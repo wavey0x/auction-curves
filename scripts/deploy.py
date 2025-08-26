@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from brownie import accounts, Auction, ModifiedAuction, interface
+from brownie import accounts, MinuteStepAuction, MediumStepAuction, SmallStepAuction, interface
 import time
 
 def main():
@@ -10,18 +10,21 @@ def main():
     print(f"Deploying contracts with account: {deployer}")
     print(f"Account balance: {deployer.balance() / 1e18} ETH")
     
-    # Deploy original auction
-    print("\nDeploying original Auction contract...")
-    original_auction = Auction.deploy({'from': deployer})
+    # Deploy all three auction contracts
+    print("\nDeploying MinuteStepAuction contract...")
+    minute_step_auction = MinuteStepAuction.deploy({'from': deployer})
     
-    # Deploy modified auction  
-    print("Deploying ModifiedAuction contract...")
-    modified_auction = ModifiedAuction.deploy({'from': deployer})
+    print("Deploying MediumStepAuction contract...")
+    medium_step_auction = MediumStepAuction.deploy({'from': deployer})
     
-    print(f"\nOriginal Auction deployed at: {original_auction.address}")
-    print(f"Modified Auction deployed at: {modified_auction.address}")
+    print("Deploying SmallStepAuction contract...")
+    small_step_auction = SmallStepAuction.deploy({'from': deployer})
     
-    return original_auction, modified_auction
+    print(f"\nMinute-Step Auction deployed at: {minute_step_auction.address}")
+    print(f"Medium-Step Auction deployed at: {medium_step_auction.address}")
+    print(f"Small-Step Auction deployed at: {small_step_auction.address}")
+    
+    return minute_step_auction, medium_step_auction, small_step_auction
 
 if __name__ == "__main__":
     main()

@@ -14,11 +14,11 @@ interface ICowSettlement {
 }
 
 /**
- *   @title ModifiedAuction
+ *   @title MediumStepAuction
  *   @author yearn.fi (modified)
- *   @notice Dutch auction contract with modified price decay function.
+ *   @notice Dutch auction contract with 36-second step intervals.
  */
-contract ModifiedAuction is Governance2Step, ReentrancyGuard {
+contract MediumStepAuction is Governance2Step, ReentrancyGuard {
     using GPv2Order for GPv2Order.Data;
     using SafeERC20 for ERC20;
 

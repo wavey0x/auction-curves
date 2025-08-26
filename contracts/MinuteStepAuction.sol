@@ -14,11 +14,11 @@ interface ICowSettlement {
 }
 
 /**
- *   @title Auction
+ *   @title MinuteStepAuction
  *   @author yearn.fi
- *   @notice General use dutch auction contract for token sales.
+ *   @notice Dutch auction contract with minute-level price updates (original Yearn implementation).
  */
-contract Auction is Governance2Step, ReentrancyGuard {
+contract MinuteStepAuction is Governance2Step, ReentrancyGuard {
     using GPv2Order for GPv2Order.Data;
     using SafeERC20 for ERC20;
 
