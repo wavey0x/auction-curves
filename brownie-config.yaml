@@ -1,0 +1,22 @@
+dependencies:
+  - OpenZeppelin/openzeppelin-contracts@4.9.0
+
+compiler:
+  solc:
+    version: 0.8.19
+    optimizer:
+      enabled: true
+      runs: 200
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.9.0"
+
+networks:
+  development:
+    host: http://127.0.0.1:8545
+    gas_limit: 12000000
+    gas_price: 20000000000
+    
+  mainnet-fork:
+    host: http://127.0.0.1:8545
+    gas_limit: 12000000
+    gas_price: 20000000000
