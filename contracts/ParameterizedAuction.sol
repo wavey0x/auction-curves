@@ -14,11 +14,11 @@ interface ICowSettlement {
 }
 
 /**
- *   @title MediumStepAuction
+ *   @title ParameterizedAuction
  *   @author yearn.fi (modified)
- *   @notice Dutch auction contract with 36-second step intervals.
+ *   @notice Dutch auction contract with configurable step decay parameters.
  */
-contract MediumStepAuction is Governance2Step, ReentrancyGuard {
+contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
     using GPv2Order for GPv2Order.Data;
     using SafeERC20 for ERC20;
 
@@ -49,10 +49,14 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
 
     uint256 internal constant WAD = 1e18;
 
-    // New constants (RAY precision: 1e27)
-    uint256 internal constant PRICE_UPDATE_INTERVAL = 36; // seconds
-    // 0.5^(1/100) in RAY (because 3600 / 36 = 100 steps per hour)
-    uint256 internal constant STEP_DECAY = 993092495437035901533210216;
+    /// @notice Price update interval in seconds (immutable, set at deployment)
+    uint256 public immutable PRICE_UPDATE_INTERVAL;
+    
+    /// @notice Step decay multiplier in RAY precision (immutable, set at deployment)
+    uint256 public immutable STEP_DECAY;
+    
+    /// @notice Optional fixed starting price (0 means use dynamic pricing)
+    uint256 public immutable FIXED_STARTING_PRICE;
 
     address internal constant COW_SETTLEMENT =
         0x9008D19f58AAbD9eD0D60971565AA8510560ab41;
@@ -68,7 +72,7 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
     /// @notice The address that will receive the funds in the auction.
     address public receiver;
 
-    /// @notice The amount to start the auction at.
+    /// @notice The amount to start the auction at (ignored if FIXED_STARTING_PRICE > 0).
     uint256 public startingPrice;
 
     /// @notice The time that each auction lasts.
@@ -80,7 +84,23 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
     /// @notice Array of all the enabled auction for this contract.
     address[] public enabledAuctions;
 
-    constructor() Governance2Step(msg.sender) {
+    /**
+     * @param _priceUpdateInterval Price update interval in seconds
+     * @param _stepDecay Step decay multiplier in RAY precision (1e27)
+     * @param _fixedStartingPrice Fixed starting price (0 for dynamic pricing)
+     */
+    constructor(
+        uint256 _priceUpdateInterval,
+        uint256 _stepDecay,
+        uint256 _fixedStartingPrice
+    ) Governance2Step(msg.sender) {
+        require(_priceUpdateInterval > 0, "invalid interval");
+        require(_stepDecay > 0 && _stepDecay <= 1e27, "invalid decay");
+        
+        PRICE_UPDATE_INTERVAL = _priceUpdateInterval;
+        STEP_DECAY = _stepDecay;
+        FIXED_STARTING_PRICE = _fixedStartingPrice;
+
         bytes32 domainSeparator;
         if (COW_SETTLEMENT.code.length > 0) {
             domainSeparator = ICowSettlement(COW_SETTLEMENT).domainSeparator();
@@ -89,6 +109,12 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
         }
 
         COW_DOMAIN_SEPARATOR = domainSeparator;
+        
+        // Set starting price if fixed
+        if (_fixedStartingPrice > 0) {
+            startingPrice = _fixedStartingPrice;
+            emit UpdatedStartingPrice(_fixedStartingPrice);
+        }
     }
 
     /**
@@ -97,7 +123,7 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
      * @param _receiver Address that will receive the funds from the auction.
      * @param _governance Address of the contract governance.
      * @param _auctionLength Duration of each auction in seconds.
-     * @param _startingPrice Starting price for each auction.
+     * @param _startingPrice Starting price for each auction (ignored if FIXED_STARTING_PRICE > 0).
      */
     function initialize(
         address _want,
@@ -109,7 +135,6 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
         require(auctionLength == 0, "initialized");
         require(_want != address(0), "ZERO ADDRESS");
         require(_auctionLength != 0, "length");
-        require(_startingPrice != 0, "starting price");
         require(_receiver != address(0), "receiver");
         // Cannot have more than 18 decimals.
         uint256 decimals = ERC20(_want).decimals();
@@ -124,8 +149,14 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
         receiver = _receiver;
         governance = _governance;
         auctionLength = _auctionLength;
-        startingPrice = _startingPrice;
-        emit UpdatedStartingPrice(_startingPrice);
+        
+        // Only set starting price if not using fixed pricing
+        if (FIXED_STARTING_PRICE == 0) {
+            require(_startingPrice != 0, "starting price");
+            startingPrice = _startingPrice;
+            emit UpdatedStartingPrice(_startingPrice);
+        }
+        // If using fixed pricing, _startingPrice parameter is ignored
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -296,7 +327,7 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
     }
 
     /**
-     * @dev Modified price function with new step-based decay.
+     * @dev Parameterized price function with configurable step decay.
      * @param _kicked The timestamp the auction was kicked.
      * @param _available The initial available amount scaled 1e18.
      * @param _timestamp The specific timestamp for calculating the price.
@@ -312,14 +343,15 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
         uint256 secondsElapsed = _timestamp - _kicked;
         if (secondsElapsed > auctionLength) return 0;
 
-        // Total number of 36s steps since the auction started
+        // Total number of steps since the auction started
         uint256 stepsElapsed = secondsElapsed / PRICE_UPDATE_INTERVAL; // floor
 
         // rpow(STEP_DECAY, stepsElapsed) -> RAY
         uint256 decay = Maths.rpow(STEP_DECAY, stepsElapsed);
 
-        // Initial price in WAD = startingPrice (base units) / _available
-        uint256 initialPrice = Maths.wdiv(startingPrice * 1e18, _available); // WAD
+        // Initial price calculation
+        uint256 effectiveStartingPrice = FIXED_STARTING_PRICE > 0 ? FIXED_STARTING_PRICE : startingPrice;
+        uint256 initialPrice = Maths.wdiv(effectiveStartingPrice, _available); // WAD
 
         // WAD * RAY / 1e27 => WAD
         return (initialPrice * decay) / 1e27;
@@ -409,11 +441,16 @@ contract MediumStepAuction is Governance2Step, ReentrancyGuard {
 
     /**
      * @notice Sets the starting price for the auction.
-     * @param _startingPrice The new starting price for the auction.
+     * @dev Disabled if using fixed starting price.
+     * @param _startingPrice The new starting price.
      */
     function setStartingPrice(
         uint256 _startingPrice
     ) external virtual onlyGovernance {
+        if (FIXED_STARTING_PRICE > 0) {
+            revert("Fixed starting price cannot be changed");
+        }
+        
         require(_startingPrice != 0, "starting price");
 
         // Don't change the price when an auction is active.
