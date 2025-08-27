@@ -34,7 +34,7 @@ def calculate_price_over_time():
     # Auction 1: Custom test decay (configurable) - moved to first position
     custom_auction = ParameterizedAuction.deploy(
         60,                                    # 60 seconds interval
-        0.988514020352896135_356867505 * 10 ** 27,  # 0.988 in RAY (1% decay per step)
+        0.988514020352896135_356867505 * 10 ** 27,
         0,                                     # dynamic pricing
         {'from': deployer}
     )
@@ -42,7 +42,7 @@ def calculate_price_over_time():
     # Auction 2: Half-Life Decay (1-hour half-life, 36s steps)
     half_life_auction = ParameterizedAuction.deploy(
         36,                                    # 36 seconds interval
-        993092495437035901533210216,          # 0.5^(1/100) in RAY
+        0.9925 * 10 ** 27,
         0,                                     # dynamic pricing
         {'from': deployer}
     )
@@ -50,7 +50,7 @@ def calculate_price_over_time():
     # Auction 3: Extended Decay (36h duration, same final price as 24h)
     extended_auction = ParameterizedAuction.deploy(
         36,                                    # 36 seconds interval  
-        995389679103229139420708864,          # 0.5^(1/150) in RAY
+        0.995 * 10 ** 27,
         0,                                     # dynamic pricing
         {'from': deployer}
     )
@@ -58,7 +58,7 @@ def calculate_price_over_time():
     # Auction 4: Fixed 0.2% Decay with 2400 starting price (36s intervals)
     fixed_auction = ParameterizedAuction.deploy(
         36,                                    # 36 seconds interval
-        997_000_000_000_000_000_000_000_000,  # 0.998 in RAY (0.3% decay)
+        0.997 * 10 ** 27,
         0,                   
         {'from': deployer}
     )
@@ -378,7 +378,7 @@ def calculate_price_over_time():
     custom_starting = get_starting_price(custom_prices)
     
     # Create the table
-    table = Table(title="🔨 Dutch Auction Parameters & 24h Results (Blockchain Deployed)", title_style="bold magenta")
+    table = Table(title="🔨 Dutch Auction Parameters & 24h Results (Fork Deploy Sim)", title_style="bold magenta")
     
     table.add_column("#", style="cyan", no_wrap=True)
     table.add_column("Duration", style="magenta")
