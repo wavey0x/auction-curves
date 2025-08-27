@@ -256,19 +256,19 @@ def calculate_price_over_time():
     
     # Linear scale plot (top)
     ax1.plot(custom_hours, custom_filtered, 
-             label=f'Custom Decay ({custom_interval}s, -{(1-custom_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 1 ({custom_interval}s, -{(1-custom_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='blue')
     ax1.plot(half_life_hours, half_life_filtered, 
-             label=f'Half-Life Decay ({half_life_interval}s, -{(1-half_life_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 2 ({half_life_interval}s, -{(1-half_life_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='red')
     ax1.plot(extended_hours, extended_filtered, 
-             label=f'Extended Decay ({extended_interval}s, -{(1-extended_decay)*100:.2f}%/step, 36h)', 
+             label=f'Auction 3 ({extended_interval}s, -{(1-extended_decay)*100:.2f}%/step, 36h)', 
              linewidth=2, color='green')
     ax1.plot(fixed_hours, fixed_filtered, 
-             label=f'Fixed Decay ({fixed_interval}s, -{(1-fixed_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 4 ({fixed_interval}s, -{(1-fixed_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='orange')
     ax1.plot(fixed_24s_hours, fixed_24s_filtered, 
-             label=f'Fixed 24s Decay ({fixed_24s_interval}s, -{(1-fixed_24s_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 5 ({fixed_24s_interval}s, -{(1-fixed_24s_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='purple')
     
     ax1.set_xlabel('Hours since auction start')
@@ -289,19 +289,19 @@ def calculate_price_over_time():
     
     # Log scale plot (bottom)
     ax2.plot(custom_hours, custom_filtered, 
-             label=f'Custom Decay ({custom_interval}s, -{(1-custom_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 1 ({custom_interval}s, -{(1-custom_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='blue')
     ax2.plot(half_life_hours, half_life_filtered, 
-             label=f'Half-Life Decay ({half_life_interval}s, -{(1-half_life_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 2 ({half_life_interval}s, -{(1-half_life_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='red')
     ax2.plot(extended_hours, extended_filtered, 
-             label=f'Extended Decay ({extended_interval}s, -{(1-extended_decay)*100:.2f}%/step, 36h)', 
+             label=f'Auction 3 ({extended_interval}s, -{(1-extended_decay)*100:.2f}%/step, 36h)', 
              linewidth=2, color='green')
     ax2.plot(fixed_hours, fixed_filtered, 
-             label=f'Fixed Decay ({fixed_interval}s, -{(1-fixed_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 4 ({fixed_interval}s, -{(1-fixed_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='orange')
     ax2.plot(fixed_24s_hours, fixed_24s_filtered, 
-             label=f'Fixed 24s Decay ({fixed_24s_interval}s, -{(1-fixed_24s_decay)*100:.2f}%/step, 24h)', 
+             label=f'Auction 5 ({fixed_24s_interval}s, -{(1-fixed_24s_decay)*100:.2f}%/step, 24h)', 
              linewidth=2, color='purple')
     
     ax2.set_xlabel('Hours since auction start')
@@ -398,7 +398,8 @@ def calculate_price_over_time():
         f"{custom_starting:,.2f}",
         f"{price_12h_custom:,.2f}" if price_12h_custom is not None else "ended",
         f"{price_24h_custom:,.2f}" if price_24h_custom is not None else "ended",
-        f"{price_36h_custom:,.2f}" if price_36h_custom is not None else "ended"
+        f"{price_36h_custom:,.2f}" if price_36h_custom is not None else "ended",
+        style="blue"
     )
     
     table.add_row(
@@ -409,7 +410,8 @@ def calculate_price_over_time():
         f"{half_life_starting:,.2f}",
         f"{price_12h_half_life:,.2f}" if price_12h_half_life is not None else "ended",
         f"{price_24h_half_life:,.2f}" if price_24h_half_life is not None else "ended",
-        f"{price_36h_half_life:,.2f}" if price_36h_half_life is not None else "ended"
+        f"{price_36h_half_life:,.2f}" if price_36h_half_life is not None else "ended",
+        style="red"
     )
     
     table.add_row(
@@ -420,7 +422,8 @@ def calculate_price_over_time():
         f"{extended_starting:,.2f}",
         f"{price_12h_extended:,.2f}" if price_12h_extended is not None else "ended",
         f"{price_24h_extended:,.2f}" if price_24h_extended is not None else "ended",
-        f"{price_36h_extended:,.2f}" if price_36h_extended is not None else "ended"
+        f"{price_36h_extended:,.2f}" if price_36h_extended is not None else "ended",
+        style="green"
     )
     
     table.add_row(
@@ -431,7 +434,8 @@ def calculate_price_over_time():
         f"{fixed_starting:,.2f}",
         f"{price_12h_fixed:,.2f}" if price_12h_fixed is not None else "ended",
         f"{price_24h_fixed:,.2f}" if price_24h_fixed is not None else "ended",
-        f"{price_36h_fixed:,.2f}" if price_36h_fixed is not None else "ended"
+        f"{price_36h_fixed:,.2f}" if price_36h_fixed is not None else "ended",
+        style="bright_yellow"
     )
     
     table.add_row(
@@ -442,7 +446,8 @@ def calculate_price_over_time():
         f"{fixed_24s_starting:,.2f}",
         f"{price_12h_fixed_24s:,.2f}" if price_12h_fixed_24s is not None else "ended",
         f"{price_24h_fixed_24s:,.2f}" if price_24h_fixed_24s is not None else "ended",
-        f"{price_36h_fixed_24s:,.2f}" if price_36h_fixed_24s is not None else "ended"
+        f"{price_36h_fixed_24s:,.2f}" if price_36h_fixed_24s is not None else "ended",
+        style="magenta"
     )
     
     console.print("\n")
