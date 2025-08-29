@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-800;
+  }
+  
+  body {
+    @apply font-mono;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-gray-100;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700 focus:ring-gray-500;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+  
+  .btn-md {
+    @apply px-4 py-2 text-sm;
+  }
+  
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+  
+  .card {
+    @apply bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-xl;
+  }
+  
+  .input {
+    @apply block w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+  }
+  
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-success-500/20 text-success-400 ring-1 ring-success-500/30;
+  }
+  
+  .badge-warning {
+    @apply badge bg-warning-500/20 text-warning-400 ring-1 ring-warning-500/30;
+  }
+  
+  .badge-danger {
+    @apply badge bg-danger-500/20 text-danger-400 ring-1 ring-danger-500/30;
+  }
+  
+  .badge-neutral {
+    @apply badge bg-gray-500/20 text-gray-400 ring-1 ring-gray-500/30;
+  }
+  
+  .table {
+    @apply w-full border-collapse;
+  }
+  
+  .table th {
+    @apply border-b border-gray-700 px-3 py-1.5 text-left text-xs font-medium text-gray-400 uppercase tracking-wider;
+  }
+  
+  .table td {
+    @apply border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300;
+  }
+  
+  .table tbody tr:hover {
+    @apply bg-gray-800/50;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+  }
+  
+  .glassmorphism {
+    @apply backdrop-blur-md bg-gray-900/30 border border-gray-700/50;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .tooltip {
+    @apply relative;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    @apply opacity-100 visible;
+  }
+  
+  .tooltip-text {
+    @apply invisible opacity-0 absolute z-50 px-2 py-1 text-xs font-mono text-gray-100 bg-gray-800 border border-gray-600 rounded-md shadow-lg transition-all duration-200;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  
+  .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -4px;
+    border-width: 4px;
+    border-style: solid;
+    border-color: theme('colors.gray.600') transparent transparent transparent;
+  }
+  
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px -10px theme('colors.primary.500');
+    }
+    to {
+      box-shadow: 0 0 20px -5px theme('colors.primary.400');
+    }
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: theme('colors.gray.900');
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme('colors.gray.600');
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.gray.500');
+}
+
+/* Loading animations */
+.skeleton {
+  @apply animate-pulse bg-gray-800 rounded;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

@@ -1,0 +1,405 @@
+#!/usr/bin/env python3
+"""
+Massive test deployment script:
+- 10 diverse mock tokens
+- 100 auctions with varied configurations
+- Token pair combinations
+- Activity simulation setup
+"""
+
+import json
+import random
+from brownie import accounts, AuctionFactory, AuctionHouse, MockERC20Enhanced, network
+from rich.console import Console
+from rich.table import Table
+from rich.progress import Progress, TaskID, track
+from rich.panel import Panel
+from pathlib import Path
+import time
+
+console = Console()
+
+# Token configurations: (symbol, name, decimals, category)
+TOKEN_CONFIGS = [
+    ("USDC", "USD Coin", 6, "stable"),
+    ("USDT", "Tether USD", 6, "stable"), 
+    ("WETH", "Wrapped Ether", 18, "crypto"),
+    ("WBTC", "Wrapped Bitcoin", 8, "crypto"),
+    ("DAI", "Dai Stablecoin", 18, "stable"),
+    ("LINK", "Chainlink", 18, "defi"),
+    ("UNI", "Uniswap", 18, "defi"),
+    ("AAVE", "Aave Token", 18, "defi"),
+    ("CRV", "Curve DAO Token", 18, "defi"),
+    ("SNX", "Synthetix", 18, "defi"),
+]
+
+# Auction configuration variations - REDUCED FOR TESTING
+AUCTION_CONFIGS = [
+    # Fast decay configurations (3 auctions)
+    *[{
+        "decay": 990000000000000000000000000,  # 1% decay per step
+        "starting_price_range": (500000, 2000000),
+        "description": "Fast decay"
+    } for _ in range(3)],
+    
+    # Medium decay configurations (3 auctions)
+    *[{
+        "decay": 995000000000000000000000000,  # 0.5% decay per step
+        "starting_price_range": (100000, 1000000),
+        "description": "Medium decay"
+    } for _ in range(3)],
+    
+    # Slow decay configurations (2 auctions)
+    *[{
+        "decay": 998000000000000000000000000,  # 0.2% decay per step
+        "starting_price_range": (50000, 500000),
+        "description": "Slow decay"
+    } for _ in range(2)],
+    
+    # Custom varied configurations (2 auctions)
+    *[{
+        "decay": random.randint(950000000000000000000000000, 999000000000000000000000000),
+        "starting_price_range": (random.randint(10000, 100000), random.randint(1000000, 10000000)),
+        "description": "Custom"
+    } for _ in range(2)],
+]
+
+class TestDeployment:
+    def __init__(self):
+        self.deployer = accounts[0]
+        self.receivers = accounts[1:6]  # Use multiple receivers
+        self.tokens = {}
+        self.factory = None
+        self.auctions = []
+        
+    def deploy_factory(self):
+        """Deploy the AuctionFactory"""
+        console.print("\n🏭 [bold blue]Deploying AuctionFactory...[/bold blue]")
+        
+        self.factory = AuctionFactory.deploy({'from': self.deployer})
+        
+        console.print(f"✅ Factory deployed: [green]{self.factory.address}[/green]")
+        return self.factory
+    
+    def deploy_tokens(self):
+        """Deploy 10 diverse mock tokens"""
+        console.print("\n🪙 [bold yellow]Deploying 10 Mock Tokens...[/bold yellow]")
+        
+        with Progress() as progress:
+            task = progress.add_task("Deploying tokens...", total=len(TOKEN_CONFIGS))
+            
+            for symbol, name, decimals, category in TOKEN_CONFIGS:
+                token = MockERC20Enhanced.deploy(
+                    name,
+                    symbol, 
+                    decimals,
+                    {'from': self.deployer}
+                )
+                
+                self.tokens[symbol] = {
+                    'contract': token,
+                    'symbol': symbol,
+                    'name': name,
+                    'decimals': decimals,
+                    'category': category,
+                    'address': token.address
+                }
+                
+                progress.update(task, advance=1)
+                
+        # Display token table
+        self.display_token_table()
+        return self.tokens
+    
+    def display_token_table(self):
+        """Display deployed tokens in a nice table"""
+        table = Table(title="🪙 Deployed Tokens")
+        table.add_column("Symbol", style="cyan") 
+        table.add_column("Name", style="green")
+        table.add_column("Decimals", style="yellow")
+        table.add_column("Category", style="magenta")
+        table.add_column("Address", style="dim")
+        
+        for symbol, token_info in self.tokens.items():
+            table.add_row(
+                symbol,
+                token_info['name'],
+                str(token_info['decimals']),
+                token_info['category'],
+                token_info['address'][:10] + "..."
+            )
+            
+        console.print(table)
+    
+    def generate_token_pairs(self):
+        """Generate 100 diverse token pairs"""
+        pairs = []
+        symbols = list(self.tokens.keys())
+        
+        # Stablecoin pairs (10 pairs)
+        stables = [s for s in symbols if self.tokens[s]['category'] == 'stable']
+        for i, from_token in enumerate(stables):
+            for to_token in stables:
+                if from_token != to_token and len(pairs) < 10:
+                    pairs.append((from_token, to_token))
+        
+        # Crypto -> Stablecoin (30 pairs)
+        cryptos = [s for s in symbols if self.tokens[s]['category'] == 'crypto']
+        for from_token in cryptos:
+            for to_token in stables:
+                if len(pairs) < 40:  # 10 + 30
+                    pairs.append((from_token, to_token))
+        
+        # DeFi -> Stablecoin (20 pairs) 
+        defis = [s for s in symbols if self.tokens[s]['category'] == 'defi']
+        for from_token in defis:
+            for to_token in stables:
+                if len(pairs) < 60:  # 40 + 20
+                    pairs.append((from_token, to_token))
+        
+        # DeFi -> Crypto (20 pairs)
+        for from_token in defis:
+            for to_token in cryptos:
+                if len(pairs) < 80:  # 60 + 20  
+                    pairs.append((from_token, to_token))
+        
+        # Cross-DeFi pairs (20 pairs)
+        for i, from_token in enumerate(defis):
+            for to_token in defis:
+                if from_token != to_token and len(pairs) < 100:
+                    pairs.append((from_token, to_token))
+        
+        # Fill remaining slots randomly if needed
+        while len(pairs) < 100:
+            from_token = random.choice(symbols)
+            to_token = random.choice(symbols) 
+            if from_token != to_token and (from_token, to_token) not in pairs:
+                pairs.append((from_token, to_token))
+        
+        return pairs[:10]  # Reduced for faster testing
+    
+    def deploy_auctions(self):
+        """Deploy 10 auctions with various configurations"""
+        console.print("\n🎯 [bold green]Deploying 10 Auctions (reduced for testing)...[/bold green]")
+        
+        pairs = self.generate_token_pairs()
+        
+        console.print(f"   Deploying {len(AUCTION_CONFIGS)} auctions...")
+        
+        for i, (config, (from_symbol, to_symbol)) in enumerate(zip(AUCTION_CONFIGS, pairs)):
+            from_token = self.tokens[from_symbol]
+            to_token = self.tokens[to_symbol] 
+            receiver = random.choice(self.receivers)
+            
+            # Random starting price in range
+            starting_price = random.randint(*config["starting_price_range"])
+            
+            try:
+                # Deploy auction (minimal logging)
+                tx = self.factory.createNewAuction(
+                    to_token['address'],  # want token
+                    receiver.address,     # receiver
+                    self.deployer.address, # governance
+                    starting_price,       # starting price
+                    {'from': self.deployer}
+                )
+                
+                auction_address = tx.events['DeployedNewAuction']['auction']
+                
+                # Configure auction with specific parameters
+                auction = AuctionHouse.at(auction_address)
+                if config["decay"] != 995000000000000000000000000:  # If not default
+                    auction.setStepDecayRate(config["decay"], {'from': self.deployer})
+                
+                auction_info = {
+                    'address': auction_address,
+                    'from_token': from_symbol,
+                    'to_token': to_symbol, 
+                    'description': config.get('description', 'Custom'),
+                    'decay': config['decay'],
+                    'starting_price': starting_price,
+                    'receiver': receiver.address
+                }
+                
+                self.auctions.append(auction_info)
+                
+                # Simple progress indicator
+                if (i + 1) % 5 == 0 or i == len(AUCTION_CONFIGS) - 1:
+                    console.print(f"   Progress: {i+1}/{len(AUCTION_CONFIGS)} auctions deployed")
+                
+            except Exception as e:
+                console.print(f"   ❌ Failed to create auction {i+1}: {str(e)}")
+                raise
+        
+        console.print(f"✅ Deployed {len(self.auctions)} auctions")
+        return self.auctions
+    
+    def enable_tokens_and_mint(self):
+        """Enable tokens in auctions and mint test amounts"""
+        console.print("\n⚡ [bold cyan]Enabling tokens and minting...[/bold cyan]")
+        
+        with Progress() as progress:
+            task = progress.add_task("Processing auctions...", total=len(self.auctions))
+            
+            for auction_info in self.auctions:
+                auction = AuctionHouse.at(auction_info['address'])
+                from_token_contract = self.tokens[auction_info['from_token']]['contract']
+                
+                # Enable the from token in the auction
+                auction.enable(from_token_contract.address, {'from': self.deployer})
+                
+                # Mint tokens to auction (random amount between 100-10000)
+                decimals = self.tokens[auction_info['from_token']]['decimals']
+                mint_amount = random.randint(100, 10000) * (10 ** decimals)
+                from_token_contract.mint(auction.address, mint_amount, {'from': self.deployer})
+                
+                # Store mint amount for later reference
+                auction_info['minted_amount'] = mint_amount
+                
+                progress.update(task, advance=1)
+        
+        console.print("✅ All tokens enabled and minted")
+    
+    def kick_random_auctions(self, percentage=0.5):
+        """Kick a percentage of auctions to simulate activity"""
+        console.print(f"\n🚀 [bold magenta]Kicking {int(percentage*100)}% of auctions...[/bold magenta]")
+        
+        auctions_to_kick = random.sample(self.auctions, int(len(self.auctions) * percentage))
+        
+        with Progress() as progress:
+            task = progress.add_task("Kicking auctions...", total=len(auctions_to_kick))
+            
+            for auction_info in auctions_to_kick:
+                auction = AuctionHouse.at(auction_info['address'])
+                from_token_contract = self.tokens[auction_info['from_token']]['contract']
+                
+                # Kick the auction
+                tx = auction.kick(from_token_contract.address, {'from': self.deployer})
+                auction_info['kicked_at'] = tx.timestamp
+                auction_info['kicked'] = True
+                
+                progress.update(task, advance=1)
+        
+        console.print(f"✅ Kicked {len(auctions_to_kick)} auctions")
+    
+    def save_deployment_info(self):
+        """Save deployment info to JSON for other scripts"""
+        deployment_data = {
+            'factory_address': self.factory.address,
+            'tokens': {
+                symbol: {
+                    'address': info['address'],
+                    'name': info['name'],
+                    'symbol': symbol,
+                    'decimals': info['decimals'],
+                    'category': info['category']
+                } 
+                for symbol, info in self.tokens.items()
+            },
+            'auctions': self.auctions,
+            'network': network.show_active(),
+            'deployer': str(self.deployer),
+            'block_number': network.web3.eth.block_number
+        }
+        
+        output_path = Path(__file__).parent.parent.parent / "deployment_info.json"
+        with open(output_path, 'w') as f:
+            json.dump(deployment_data, f, indent=2, default=str)
+        
+        console.print(f"\n💾 Deployment info saved to: [green]{output_path}[/green]")
+    
+    def display_summary(self):
+        """Display comprehensive deployment summary"""
+        console.print("\n" + "="*60)
+        console.print(Panel.fit(
+            f"🏛️ [bold]Auction House Test Deployment Complete[/bold]\n\n"
+            f"🏭 Factory: {self.factory.address}\n"
+            f"🪙 Tokens: {len(self.tokens)}\n" 
+            f"🎯 Auctions: {len(self.auctions)}\n"
+            f"🚀 Active: {len([a for a in self.auctions if a.get('kicked', False)])}\n"
+            f"⛽ Network: {network.show_active()}\n"
+            f"📦 Block: {network.web3.eth.block_number}",
+            title="Deployment Summary",
+            style="bold green"
+        ))
+        
+        # Auction type breakdown
+        type_counts = {}
+        for auction in self.auctions:
+            description = auction.get('description', 'Custom')
+            type_counts[description] = type_counts.get(description, 0) + 1
+        
+        type_table = Table(title="🎯 Auction Type Distribution")
+        type_table.add_column("Type", style="cyan")
+        type_table.add_column("Count", style="green") 
+        type_table.add_column("Description", style="yellow")
+        
+        descriptions = {
+            "linear": "0.5% decay, 60s intervals, 24h duration",
+            "exponential": "1% decay, 36s intervals, 12h duration", 
+            "conservative": "0.2% decay, 120s intervals, 48h duration",
+            "custom": "Varied parameters for testing"
+        }
+        
+        for config_type, count in type_counts.items():
+            type_table.add_row(config_type, str(count), f"{config_type} auction configuration")
+        
+        console.print(type_table)
+        
+        # Next steps
+        console.print(Panel.fit(
+            "[bold cyan]Next Steps:[/bold cyan]\n\n"
+            "1. Generate ABIs: [green]brownie run scripts/generate_abis.py[/green]\n"
+            "2. Start Rindexer: [green]cd indexer/rindexer && rindexer start[/green]\n"  
+            "3. Start API: [green]cd monitoring/api && uvicorn main:app[/green]\n"
+            "4. Start Frontend: [green]cd monitoring/frontend && npm run dev[/green]\n"
+            "5. Simulate Activity: [green]python scripts/simulate/continuous_activity.py[/green]",
+            title="🚀 Ready for Testing",
+            style="bold blue"
+        ))
+
+def main():
+    """Main deployment function"""
+    console.print(Panel.fit(
+        "[bold magenta]🏛️ Auction House Test Deployment[/bold magenta]\n\n"
+        "Deploying:\n"
+        "• 10 diverse mock tokens (USDC, WETH, WBTC, etc.)\n"
+        "• 10 auctions with varied configurations (reduced for testing)\n" 
+        "• Token pairs across all categories\n"
+        "• Simulation-ready setup",
+        title="Starting Deployment"
+    ))
+    
+    deployment = TestDeployment()
+    
+    try:
+        # Phase 1: Core contracts
+        console.print("[bold blue]Phase 1: Core Contracts[/bold blue]")
+        deployment.deploy_factory()
+        deployment.deploy_tokens()
+        
+        # Phase 2: Auctions
+        console.print("[bold blue]Phase 2: Auctions[/bold blue]")
+        deployment.deploy_auctions()
+        deployment.enable_tokens_and_mint()
+        
+        # Phase 3: Initial activity
+        console.print("[bold blue]Phase 3: Initial Activity[/bold blue]")
+        deployment.kick_random_auctions(0.5)  # Kick 50% of auctions
+        
+        # Phase 4: Save and summarize
+        console.print("[bold blue]Phase 4: Finalization[/bold blue]")
+        deployment.save_deployment_info()
+        deployment.display_summary()
+        
+        return deployment
+        
+    except Exception as e:
+        console.print(f"\n❌ [bold red]Deployment failed at step: {str(e)}[/bold red]")
+        console.print(f"[bold red]Error type: {type(e).__name__}[/bold red]")
+        import traceback
+        console.print(f"[red]Stack trace:\n{traceback.format_exc()}[/red]")
+        raise
+
+if __name__ == "__main__":
+    main()

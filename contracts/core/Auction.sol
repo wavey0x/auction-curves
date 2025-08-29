@@ -2,7 +2,7 @@
 pragma solidity >=0.8.18;
 
 import {Maths} from "./libraries/Maths.sol";
-import {ITaker} from "./interfaces/ITaker.sol";
+import {ITaker} from "../interfaces/ITaker.sol";
 import {GPv2Order} from "./libraries/GPv2Order.sol";
 import {Governance2Step} from "./utils/Governance2Step.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -14,11 +14,11 @@ interface ICowSettlement {
 }
 
 /**
- *   @title ParameterizedAuction
- *   @author yearn.fi (modified)
- *   @notice Dutch auction contract with configurable step decay parameters.
+ *   @title Auction
+ *   @author yearn.fi
+ *   @notice General use dutch auction contract for token sales.
  */
-contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
+contract Auction is Governance2Step, ReentrancyGuard {
     using GPv2Order for GPv2Order.Data;
     using SafeERC20 for ERC20;
 
@@ -33,6 +33,9 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
 
     /// @notice Emitted when the starting price is updated.
     event UpdatedStartingPrice(uint256 startingPrice);
+
+    /// @notice Emitted when the step decay rate is updated.
+    event UpdatedStepDecayRate(uint256 indexed stepDecayRate);
 
     /// @dev Store address and scaler in one slot.
     struct TokenInfo {
@@ -49,22 +52,17 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
 
     uint256 internal constant WAD = 1e18;
 
-    /// @notice Price update interval in seconds (immutable, set at deployment)
-    uint256 public immutable PRICE_UPDATE_INTERVAL;
-    
-    /// @notice Step decay multiplier in RAY precision (immutable, set at deployment)
-    uint256 public immutable STEP_DECAY;
-    
-    /// @notice Optional fixed starting price (0 means use dynamic pricing)
-    uint256 public immutable FIXED_STARTING_PRICE;
-
     address internal constant COW_SETTLEMENT =
         0x9008D19f58AAbD9eD0D60971565AA8510560ab41;
 
     address internal constant VAULT_RELAYER =
         0xC92E8bdf79f0507f65a392b0ab4667716BFE0110;
 
-    bytes32 internal immutable COW_DOMAIN_SEPARATOR;
+    /// @notice The time period for each price step in seconds.
+    uint256 public constant STEP_DURATION = 36;
+
+    /// @notice The time that each auction lasts.
+    uint256 internal constant AUCTION_LENGTH = 1 days;
 
     /// @notice Struct to hold the info for `want`.
     TokenInfo internal wantInfo;
@@ -72,11 +70,11 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
     /// @notice The address that will receive the funds in the auction.
     address public receiver;
 
-    /// @notice The amount to start the auction at (ignored if FIXED_STARTING_PRICE > 0).
+    /// @notice The amount to start the auction at.
     uint256 public startingPrice;
 
-    /// @notice The time that each auction lasts.
-    uint256 public auctionLength;
+    /// @notice The decay rate per 36-second step (e.g., 0.995 * 1e27 for 0.5% decrease).
+    uint256 public stepDecayRate;
 
     /// @notice Mapping from `from` token to its struct.
     mapping(address => AuctionInfo) public auctions;
@@ -84,57 +82,24 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
     /// @notice Array of all the enabled auction for this contract.
     address[] public enabledAuctions;
 
-    /**
-     * @param _priceUpdateInterval Price update interval in seconds
-     * @param _stepDecay Step decay multiplier in RAY precision (1e27)
-     * @param _fixedStartingPrice Fixed starting price (0 for dynamic pricing)
-     */
-    constructor(
-        uint256 _priceUpdateInterval,
-        uint256 _stepDecay,
-        uint256 _fixedStartingPrice
-    ) Governance2Step(msg.sender) {
-        require(_priceUpdateInterval > 0, "invalid interval");
-        require(_stepDecay > 0 && _stepDecay <= 1e27, "invalid decay");
-        
-        PRICE_UPDATE_INTERVAL = _priceUpdateInterval;
-        STEP_DECAY = _stepDecay;
-        FIXED_STARTING_PRICE = _fixedStartingPrice;
-
-        bytes32 domainSeparator;
-        if (COW_SETTLEMENT.code.length > 0) {
-            domainSeparator = ICowSettlement(COW_SETTLEMENT).domainSeparator();
-        } else {
-            domainSeparator = bytes32(0);
-        }
-
-        COW_DOMAIN_SEPARATOR = domainSeparator;
-        
-        // Set starting price if fixed
-        if (_fixedStartingPrice > 0) {
-            startingPrice = _fixedStartingPrice;
-            emit UpdatedStartingPrice(_fixedStartingPrice);
-        }
-    }
+    constructor() Governance2Step(msg.sender) {}
 
     /**
      * @notice Initializes the Auction contract with initial parameters.
      * @param _want Address this auction is selling to.
      * @param _receiver Address that will receive the funds from the auction.
      * @param _governance Address of the contract governance.
-     * @param _auctionLength Duration of each auction in seconds.
-     * @param _startingPrice Starting price for each auction (ignored if FIXED_STARTING_PRICE > 0).
+     * @param _startingPrice Starting price for each auction.
      */
     function initialize(
         address _want,
         address _receiver,
         address _governance,
-        uint256 _auctionLength,
         uint256 _startingPrice
     ) public virtual {
-        require(auctionLength == 0, "initialized");
+        require(stepDecayRate == 0, "initialized");
         require(_want != address(0), "ZERO ADDRESS");
-        require(_auctionLength != 0, "length");
+        require(_startingPrice != 0, "starting price");
         require(_receiver != address(0), "receiver");
         // Cannot have more than 18 decimals.
         uint256 decimals = ERC20(_want).decimals();
@@ -148,15 +113,10 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
 
         receiver = _receiver;
         governance = _governance;
-        auctionLength = _auctionLength;
-        
-        // Only set starting price if not using fixed pricing
-        if (FIXED_STARTING_PRICE == 0) {
-            require(_startingPrice != 0, "starting price");
-            startingPrice = _startingPrice;
-            emit UpdatedStartingPrice(_startingPrice);
-        }
-        // If using fixed pricing, _startingPrice parameter is ignored
+        startingPrice = _startingPrice;
+        stepDecayRate = 0.995 * 1e27; // Default to 0.5% decay per step
+        emit UpdatedStartingPrice(_startingPrice);
+        emit UpdatedStepDecayRate(stepDecayRate);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -169,6 +129,10 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
      */
     function want() public view virtual returns (address) {
         return wantInfo.tokenAddress;
+    }
+
+    function auctionLength() public view virtual returns (uint256) {
+        return AUCTION_LENGTH;
     }
 
     /**
@@ -201,7 +165,7 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
      * @return . Whether the auction is active.
      */
     function isActive(address _from) public view virtual returns (bool) {
-        return auctions[_from].kicked + auctionLength >= block.timestamp;
+        return auctions[_from].kicked + AUCTION_LENGTH >= block.timestamp;
     }
 
     /**
@@ -327,7 +291,7 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
     }
 
     /**
-     * @dev Parameterized price function with configurable step decay.
+     * @dev Internal function to calculate the scaled price based on auction parameters.
      * @param _kicked The timestamp the auction was kicked.
      * @param _available The initial available amount scaled 1e18.
      * @param _timestamp The specific timestamp for calculating the price.
@@ -341,20 +305,20 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
         if (_available == 0) return 0;
 
         uint256 secondsElapsed = _timestamp - _kicked;
-        if (secondsElapsed > auctionLength) return 0;
 
-        // Total number of steps since the auction started
-        uint256 stepsElapsed = secondsElapsed / PRICE_UPDATE_INTERVAL; // floor
+        if (secondsElapsed > AUCTION_LENGTH) return 0;
 
-        // rpow(STEP_DECAY, stepsElapsed) -> RAY
-        uint256 decay = Maths.rpow(STEP_DECAY, stepsElapsed);
+        // Calculate the number of price steps that have passed
+        uint256 steps = secondsElapsed / STEP_DURATION;
 
-        // Initial price calculation
-        uint256 effectiveStartingPrice = FIXED_STARTING_PRICE > 0 ? FIXED_STARTING_PRICE : startingPrice;
-        uint256 initialPrice = Maths.wdiv(effectiveStartingPrice, _available); // WAD
+        // Calculate the decay multiplier using the configurable decay rate per step
+        uint256 decayMultiplier = Maths.rpow(stepDecayRate, steps);
 
-        // WAD * RAY / 1e27 => WAD
-        return (initialPrice * decay) / 1e27;
+        // Calculate initial price per token
+        uint256 initialPrice = Maths.wdiv(startingPrice * 1e18, _available);
+
+        // Apply the decay to get the current price
+        return Maths.rmul(initialPrice, decayMultiplier);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -441,16 +405,11 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
 
     /**
      * @notice Sets the starting price for the auction.
-     * @dev Disabled if using fixed starting price.
-     * @param _startingPrice The new starting price.
+     * @param _startingPrice The new starting price for the auction.
      */
     function setStartingPrice(
         uint256 _startingPrice
     ) external virtual onlyGovernance {
-        if (FIXED_STARTING_PRICE > 0) {
-            revert("Fixed starting price cannot be changed");
-        }
-        
         require(_startingPrice != 0, "starting price");
 
         // Don't change the price when an auction is active.
@@ -462,6 +421,30 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
         startingPrice = _startingPrice;
 
         emit UpdatedStartingPrice(_startingPrice);
+    }
+
+    /**
+     * @notice Sets the step decay rate for the auction.
+     * @dev The decay rate should be less than 1e27 (e.g., 0.995 * 1e27 for 0.5% decay).
+     * @param _stepDecayRate The new decay rate per 36-second step.
+     */
+    function setStepDecayRate(
+        uint256 _stepDecayRate
+    ) external virtual onlyGovernance {
+        require(
+            _stepDecayRate > 0 && _stepDecayRate <= 1e27,
+            "invalid decay rate"
+        );
+
+        // Don't change the decay rate when an auction is active.
+        address[] memory _enabledAuctions = enabledAuctions;
+        for (uint256 i = 0; i < _enabledAuctions.length; ++i) {
+            require(!isActive(_enabledAuctions[i]), "active auction");
+        }
+
+        stepDecayRate = _stepDecayRate;
+
+        emit UpdatedStepDecayRate(_stepDecayRate);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -478,7 +461,7 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
     ) external virtual nonReentrant returns (uint256 _available) {
         require(auctions[_from].scaler != 0, "not enabled");
         require(
-            block.timestamp > auctions[_from].kicked + auctionLength,
+            block.timestamp > auctions[_from].kicked + AUCTION_LENGTH,
             "too soon"
         );
 
@@ -560,7 +543,7 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
         AuctionInfo memory auction = auctions[_from];
         // Make sure the auction is active.
         require(
-            auction.kicked + auctionLength >= block.timestamp,
+            auction.kicked + AUCTION_LENGTH >= block.timestamp,
             "not kicked"
         );
 
@@ -620,12 +603,17 @@ contract ParameterizedAuction is Governance2Step, ReentrancyGuard {
         );
 
         // Verify the order details.
-        require(_hash == order.hash(COW_DOMAIN_SEPARATOR), "bad order");
+        // Retreive domain seperator each time for chains it is not deployed on yet
+        require(
+            _hash ==
+                order.hash(ICowSettlement(COW_SETTLEMENT).domainSeparator()),
+            "bad order"
+        );
         require(paymentAmount != 0, "zero amount");
         require(available(address(order.sellToken)) != 0, "zero available");
         require(order.feeAmount == 0, "fee");
         require(order.partiallyFillable, "partial fill");
-        require(order.validTo < auction.kicked + auctionLength, "expired");
+        require(order.validTo < auction.kicked + AUCTION_LENGTH, "expired");
         require(order.appData == bytes32(0), "app data");
         require(order.buyAmount >= paymentAmount, "bad price");
         require(address(order.buyToken) == want(), "bad token");

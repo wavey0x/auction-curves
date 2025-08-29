@@ -1,0 +1,114 @@
+version: "3.8"
+
+services:
+  # PostgreSQL with TimescaleDB for auction data
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: auction_postgres
+    environment:
+      POSTGRES_DB: auction
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      TIMESCALEDB_TELEMETRY: "off"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - auction
+
+  # Redis for caching and real-time data
+  redis:
+    image: redis:7-alpine
+    container_name: auction_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - auction
+
+  # Anvil for local blockchain testing
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:latest
+    container_name: auction_anvil
+    ports:
+      - "8545:8545"
+    command: >
+      anvil
+      --host 0.0.0.0
+      --port 8545
+      --accounts 10
+      --balance 10000
+      --gas-limit 12000000
+      --code-size-limit 41943040
+      --fork-url ${MAINNET_RPC_URL:-}
+    networks:
+      - auction
+    profiles:
+      - blockchain
+
+  # FastAPI backend (when ready)
+  api:
+    build:
+      context: ./monitoring/api
+      dockerfile: Dockerfile
+    container_name: auction_api
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/auction
+      REDIS_URL: redis://redis:6379
+      RPC_URL: http://anvil:8545
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - auction
+    profiles:
+      - api
+
+  # React frontend (when ready)
+  frontend:
+    build:
+      context: ./monitoring/frontend
+      dockerfile: Dockerfile
+    container_name: auction_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_WS_URL: ws://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - auction
+    profiles:
+      - frontend
+
+  # Rindexer for blockchain event indexing (when configured)
+  indexer:
+    build:
+      context: ./indexer
+      dockerfile: Dockerfile
+    container_name: auction_indexer
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/auction
+      RPC_URL: http://anvil:8545
+    depends_on:
+      - postgres
+      - anvil
+    networks:
+      - auction
+    profiles:
+      - indexer
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  auction:
+    driver: bridge

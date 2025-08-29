@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from brownie import accounts, ParameterizedAuction, MockERC20, Wei
+from brownie import accounts, Auction, MockERC20, Wei
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -16,7 +16,7 @@ def deploy_mock_token():
     return mock_token
 
 def calculate_price_over_time():
-    """Calculate and compare price decay using ParameterizedAuction with different decay factors"""
+    """Calculate and compare price decay using Auction with different decay factors"""
     
     deployer = accounts[0]
     receiver = accounts[1]
@@ -28,11 +28,11 @@ def calculate_price_over_time():
     want_token = deploy_mock_token()  # Token we want to receive
     from_token = deploy_mock_token()  # Token being auctioned
     
-    # Deploy ParameterizedAuction contracts with different parameters
+    # Deploy Auction contracts with different parameters
     print("Deploying parameterized auction contracts...")
     
     # Auction 1: Custom test decay (configurable) - moved to first position
-    custom_auction = ParameterizedAuction.deploy(
+    custom_auction = Auction.deploy(
         60,                                    # 60 seconds interval
         0.988514020352896135_356867505 * 10 ** 27,
         0,                                     # dynamic pricing
@@ -40,7 +40,7 @@ def calculate_price_over_time():
     )
     
     # Auction 2: Half-Life Decay (1-hour half-life, 36s steps)
-    half_life_auction = ParameterizedAuction.deploy(
+    half_life_auction = Auction.deploy(
         36,                                    # 36 seconds interval
         0.9925 * 10 ** 27,
         0,                                     # dynamic pricing
@@ -48,7 +48,7 @@ def calculate_price_over_time():
     )
     
     # Auction 3: Extended Decay (36h duration, same final price as 24h)
-    extended_auction = ParameterizedAuction.deploy(
+    extended_auction = Auction.deploy(
         36,                                    # 36 seconds interval  
         0.995 * 10 ** 27,
         0,                                     # dynamic pricing
@@ -56,7 +56,7 @@ def calculate_price_over_time():
     )
     
     # Auction 4: Fixed 0.2% Decay with 2400 starting price (36s intervals)
-    fixed_auction = ParameterizedAuction.deploy(
+    fixed_auction = Auction.deploy(
         36,                                    # 36 seconds interval
         0.997 * 10 ** 27,
         0,                   
@@ -64,7 +64,7 @@ def calculate_price_over_time():
     )
     
     # Auction 5: Fixed 0.2% Decay with 2400 starting price (24s intervals)  
-    fixed_24s_auction = ParameterizedAuction.deploy(
+    fixed_24s_auction = Auction.deploy(
         24,                                    # 24 seconds interval
         997_000_000_000_000_000_000_000_000,  # 0.998 in RAY (0.3% decay)
         0,                   

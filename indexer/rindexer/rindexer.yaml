@@ -1,0 +1,76 @@
+# Rindexer configuration for Auction event indexing
+name: auction
+description: "Indexes all events from Dutch auction contracts"
+project_type: no-code
+
+# Network configurations
+networks:
+  - name: local
+    chain_id: 31337
+    rpc: http://localhost:8545
+    compute_units_per_second: 330
+    disable_logs_bloom_checks: true
+
+# Storage configuration - let Rindexer auto-create tables
+storage:
+  postgres:
+    enabled: true
+    connection_string: "postgresql://postgres:password@localhost:5432/auction"
+    # Rindexer will automatically create tables based on events
+
+  csv:
+    enabled: false
+
+# Global configuration
+global:
+  start_block: 0
+  # end_block: # Empty for live indexing
+
+# Contract definitions
+contracts:
+  # AuctionFactory contract - Rindexer will auto-create 'deployed_new_auction' table
+  - name: AuctionFactory
+    abi: "./abis/AuctionFactory.json"
+    details:
+      - network: local
+        address: "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485"
+        start_block: 0
+        include_events:
+          - DeployedNewAuction
+
+  # Auction contract 1
+  - name: Auction1
+    abi: "./abis/Auction.json"
+    details:
+      - network: local
+        address: "0xb305369cc06fd05898b1dcfb96ae27d0c783a89e"
+        include_events:
+          - AuctionEnabled # -> auction_enabled table
+          - AuctionDisabled # -> auction_disabled table
+          - AuctionKicked # -> auction_kicked table
+          - UpdatedStartingPrice # -> updated_starting_price table
+          - UpdatedStepDecayRate # -> updated_step_decay_rate table
+
+  # Auction contract 2
+  - name: Auction2
+    abi: "./abis/Auction.json"
+    details:
+      - network: local
+        address: "0xe4faec0f9344df83e71c4e0043e058304acbcc09"
+        include_events:
+          - AuctionEnabled # -> auction_enabled table
+          - AuctionDisabled # -> auction_disabled table
+          - AuctionKicked # -> auction_kicked table
+          - UpdatedStartingPrice # -> updated_starting_price table
+          - UpdatedStepDecayRate # -> updated_step_decay_rate table
+
+# No custom handlers needed - Rindexer handles everything automatically
+# Tables will be created as:
+# - deployed_new_auction (auction, want, block_number, timestamp, etc.)
+# - auction_enabled (from_token, to_token, block_number, timestamp, etc.)
+# - auction_kicked (from_token, available, block_number, timestamp, etc.)
+# - auction_disabled (from_token, to_token, block_number, timestamp, etc.)
+# - updated_starting_price (starting_price, block_number, timestamp, etc.)
+# - updated_step_decay_rate (step_decay_rate, block_number, timestamp, etc.)
+
+# Rindexer provides GraphQL API automatically for querying this data

@@ -1,0 +1,170 @@
+{
+  "factory_address": "0x335796f7A0F72368D1588839e38f163d90C92C80",
+  "tokens": {
+    "USDC": {
+      "address": "0xa86582Ad5E80abc19F95f8A9Fb3905Cda0dAbd59",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "decimals": 6,
+      "category": "stable"
+    },
+    "USDT": {
+      "address": "0x97915c43511f8cB4Fbe7Ea03B96EEe940eC4AF12",
+      "name": "Tether USD",
+      "symbol": "USDT",
+      "decimals": 6,
+      "category": "stable"
+    },
+    "WETH": {
+      "address": "0xC6A09F78CfB85275e5261200442b0B9AA9D4D0ce",
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "decimals": 18,
+      "category": "crypto"
+    },
+    "WBTC": {
+      "address": "0xA002B84Ca3c9e8748209F286Ecf99300CA50161A",
+      "name": "Wrapped Bitcoin",
+      "symbol": "WBTC",
+      "decimals": 8,
+      "category": "crypto"
+    },
+    "DAI": {
+      "address": "0x4633394E4Fd1175273845d7F0d6A5F613309d384",
+      "name": "Dai Stablecoin",
+      "symbol": "DAI",
+      "decimals": 18,
+      "category": "stable"
+    },
+    "LINK": {
+      "address": "0x039d7496e432c6Aea4c24648a59318b3cbe09942",
+      "name": "Chainlink",
+      "symbol": "LINK",
+      "decimals": 18,
+      "category": "defi"
+    },
+    "UNI": {
+      "address": "0xbF97DEfeb6a387215E3e67DFb988c675c9bb1a29",
+      "name": "Uniswap",
+      "symbol": "UNI",
+      "decimals": 18,
+      "category": "defi"
+    },
+    "AAVE": {
+      "address": "0xaE7b7A1c6C4d859e19301ccAc2C6eD28A4C51288",
+      "name": "Aave Token",
+      "symbol": "AAVE",
+      "decimals": 18,
+      "category": "defi"
+    },
+    "CRV": {
+      "address": "0xe9CD84fe4ddfB0f016e3264791923902906753Bd",
+      "name": "Curve DAO Token",
+      "symbol": "CRV",
+      "decimals": 18,
+      "category": "defi"
+    },
+    "SNX": {
+      "address": "0x7722f5d7964a04672761cdfdC7c17B7Ac8f197b7",
+      "name": "Synthetix",
+      "symbol": "SNX",
+      "decimals": 18,
+      "category": "defi"
+    }
+  },
+  "auctions": [
+    {
+      "address": "0xeF7cD1CCC730521dEC8168DE0A4cCBaD208Ef0f7",
+      "from_token": "USDC",
+      "to_token": "USDT",
+      "description": "Fast",
+      "decay": 990000000000000000000000000,
+      "starting_price": 643260,
+      "receiver": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+    },
+    {
+      "address": "0xADE3C7249820fa2F4F5cEe2D98a6195de9e92496",
+      "from_token": "USDT",
+      "to_token": "WETH",
+      "description": "Fast",
+      "decay": 990000000000000000000000000,
+      "starting_price": 710854,
+      "receiver": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+    },
+    {
+      "address": "0xDDE005Ad469105Db10EB59733ed52139f67413be",
+      "from_token": "WETH",
+      "to_token": "WBTC",
+      "description": "Medium",
+      "decay": 995000000000000000000000000,
+      "starting_price": 378109,
+      "receiver": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+    },
+    {
+      "address": "0x691E3E2eF9387247742a6026ff879e00Ea0d5314",
+      "from_token": "WBTC",
+      "to_token": "DAI",
+      "description": "Medium",
+      "decay": 995000000000000000000000000,
+      "starting_price": 154857,
+      "receiver": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+    },
+    {
+      "address": "0xf50E7505e51fD2Ff47418a95bF938081435c183a",
+      "from_token": "DAI",
+      "to_token": "LINK",
+      "description": "Slow",
+      "decay": 998000000000000000000000000,
+      "starting_price": 257068,
+      "receiver": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+    },
+    {
+      "address": "0xCFEbce83076eA5ef7000dDB8858e940A196374eB",
+      "from_token": "LINK",
+      "to_token": "UNI",
+      "description": "Slow",
+      "decay": 998000000000000000000000000,
+      "starting_price": 390930,
+      "receiver": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+    },
+    {
+      "address": "0x216f6932e382Cd8437b20d8A8E8f15f352DBFf51",
+      "from_token": "UNI",
+      "to_token": "AAVE",
+      "description": "Custom",
+      "decay": 992000000000000000000000000,
+      "starting_price": 726334,
+      "receiver": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"
+    },
+    {
+      "address": "0xD8D93Ed03d52954dCdAcCE1928D26e3d1F5b0495",
+      "from_token": "AAVE",
+      "to_token": "CRV",
+      "description": "Custom",
+      "decay": 991000000000000000000000000,
+      "starting_price": 606317,
+      "receiver": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+    },
+    {
+      "address": "0x6D4EE866dd6b87dC2C6a1b941362592fad11BF2D",
+      "from_token": "CRV",
+      "to_token": "SNX",
+      "description": "Custom",
+      "decay": 996000000000000000000000000,
+      "starting_price": 586848,
+      "receiver": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc"
+    },
+    {
+      "address": "0xA59e68E40708a437A2Dd8Ff1d3C7df0B241d0665",
+      "from_token": "SNX",
+      "to_token": "USDC",
+      "description": "Custom",
+      "decay": 997000000000000000000000000,
+      "starting_price": 577259,
+      "receiver": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"
+    }
+  ],
+  "network": "development",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "block_number": 984
+}

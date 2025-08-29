@@ -1,0 +1,27 @@
+# FastAPI backend requirements
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.23
+
+# WebSocket support
+websockets==12.0
+
+# Data processing
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Caching and Redis
+redis[hiredis]==5.0.1
+aioredis==2.0.1
+
+# Utilities
+python-dotenv==1.0.0
+rich==13.7.0
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
