@@ -159,6 +159,15 @@ class AuctionFilters(BaseModel):
     page: int = Field(1, ge=1)
     limit: int = Field(20, ge=1, le=100)
 
+class SystemStats(BaseModel):
+    """System statistics"""
+    total_auctions: int = Field(..., description="Total number of auctions")
+    active_auctions: int = Field(..., description="Number of active auctions")
+    unique_tokens: int = Field(..., description="Number of unique tokens")
+    total_rounds: int = Field(..., description="Total number of rounds")
+    total_sales: int = Field(..., description="Total number of sales")
+    total_participants: int = Field(..., description="Total number of participants")
+
 class WebSocketMessage(BaseModel):
     """WebSocket message format"""
     type: str = Field(..., description="Message type")

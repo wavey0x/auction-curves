@@ -35,13 +35,13 @@ def main():
     # Get Auction contract instance
     auction = Auction.at(auction_address)
     
-    # Enable the from token in the AuctionHouse
+    # Enable the from token in the Auction
     auction.enableToken(from_token.address, {'from': deployer})
-    print(f"Enabled {from_token.address} in AuctionHouse")
+    print(f"Enabled {from_token.address} in Auction")
     
-    # Mint some tokens to the AuctionHouse contract for testing
+    # Mint some tokens to the Auction contract for testing
     from_token.mint(auction.address, 1000 * 10**18, {'from': deployer})
-    print("Minted 1000 tokens to AuctionHouse contract")
+    print("Minted 1000 tokens to Auction contract")
     
     print("\n✅ Deployment complete!")
     print(f"Auction Factory: {factory.address}")

@@ -22,8 +22,8 @@ from rich.panel import Panel
 # Set high precision for calculations
 getcontext().prec = 50
 
-# AuctionHouse constants
-STEP_DURATION = 36  # seconds per step (constant from AuctionHouse.sol)
+# Auction constants
+STEP_DURATION = 36  # seconds per step (constant from Auction.sol)
 AUCTION_LENGTH = 86400  # 1 day in seconds
 
 # Setup logging and console

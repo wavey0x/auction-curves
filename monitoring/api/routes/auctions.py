@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional, List
 from datetime import datetime, timedelta
 
-from ..models.auction import (
+from models.auction import (
     AuctionResponse,
     AuctionListResponse,
     AuctionListItem,
@@ -114,7 +114,7 @@ async def list_auctions(
 async def get_auction(auction: str):
     """Get detailed Auction information"""
     
-    from ..models.auction import AuctionParameters, AuctionActivity
+    from models.auction import AuctionParameters, AuctionActivity
     
     mock_tokens = [
         TokenInfo(address="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", symbol="USDC", name="USD Coin", decimals=6),
@@ -251,7 +251,7 @@ async def get_price_history(
 ):
     """Get price history for charting"""
     
-    from ..models.auction import PriceHistoryPoint
+    from models.auction import PriceHistoryPoint
     
     points = []
     current_time = datetime.now()

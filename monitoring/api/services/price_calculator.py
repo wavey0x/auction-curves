@@ -12,7 +12,7 @@ import logging
 import json
 import os
 
-from ..database import get_db, DatabaseQueries
+from database import get_db, DatabaseQueries
 
 logger = logging.getLogger(__name__)
 

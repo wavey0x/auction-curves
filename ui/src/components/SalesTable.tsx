@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ExternalLink, Copy, TrendingDown, Hash, Check } from "lucide-react";
+import { ExternalLink, Copy, TrendingDown, Check } from "lucide-react";
 import type { AuctionSale, Token } from "../types/auction";
 import ChainIcon from "./ChainIcon";
 import {
@@ -99,8 +99,8 @@ const SalesTable: React.FC<SalesTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {sales.map((sale) => (
-                <tr key={sale.sale_id} className="group">
+              {sales.map((sale, index) => (
+                <tr key={sale.sale_id || `sale-${index}`} className="group">
                   <td>
                     <div className="flex items-center space-x-1.5">
                       <TrendingDown className="h-3.5 w-3.5 text-primary-500" />
@@ -109,7 +109,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                           S{sale.sale_seq}
                         </div>
                         <div className="font-medium text-primary-400 text-xs leading-tight">
-                          {sale.sale_id.split("-").slice(-2).join("-")}
+                          {sale.sale_id ? sale.sale_id.split("-").slice(-2).join("-") : 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -162,16 +162,14 @@ const SalesTable: React.FC<SalesTableProps> = ({
                           to={`/round/${auctionAddress}/${sale.round_id}`}
                           className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
                         >
-                          <Hash className="h-3 w-3 text-gray-500 group-hover:text-primary-400" />
                           <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
-                            {sale.round_id}
+                            R{sale.round_id}
                           </span>
                         </Link>
                       ) : (
                         <div className="flex items-center space-x-1">
-                          <Hash className="h-3 w-3 text-gray-500" />
                           <span className="font-mono text-sm text-gray-300">
-                            {sale.round_id}
+                            R{sale.round_id}
                           </span>
                         </div>
                       )}

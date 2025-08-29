@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { 
   Activity, 
   ArrowUpDown, 
@@ -9,7 +10,6 @@ import {
   Filter,
   Clock,
   TrendingDown,
-  Hash,
   ExternalLink,
   ChevronDown,
   ChevronRight,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import type { AuctionListItem } from '../types/auction'
 import { formatAddress, formatTokenAmount, formatTimeAgo } from '../lib/utils'
-import { getChainDisplay } from '../lib/chainData'
+import { apiClient } from '../lib/api'
 import StackedProgressMeter from './StackedProgressMeter'
 import ChainIcon from './ChainIcon'
 
@@ -33,8 +33,24 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
   const [tokenFilter, setTokenFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [chainFilter, setChainFilter] = useState('')
+  const [chainDropdownOpen, setChainDropdownOpen] = useState(false)
   const [sortField, setSortField] = useState<SortField>('address')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setChainDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   // Extract unique values for filters
 
@@ -57,19 +73,34 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
     return Array.from(tokens).sort()
   }, [auctions])
 
+  // Fetch chain data from API  
+  const { data: chainData } = useQuery({
+    queryKey: ['chains'],
+    queryFn: () => apiClient.getChains(),
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+  })
+
   const uniqueChains = useMemo(() => {
-    const chains = new Set<{chainId: number, name: string}>()
+    const chainIds = new Set<number>()
     auctions?.forEach(ah => {
-      const chainInfo = getChainDisplay(ah.chain_id)
-      if (chainInfo) {
-        chains.add({
-          chainId: ah.chain_id,
-          name: chainInfo.shortName
-        })
+      chainIds.add(ah.chain_id)
+    })
+    
+    const chains = Array.from(chainIds).map(chainId => {
+      const chainInfo = chainData?.chains[chainId]
+      return chainInfo ? {
+        chainId,
+        name: chainInfo.shortName,
+        icon: chainInfo.icon
+      } : {
+        chainId,
+        name: `Chain ${chainId}`,
+        icon: null
       }
     })
-    return Array.from(chains).sort((a, b) => a.name.localeCompare(b.name))
-  }, [auctions])
+    
+    return chains.sort((a, b) => a.name.localeCompare(b.name))
+  }, [auctions, chainData])
 
   // Filter and sort data
   const filteredAndSorted = useMemo(() => {
@@ -220,16 +251,55 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
             <option value="inactive">Inactive</option>
           </select>
           
-          <select
-            className="w-full sm:w-28 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-            value={chainFilter}
-            onChange={(e) => setChainFilter(e.target.value)}
-          >
-            <option value="">All Chains</option>
-            {uniqueChains.map(chain => (
-              <option key={chain.chainId} value={chain.name}>{chain.name}</option>
-            ))}
-          </select>
+          {/* Custom Chain Filter Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setChainDropdownOpen(!chainDropdownOpen)}
+              className="w-full sm:w-36 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-2">
+                {chainFilter ? (
+                  <>
+                    <ChainIcon 
+                      chainId={uniqueChains.find(c => c.name === chainFilter)?.chainId || 0} 
+                      size="sm" 
+                    />
+                    <span>{chainFilter}</span>
+                  </>
+                ) : (
+                  <span>All Chains</span>
+                )}
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${chainDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {chainDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg max-h-48 overflow-y-auto z-50">
+                <button
+                  onClick={() => {
+                    setChainFilter('')
+                    setChainDropdownOpen(false)
+                  }}
+                  className="w-full px-2 py-2 text-left text-sm hover:bg-gray-700 flex items-center space-x-2"
+                >
+                  <span>All Chains</span>
+                </button>
+                {uniqueChains.map(chain => (
+                  <button
+                    key={chain.chainId}
+                    onClick={() => {
+                      setChainFilter(chain.name)
+                      setChainDropdownOpen(false)
+                    }}
+                    className="w-full px-2 py-2 text-left text-sm hover:bg-gray-700 flex items-center space-x-2"
+                  >
+                    <ChainIcon chainId={chain.chainId} size="sm" />
+                    <span>{chain.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           
           <button
             onClick={() => {
@@ -315,7 +385,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                   <tr key={auction?.address || index} className="group">
                     <td>
                       <Link
-                        to={`/auction-house/${auction?.address}`}
+                        to={`/auction/${auction?.address}`}
                         className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
                       >
                         {formatAddress(auction?.address || '')}
@@ -369,9 +439,8 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                           to={`/round/${auction?.address}/${currentRound?.round_id}`}
                           className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
                         >
-                          <Hash className="h-3 w-3 text-gray-500 group-hover:text-primary-400" />
                           <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
-                            {currentRound.round_id}
+                            R{currentRound.round_id}
                           </span>
                         </Link>
                       ) : (
@@ -418,7 +487,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
             <p>No Auction Houses match the current filters</p>
           </div>
         )}
-        </div>
+      </div>
       </div>
     </div>
   )

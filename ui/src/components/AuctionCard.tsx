@@ -1,146 +1,169 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { TrendingDown, Clock, DollarSign, Activity } from 'lucide-react'
-import type { AuctionSummary } from '../types/auction'
-import {
-  formatAddress,
-  formatTokenAmount,
-  formatUSD,
-  formatTimeAgo,
-  getAuctionProgress,
-  getAuctionStatus,
-  cn
-} from '../lib/utils'
+import { 
+  Clock, 
+  TrendingUp, 
+  TrendingDown, 
+  Users, 
+  DollarSign,
+  Coins,
+  Activity
+} from 'lucide-react'
+import type { AuctionListItem } from '../types/auction'
+import { formatAddress, formatTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
+import StackedProgressMeter from './StackedProgressMeter'
 
 interface AuctionCardProps {
-  auction: AuctionSummary
+  auction: AuctionListItem
 }
 
 const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
-  const createdAt = new Date(auction.created_at).getTime() / 1000
-  const progress = getAuctionProgress(createdAt, 86400) // Assuming 24h default
-  const status = getAuctionStatus(progress)
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'text-success-400 bg-success-500/20'
-      case 'ending':
-        return 'text-warning-400 bg-warning-500/20'
-      case 'ended':
-        return 'text-gray-400 bg-gray-500/20'
-      default:
-        return 'text-gray-400 bg-gray-500/20'
-    }
-  }
-
+  const isActive = auction.current_round?.is_active || false
+  const currentRound = auction.current_round
+  
   return (
-    <Link to={`/auction/${auction.address}`} className="block group">
-      <div className="card hover:bg-gray-800/50 transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-2xl">
+    <Link to={`/auction/${auction.address}`}>
+      <div className="card hover:bg-gray-800/50 transition-colors group">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <h3 className="font-mono text-sm text-gray-300">
-                {formatAddress(auction.address, 10)}
-              </h3>
-              <span className={cn("badge text-xs", getStatusColor(status))}>
-                {status}
-              </span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-lg ${
+              isActive ? 'bg-success-500/20' : 'bg-gray-700'
+            }`}>
+              <Activity className={`h-5 w-5 ${
+                isActive ? 'text-success-400' : 'text-gray-400'
+              }`} />
             </div>
-            
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
-              <span>Want:</span>
-              <span className="font-mono text-gray-300">
-                {formatAddress(auction.want_token, 8)}
-              </span>
+            <div>
+              <h3 className="font-mono text-sm font-medium text-gray-200 group-hover:text-primary-400 transition-colors">
+                {formatAddress(auction.address, 8)}
+              </h3>
+              <p className="text-xs text-gray-500">
+                Auction House
+              </p>
             </div>
           </div>
           
+          <div className="flex items-center space-x-2">
+            <div className={`h-2 w-2 rounded-full ${
+              isActive ? 'bg-success-500 animate-pulse' : 'bg-gray-600'
+            }`}></div>
+            <span className={`text-xs font-medium uppercase ${
+              isActive ? 'text-success-400' : 'text-gray-500'
+            }`}>
+              {isActive ? 'Active' : 'Inactive'}
+            </span>
+          </div>
         </div>
 
-        {/* Progress bar for active auctions */}
-        {status === 'active' && progress > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>Progress</span>
-              <span>{progress.toFixed(1)}%</span>
+        {/* Token Information */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-gray-500 uppercase">Trading</span>
+            <span className="text-xs text-gray-600">→</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1">
+              <Coins className="h-3 w-3 text-primary-500" />
+              <div className="flex flex-wrap gap-1">
+                {auction.from_tokens.map((token, index) => (
+                  <span key={token.address} className="text-xs font-medium text-primary-400">
+                    {token.symbol}
+                    {index < auction.from_tokens.length - 1 ? ',' : ''}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary-500 to-primary-400 transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
+            
+            <div className="flex items-center space-x-1">
+              <Coins className="h-3 w-3 text-yellow-500" />
+              <span className="text-xs font-medium text-yellow-400">
+                {auction.want_token.symbol}
+              </span>
             </div>
+          </div>
+        </div>
+
+        {/* Current Round Info */}
+        {currentRound && (
+          <div className="mb-4 p-3 bg-gray-800/30 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-gray-400">
+                Round R{currentRound.round_id}
+              </span>
+              <span className="text-xs text-gray-500">
+                {currentRound.total_sales} sales
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {currentRound.current_price && (
+                <div>
+                  <span className="text-gray-500">Current Price</span>
+                  <div className="font-mono text-gray-200">
+                    {formatTokenAmount(currentRound.current_price, 6, 2)}
+                  </div>
+                </div>
+              )}
+              
+              {currentRound.time_remaining && (
+                <div>
+                  <span className="text-gray-500">Time Left</span>
+                  <div className="font-medium text-primary-400">
+                    {Math.floor(currentRound.time_remaining / 60)}m
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {currentRound.progress_percentage && currentRound.time_remaining && (
+              <div className="mt-2">
+                <span className="text-xs text-gray-500 mb-2 block">Progress</span>
+                <StackedProgressMeter
+                  timeProgress={(currentRound.seconds_elapsed / (currentRound.seconds_elapsed + currentRound.time_remaining)) * 100}
+                  amountProgress={currentRound.progress_percentage}
+                  timeRemaining={currentRound.time_remaining}
+                  totalSales={currentRound.total_sales}
+                  size="sm"
+                />
+              </div>
+            )}
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <TrendingDown className="h-4 w-4 text-success-500" />
-              <div>
-                <div className="text-xs text-gray-500">Kicks</div>
-                <div className="font-semibold text-success-400">
-                  {auction.total_kicks}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Activity className="h-4 w-4 text-primary-500" />
-              <div>
-                <div className="text-xs text-gray-500">Takes</div>
-                <div className="font-semibold text-primary-400">
-                  {auction.total_takes}
-                </div>
-              </div>
+        {/* Parameters */}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <span className="text-gray-500 flex items-center space-x-1">
+              <TrendingDown className="h-3 w-3" />
+              <span>Decay Rate</span>
+            </span>
+            <div className="font-medium text-gray-200">
+              {auction.decay_rate_percent.toFixed(1)}%
             </div>
           </div>
           
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-4 w-4 text-yellow-500" />
-              <div>
-                <div className="text-xs text-gray-500">Volume</div>
-                <div className="font-semibold text-yellow-400">
-                  {formatUSD(auction.total_volume)}
-                </div>
-              </div>
+          <div>
+            <span className="text-gray-500 flex items-center space-x-1">
+              <Clock className="h-3 w-3" />
+              <span>Update Interval</span>
+            </span>
+            <div className="font-medium text-gray-200">
+              {auction.update_interval_minutes.toFixed(1)}m
             </div>
-            
-            {auction.current_price && (
-              <div className="flex items-center space-x-2">
-                <div className="h-4 w-4 bg-purple-500 rounded-full flex-shrink-0" />
-                <div>
-                  <div className="text-xs text-gray-500">Current Price</div>
-                  <div className="font-semibold text-purple-400 font-mono text-xs">
-                    {formatTokenAmount(auction.current_price, 18, 6)}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-          <div className="flex items-center space-x-1 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            <span>Created {formatTimeAgo(createdAt)}</span>
+        {auction.last_kicked && (
+          <div className="mt-4 pt-3 border-t border-gray-800">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>Last Round</span>
+              <span>{formatTimeAgo(new Date(auction.last_kicked).getTime() / 1000)}</span>
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <div className={cn(
-              "h-2 w-2 rounded-full",
-              status === 'active' ? 'bg-success-500 animate-pulse' : 
-              status === 'ending' ? 'bg-warning-500 animate-pulse' :
-              'bg-gray-500'
-            )} />
-            <span className="text-xs text-gray-500 capitalize">{status}</span>
-          </div>
-        </div>
+        )}
       </div>
     </Link>
   )

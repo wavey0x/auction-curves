@@ -56,7 +56,7 @@ CREATE TABLE auction_parameters (
     -- Discovery metadata
     discovered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     factory_address VARCHAR(42),
-    -- auction_type removed - concept no longer used
+    auction_version VARCHAR(10) DEFAULT '0.1.0', -- Contract version: 0.0.1 (legacy) or 0.1.0 (new)
     
     -- Derived fields for UI
     decay_rate_percent DECIMAL(10,4), -- Calculated decay rate as percentage

@@ -8,13 +8,12 @@ import {
   Users,
   DollarSign,
   AlertCircle,
-  Hash,
   ExternalLink,
   Activity,
   Zap,
   Gavel,
 } from "lucide-react";
-import { apiClient } from "../lib/api_new";
+import { apiClient } from "../lib/api";
 import StatsCard from "../components/StatsCard";
 import SalesTable from "../components/SalesTable";
 import AuctionsTable from "../components/AuctionsTable";
@@ -31,7 +30,7 @@ import {
 } from "../lib/utils";
 import ChainIcon from "../components/ChainIcon";
 
-type ViewType = 'active-rounds' | 'recent-sales' | 'all-auctions';
+type ViewType = 'active-rounds' | 'takes' | 'all-auctions';
 
 // Pulsing green dot component for active rounds
 const PulsingDot: React.FC = () => (
@@ -183,7 +182,7 @@ const Dashboard: React.FC = () => {
               onClick={() => setActiveView('active-rounds')}
               className={`${
                 activeView === 'active-rounds'
-                  ? 'bg-primary-600 text-white shadow-lg'
+                  ? 'bg-primary-700 text-white shadow-lg'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
               } inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 space-x-2`}
             >
@@ -200,32 +199,38 @@ const Dashboard: React.FC = () => {
               )}
             </button>
             
+            {/* Separator */}
+            <div className="w-px bg-gray-600/50 mx-1"></div>
+            
             <button
-              onClick={() => setActiveView('recent-sales')}
+              onClick={() => setActiveView('takes')}
               className={`${
-                activeView === 'recent-sales'
-                  ? 'bg-primary-600 text-white shadow-lg'
+                activeView === 'takes'
+                  ? 'bg-primary-700 text-white shadow-lg'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
               } inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 space-x-2`}
             >
-              <Zap className="h-4 w-4" />
-              <span>Recent Sales</span>
+              <Activity className="h-4 w-4" />
+              <span>Takes</span>
               {recentSales && recentSales.length > 0 && (
                 <span className={`${
-                  activeView === 'recent-sales'
+                  activeView === 'takes'
                     ? 'bg-white/20 text-white'
-                    : 'bg-purple-500/20 text-purple-400'
+                    : 'bg-primary-500/20 text-primary-400'
                 } text-xs px-1.5 py-0.5 rounded-full`}>
                   {recentSales.length}
                 </span>
               )}
             </button>
             
+            {/* Separator */}
+            <div className="w-px bg-gray-600/50 mx-1"></div>
+            
             <button
               onClick={() => setActiveView('all-auctions')}
               className={`${
                 activeView === 'all-auctions'
-                  ? 'bg-primary-600 text-white shadow-lg'
+                  ? 'bg-primary-700 text-white shadow-lg'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
               } inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 space-x-2`}
             >
@@ -235,7 +240,7 @@ const Dashboard: React.FC = () => {
                 <span className={`${
                   activeView === 'all-auctions'
                     ? 'bg-white/20 text-white'
-                    : 'bg-blue-500/20 text-blue-400'
+                    : 'bg-primary-500/20 text-primary-400'
                 } text-xs px-1.5 py-0.5 rounded-full`}>
                   {auctions.length}
                 </span>
@@ -281,9 +286,8 @@ const Dashboard: React.FC = () => {
                                 to={`/round/${round.auction}/${round.round_id}`}
                                 className="inline-flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-800/30 rounded-lg transition-all duration-200 group"
                               >
-                                <Hash className="h-4 w-4 text-gray-500 group-hover:text-primary-400" />
                                 <span className="font-mono text-base font-semibold text-gray-300 group-hover:text-primary-300">
-                                  {round.round_id}
+                                  R{round.round_id}
                                 </span>
                               </Link>
                             </td>
@@ -426,8 +430,8 @@ const Dashboard: React.FC = () => {
             </>
           )}
 
-          {/* Recent Sales View */}
-          {activeView === 'recent-sales' && (
+          {/* Takes View */}
+          {activeView === 'takes' && (
             <>
               {recentSales && recentSales.length > 0 ? (
                 <div className="overflow-y-auto max-h-[600px]">
@@ -446,8 +450,8 @@ const Dashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {recentSales.map((sale) => (
-                        <tr key={sale.sale_id} className="group">
+                      {recentSales.map((sale, index) => (
+                        <tr key={sale.sale_id || `sale-${index}`} className="group">
                           <td>
                             <div className="flex items-center space-x-2">
                               {getChainInfo(sale.chain_id).explorer !== "#" ? (
@@ -549,8 +553,8 @@ const Dashboard: React.FC = () => {
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <Activity className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Recent Sales</h3>
-                  <p className="text-sm">No recent sales activity to display</p>
+                  <h3 className="text-lg font-medium mb-2">No Takes</h3>
+                  <p className="text-sm">No takes have been recorded recently</p>
                 </div>
               )}
             </>

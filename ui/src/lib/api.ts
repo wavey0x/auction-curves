@@ -1,194 +1,146 @@
-import axios from 'axios'
-import type {
-  AuctionSummary,
+import type { 
+  AuctionListItem,
   AuctionDetails,
-  ActivityEvent,
+  AuctionRoundHistory,
+  PriceHistory,
+  AuctionSale,
   Token,
   SystemStats,
-  PriceData,
 } from '../types/auction'
 
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-})
+const BASE_URL = '/api'
 
-// Response types for API
-interface AuctionResponse {
-  auctions: AuctionSummary[]
-  count: number
-}
-
-interface ActivityResponse {
-  events: ActivityEvent[]
-  count: number
-  has_more: boolean
-}
-
-interface TokenResponse {
-  tokens: Token[]
-  count: number
-}
-
-interface PriceResponse {
-  prices: PriceData[]
-  count: number
-}
-
-// API functions
-export const apiClient = {
-  // System overview
-  async getSystemStats(): Promise<SystemStats> {
-    const response = await api.get('/analytics/overview')
-    return response.data.system_stats
-  },
-
-  // Auctions
-  async getAuctions(): Promise<AuctionSummary[]> {
-    const response = await api.get<AuctionResponse>('/auctions')
-    return response.data.auctions
-  },
+class APIClient {
+  // New Auction endpoints
+  async getAuctions(params?: {
+    status?: 'all' | 'active' | 'completed'
+    from_token?: string
+    want_token?: string
+    page?: number
+    limit?: number
+  }): Promise<{
+    auctions: AuctionListItem[]
+    total: number
+    page: number
+    per_page: number
+    has_next: boolean
+  }> {
+    const searchParams = new URLSearchParams()
+    
+    if (params?.status) searchParams.append('status', params.status)
+    if (params?.from_token) searchParams.append('from_token', params.from_token)
+    if (params?.want_token) searchParams.append('want_token', params.want_token)
+    if (params?.page) searchParams.append('page', params.page.toString())
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    
+    const url = `/auctions?${searchParams.toString()}`
+    const response = await fetch(`${BASE_URL}${url}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch auctions: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
 
   async getAuction(address: string): Promise<AuctionDetails> {
-    const response = await api.get<AuctionDetails>(`/auctions/${address}`)
-    return response.data
-  },
+    const response = await fetch(`${BASE_URL}/auctions/${address}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch auction: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
 
-  // Activity events
-  async getRecentActivity(limit = 50): Promise<ActivityEvent[]> {
-    const response = await api.get<ActivityResponse>('/activity/recent', {
-      params: { limit }
-    })
-    return response.data.events
-  },
+  async getAuctionRounds(
+    auctionAddress: string, 
+    fromToken: string, 
+    limit: number = 50
+  ): Promise<AuctionRoundHistory> {
+    const url = `/auctions/${auctionAddress}/rounds?from_token=${fromToken}&limit=${limit}`
+    const response = await fetch(`${BASE_URL}${url}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch auction rounds: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
 
-  async getKicks(limit = 50): Promise<ActivityEvent[]> {
-    const response = await api.get<ActivityResponse>('/activity/kicks', {
-      params: { limit }
-    })
-    return response.data.events
-  },
+  async getAuctionSales(
+    auctionAddress: string,
+    roundId?: number,
+    limit: number = 50
+  ): Promise<AuctionSale[]> {
+    let url = `/auctions/${auctionAddress}/sales?limit=${limit}`
+    if (roundId) url += `&round_id=${roundId}`
+    
+    const response = await fetch(`${BASE_URL}${url}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch auction sales: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
 
-  async getTakes(limit = 50): Promise<ActivityEvent[]> {
-    const response = await api.get<ActivityResponse>('/activity/takes', {
-      params: { limit }
-    })
-    return response.data.events
-  },
-
-  async getAuctionActivity(
-    address: string,
-    limit = 50
-  ): Promise<ActivityEvent[]> {
-    const response = await api.get<ActivityResponse>(
-      `/activity/auction/${address}`,
-      { params: { limit } }
-    )
-    return response.data.events
-  },
-
-  // Tokens
-  async getTokens(): Promise<Token[]> {
-    const response = await api.get<TokenResponse>('/tokens')
-    return response.data.tokens
-  },
-
-  async getToken(address: string): Promise<Token> {
-    const response = await api.get<Token>(`/tokens/${address}`)
-    return response.data
-  },
-
-  // Price data
   async getPriceHistory(
     auctionAddress: string,
     fromToken: string,
-    hours = 24
-  ): Promise<PriceData[]> {
-    const response = await api.get<PriceResponse>(
-      `/prices/history/${auctionAddress}`,
-      {
-        params: {
-          from_token: fromToken,
-          hours
-        }
-      }
-    )
-    return response.data.prices
-  },
+    hours: number = 24
+  ): Promise<PriceHistory> {
+    const url = `/auctions/${auctionAddress}/price-history?from_token=${fromToken}&hours=${hours}`
+    const response = await fetch(`${BASE_URL}${url}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch price history: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
 
-  async getCurrentPrices(): Promise<PriceData[]> {
-    const response = await api.get<PriceResponse>('/prices/current')
-    return response.data.prices
-  },
+  async getTokens(): Promise<{ tokens: Token[], count: number }> {
+    const response = await fetch(`${BASE_URL}/tokens`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tokens: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  // Chain endpoints
+  async getChains(): Promise<{ chains: Record<number, any>, count: number }> {
+    const response = await fetch(`${BASE_URL}/chains`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch chains: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  async getChain(chainId: number): Promise<any> {
+    const response = await fetch(`${BASE_URL}/chains/${chainId}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch chain ${chainId}: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  async getSystemStats(): Promise<SystemStats> {
+    const response = await fetch(`${BASE_URL}/system/stats`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch system stats: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
 }
 
-// WebSocket connection for real-time updates
-export class AuctionWebSocket {
-  private ws: WebSocket | null = null
-  private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
-  private reconnectDelay = 1000
-
-  constructor(
-    private auctionAddress: string,
-    private onMessage: (data: any) => void,
-    private onError?: (error: Event) => void
-  ) {}
-
-  connect() {
-    try {
-      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${
-        window.location.host
-      }/ws/auction/${this.auctionAddress}`
-
-      this.ws = new WebSocket(wsUrl)
-
-      this.ws.onopen = () => {
-        console.log('WebSocket connected to auction:', this.auctionAddress)
-        this.reconnectAttempts = 0
-      }
-
-      this.ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          this.onMessage(data)
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error)
-        }
-      }
-
-      this.ws.onclose = () => {
-        console.log('WebSocket disconnected')
-        this.handleReconnect()
-      }
-
-      this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-        if (this.onError) {
-          this.onError(error)
-        }
-      }
-    } catch (error) {
-      console.error('Error creating WebSocket:', error)
-    }
-  }
-
-  private handleReconnect() {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++
-      setTimeout(() => {
-        console.log(`Reconnecting... attempt ${this.reconnectAttempts}`)
-        this.connect()
-      }, this.reconnectDelay * this.reconnectAttempts)
-    }
-  }
-
-  disconnect() {
-    if (this.ws) {
-      this.ws.close()
-      this.ws = null
-    }
-  }
-}
-
-export default apiClient
+export const apiClient = new APIClient()

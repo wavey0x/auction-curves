@@ -45,7 +45,18 @@
       "Bash(source:*)",
       "Bash(brownie console:*)",
       "Bash(pip3 list:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "WebSearch",
+      "Bash(git checkout:*)",
+      "Bash(sed:*)",
+      "Bash(git restore:*)",
+      "Bash(python:*)",
+      "Bash(./run.sh:*)",
+      "Bash(pip install:*)",
+      "Bash(export DATABASE_URL=\"postgresql://postgres:password@localhost:5432/auction\")",
+      "Bash(export LOCAL_FACTORY_ADDRESS=\"0x2388d1B9D8e958528643Ef6046c638879E210294\")",
+      "Bash(export LOCAL_START_BLOCK=\"0\")",
+      "Bash(export ANVIL_RPC_URL=\"http://localhost:8545\")"
     ],
     "deny": [],
     "ask": []

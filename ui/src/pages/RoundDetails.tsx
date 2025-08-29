@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { 
   ArrowLeft,
-  Hash, 
   Clock,
   TrendingDown, 
   TrendingUp, 
@@ -14,7 +13,7 @@ import {
   Zap,
   AlertCircle
 } from 'lucide-react'
-import { apiClient } from '../lib/api_new'
+import { apiClient } from '../lib/api'
 import SalesTable from '../components/SalesTable'
 import StatsCard from '../components/StatsCard'
 import StackedProgressMeter from '../components/StackedProgressMeter'
@@ -22,23 +21,23 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import { formatAddress, formatTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 
 const RoundDetails: React.FC = () => {
-  const { auctionHouse, roundId } = useParams<{
-    auctionHouse: string
+  const { auctionAddress, roundId } = useParams<{
+    auctionAddress: string
     roundId: string
   }>()
 
   // Fetch auction details
   const { data: auctionDetails, isLoading: detailsLoading } = useQuery({
-    queryKey: ['auction', auctionHouse],
-    queryFn: () => apiClient.getAuction(auctionHouse!),
-    enabled: !!auctionHouse
+    queryKey: ['auction', auctionAddress],
+    queryFn: () => apiClient.getAuction(auctionAddress!),
+    enabled: !!auctionAddress
   })
 
   // Fetch sales for this specific round
   const { data: sales, isLoading: salesLoading } = useQuery({
-    queryKey: ['auctionSales', auctionHouse, roundId],
-    queryFn: () => apiClient.getAuctionSales(auctionHouse!, parseInt(roundId!)),
-    enabled: !!auctionHouse && !!roundId
+    queryKey: ['auctionSales', auctionAddress, roundId],
+    queryFn: () => apiClient.getAuctionSales(auctionAddress!, parseInt(roundId!)),
+    enabled: !!auctionAddress && !!roundId
   })
 
   // Fetch tokens for symbol resolution
@@ -92,8 +91,8 @@ const RoundDetails: React.FC = () => {
     progress_percentage: 100
   }
 
-  const fromTokens = auctionHouseDetails.from_tokens
-  const wantToken = auctionHouseDetails.want_token
+  const fromTokens = auctionDetails.from_tokens
+  const wantToken = auctionDetails.want_token
 
   // Calculate round statistics
   const totalAmountSold = sales.reduce((sum, sale) => sum + parseFloat(sale.amount_taken), 0)
@@ -115,7 +114,6 @@ const RoundDetails: React.FC = () => {
           
           <div>
             <div className="flex items-center space-x-3">
-              <Hash className="h-6 w-6 text-primary-500" />
               <h1 className="text-2xl font-bold text-gray-200">
                 Round R{roundId}
               </h1>
@@ -130,10 +128,10 @@ const RoundDetails: React.FC = () => {
             
             <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
               <Link 
-                to={`/auction-house/${auctionHouse}`}
+                to={`/auction/${auctionAddress}`}
                 className="hover:text-primary-400 transition-colors"
               >
-                AuctionHouse {formatAddress(auctionHouse!, 8)}
+                Auction {formatAddress(auctionAddress!, 8)}
               </Link>
               <span>•</span>
               <span>
@@ -290,10 +288,10 @@ const RoundDetails: React.FC = () => {
           
           <div className="space-y-3">
             <Link
-              to={`/auction-house/${auctionHouse}`}
+              to={`/auction/${auctionAddress}`}
               className="block w-full p-3 text-center bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <div className="text-sm font-medium text-gray-200">View Auction House</div>
+              <div className="text-sm font-medium text-gray-200">View Auction</div>
               <div className="text-xs text-gray-500">See all rounds</div>
             </Link>
             
@@ -316,16 +314,16 @@ const RoundDetails: React.FC = () => {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-500">Update Interval</span>
-                <span className="text-gray-300">{auctionHouseDetails.parameters.price_update_interval}s</span>
+                <span className="text-gray-300">{auctionDetails.price_update_interval}s</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Auction Length</span>
-                <span className="text-gray-300">{auctionHouseDetails.parameters.auction_length}s</span>
+                <span className="text-gray-300">{auctionDetails.auction_length}s</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Step Decay</span>
                 <span className="text-gray-300 font-mono">
-                  {(parseFloat(auctionHouseDetails.parameters.step_decay) / 1e27 * 100).toFixed(2)}%
+                  {(parseFloat(auctionDetails.step_decay) / 1e27 * 100).toFixed(2)}%
                 </span>
               </div>
             </div>

@@ -8,7 +8,9 @@ compiler:
       enabled: true
       runs: 200
     remappings:
-      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.9.0"
+      - "@openzeppelin=./OpenZeppelin/openzeppelin-contracts@4.9.0"
+    exclude_paths:
+      - "contracts/legacy"
 
 networks:
   development:

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any
 import logging
 
-from ..database import get_db, DatabaseQueries
+from database import get_db, DatabaseQueries
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

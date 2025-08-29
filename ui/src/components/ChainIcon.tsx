@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '../lib/api_new'
+import { apiClient } from '../lib/api'
 
 interface ChainIconProps {
   chainId: number

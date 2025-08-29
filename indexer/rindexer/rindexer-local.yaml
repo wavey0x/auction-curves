@@ -44,7 +44,7 @@ networks:
 storage:
   postgres:
     enabled: true
-    connection_string: ${DATABASE_URL:-postgres://postgres:password@127.0.0.1:5432/auction?sslmode=disable}
+    connection_string: ${DATABASE_URL}
     # Rindexer will automatically create tables based on events
 
   csv:

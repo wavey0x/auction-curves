@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import logging
 
-from ..database import get_db, DatabaseQueries
-from ..models.auction import TokenResponse, TokenInfo
+from database import get_db, DatabaseQueries
+from models.auction import TokenResponse, TokenInfo
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -1,28 +1,36 @@
-# Auction House Architecture Analysis
+# Auction System Architecture Analysis
 
 ## Overview
 
-The Auction House project is a comprehensive monorepo implementing a Dutch auction monitoring system with the following core architecture:
+The Auction System is a comprehensive monorepo implementing a Dutch auction monitoring system with the following updated core architecture:
 
-**AuctionHouse → AuctionRound → AuctionSale**
+**Auction → AuctionRound → AuctionSale**
 
-- **AuctionHouse**: Smart contracts managing Dutch auctions for token swaps
+- **Auction**: Smart contracts managing Dutch auctions for token swaps (previously called "AuctionHouse")
 - **AuctionRound**: Individual auction rounds created by each "kick" with incremental IDs
 - **AuctionSale**: Individual "takes" within rounds with sequence numbers
 
+## Terminology Updates ⚡
+
+**Recent Changes (2024)**:
+- ✅ "AuctionHouse" → "Auction" throughout codebase
+- ✅ All UI routes updated: `/auction-house/:address` → `/auction/:address`
+- ✅ Variable names: `auctionHouse` → `auction`, `auctionAddress`
+- ✅ Database migrations completed (see `migrations/004_rename_auction_house_to_auction.sql`)
+- ✅ Frontend components consolidated and renamed
+
 ## Current Architecture Components
 
-### 1. Smart Contracts (`/contracts/`)
+### 1. Smart Contracts (`/contracts/core/`)
 
 #### Core Contracts
-- **AuctionHouse.sol**: Main Dutch auction contract with configurable decay parameters
-- **AuctionFactory.sol**: Factory for deploying new AuctionHouse instances
-- **ParameterizedAuction.sol**: Parameterized auction logic
+- **Auction.sol**: Main Dutch auction contract with configurable decay parameters (renamed from AuctionHouse.sol)
+- **AuctionFactory.sol**: Factory for deploying new Auction instances
 - **Libraries**: Maths.sol, GPv2Order.sol for auction calculations
-- **Utils**: Governance2Step.sol, Clonable.sol for contract management
+- **Utils**: Clonable.sol, Governance2Step.sol for contract management
 
 #### Key Events
-- `DeployedNewAuction`: New AuctionHouse deployed
+- `DeployedNewAuction`: New Auction deployed
 - `AuctionRoundKicked`: New round started (roundId increments)
 - `AuctionSale`: Individual sale within a round (saleSeq increments)
 - `AuctionTokenEnabled/Disabled`: Token pair management
@@ -30,11 +38,11 @@ The Auction House project is a comprehensive monorepo implementing a Dutch aucti
 
 ### 2. Blockchain Indexing (`/indexer/rindexer/`)
 
-#### Rindexer Configuration
-- **Multi-network support**: Currently configured for local (31337), mainnet (1), and Arbitrum (42161)
-- **Auto-discovery**: Factory pattern automatically discovers new AuctionHouse deployments
-- **Event-based**: Automatically creates tables for blockchain events
-- **PostgreSQL integration**: Direct storage of blockchain events
+#### Rindexer Configuration Files
+- **`rindexer.yaml`**: Default configuration
+- **`rindexer-local.yaml`**: Local development (Anvil chain only)
+- **`rindexer-multi.yaml`**: Multi-network production configuration
+- **`rindexer_simple.yaml`**: Simplified test configuration
 
 #### Current Network Configuration
 ```yaml
@@ -44,16 +52,32 @@ networks:
   - arbitrum: chain_id 42161, RPC ${ARBITRUM_RPC_URL}
 ```
 
+#### Rindexer Environment Variables
+Development mode:
+```bash
+DATABASE_URL="postgresql://postgres:password@localhost:5432/auction"
+FACTORY_ADDRESS="0x335796f7A0F72368D1588839e38f163d90C92C80"
+START_BLOCK="0"
+```
+
 ### 3. Database Layer (`/data/postgres/`)
 
 #### Schema Design (Multi-Chain Native)
 All tables include `chain_id` fields for multi-chain support:
 
 - **tokens**: Token metadata cache with chain_id
-- **auction_parameters**: Contract parameters per chain
-- **auction_rounds**: Round tracking with incremental round_id per AuctionHouse
+- **auction_parameters**: Contract parameters per chain (renamed from auction_house_parameters)
+- **auction_rounds**: Round tracking with incremental round_id per Auction
 - **auction_sales**: Individual sales with sequence numbers per round
 - **price_history**: Time-series price data for analytics
+
+#### Recent Database Migrations
+```sql
+-- Migration 004: Rename auction_house tables to auction
+ALTER TABLE auction_house RENAME TO auction;
+ALTER TABLE auction_house_parameters RENAME TO auction_parameters;
+-- API query keys updated: "auctionHouseSales" → "auctionSales"
+```
 
 #### TimescaleDB Integration
 - **Hypertables**: `auction_rounds`, `auction_sales`, `price_history` optimized for time-series
@@ -62,45 +86,111 @@ All tables include `chain_id` fields for multi-chain support:
 
 ### 4. API Layer (`/monitoring/api/`)
 
+#### API Configurations
+- **Production API**: `app.py` - Full featured with database + blockchain integration
+- **Mock API**: `simple_server.py` - Hardcoded data for fast UI testing
+- **Development API**: Uses either production or mock based on `APP_MODE` environment
+
 #### RESTful API (FastAPI)
-- **AuctionHouse management**: CRUD operations for auction houses
+- **Auction management**: CRUD operations for auctions (updated from auction-houses)
 - **Multi-chain endpoints**: Chain-aware data retrieval
-- **Real-time data**: WebSocket support for live updates
+- **Real-time data**: WebSocket support removed, replaced with polling
 - **Pagination**: Efficient data loading
 - **CORS enabled**: Frontend integration ready
 
-#### Key Endpoints
-- `/auction-houses`: List with multi-chain filtering
-- `/auction-houses/{address}`: Individual AuctionHouse details
-- `/auction-houses/{address}/rounds`: Round history
-- `/auction-houses/{address}/sales`: Sales data
+#### Key Endpoints (Updated)
+- `/auctions`: List with multi-chain filtering (was `/auction-houses`)
+- `/auctions/{address}`: Individual Auction details (was `/auction-houses/{address}`)
+- `/auctions/{address}/rounds`: Round history
+- `/auctions/{address}/sales`: Sales data
 - `/chains/{chainId}`: Chain metadata
 - `/tokens`: Multi-chain token registry
 
 ### 5. Frontend (`/ui/`)
 
 #### React Application (TypeScript + Vite)
-- **Real-time monitoring**: Live auction data display
+- **Real-time monitoring**: Live auction data display with polling
 - **Multi-chain UI**: Chain icons, network filtering
 - **Responsive design**: Optimized for monitoring dashboards
 - **Component architecture**: Reusable components for auction data
 
-#### Key Components
-- **Dashboard**: Overview of active rounds and auction houses
+#### Key Components (Updated)
+- **Dashboard**: Overview of active rounds and auctions
 - **ChainIcon**: Multi-network visual indicators with tooltips
-- **SalesTable**: Real-time sales tracking
-- **AuctionHousesTable**: Filterable auction house management
+- **SalesTable**: Real-time sales tracking with fixed React key warnings
+- **AuctionsTable**: Filterable auction management (was AuctionHousesTable)
+- **AuctionCard**: Individual auction cards (renamed from AuctionHouseCard)
 - **StackedProgressMeter**: Time and volume progress indicators
 
-### 6. Infrastructure (`/docker-compose.yml`)
+#### Updated Routes
+```typescript
+// New routing structure
+/auction/:address         → AuctionDetails component
+/round/:auctionAddress/:roundId → RoundDetails component
 
-#### Services
-- **PostgreSQL + TimescaleDB**: Time-series optimized database
-- **Redis**: Caching and real-time data
-- **Anvil**: Local blockchain for testing
-- **API**: FastAPI backend service
-- **Frontend**: React application
-- **Indexer**: Rindexer blockchain event processor
+// Old routes (removed):
+/auction-house/:address
+```
+
+#### UI Fixes Applied
+- ✅ Fixed React key prop warnings in SalesTable and Dashboard
+- ✅ Added null safety for `sale.sale_id` fields
+- ✅ Updated button selected states (darker colors)
+- ✅ Added subtle separators between dashboard buttons
+
+### 6. Infrastructure & Deployment
+
+#### Run Scripts (Simplified)
+
+**New Unified Script**: `./run.sh [MODE] [OPTIONS]`
+```bash
+# Development mode (default) - Anvil + PostgreSQL + Rindexer
+./run.sh dev
+
+# Mock mode - Hardcoded data only
+./run.sh mock
+
+# Production mode - Multi-network
+./run.sh prod --no-ui
+
+# Get help
+./run.sh --help
+```
+
+**Environment Files**:
+- `.env.development` - Development configuration
+- `.env.mock` - Mock mode configuration  
+- `.env.production` - Production configuration
+
+**Legacy Scripts** (to be removed):
+- `run-dev.sh` → Use `./run.sh dev`
+- `run-mock.sh` → Use `./run.sh mock`
+- `run-prod.sh` → Use `./run.sh prod`
+
+#### Services by Mode
+
+**Development Mode** (`./run.sh dev`):
+- ✅ Anvil blockchain (local)
+- ✅ PostgreSQL (Docker)
+- ✅ Smart contract deployment
+- ✅ Rindexer (local config)
+- ✅ Production API with real data
+- ✅ React UI (dev server)
+- ✅ Price monitoring & activity simulation
+
+**Mock Mode** (`./run.sh mock`):
+- ✅ Mock API with hardcoded data
+- ✅ React UI (dev server)
+- ❌ No blockchain required
+- ❌ No database required
+- ❌ No indexing required
+
+**Production Mode** (`./run.sh prod`):
+- ✅ Multi-network blockchain indexing
+- ✅ Production database
+- ✅ Production API
+- ✅ Rindexer (multi-network config)
+- ⚠️ React UI (optional with `--no-ui` flag)
 
 ## Multi-Chain Architecture Assessment
 
@@ -115,186 +205,116 @@ All tables include `chain_id` fields for multi-chain support:
 - Chain-aware endpoints
 - Chain metadata management
 - Multi-network filtering
+- Updated endpoint names (auction → auctions)
 
 **Frontend**:
 - Chain icons and network display
 - Network filtering in tables
 - Chain-specific transaction links
+- Updated routes and component names
 
 **Indexing**:
 - Rindexer configured for multiple networks
+- Separate configs for local vs multi-network
 - Automatic chain_id inclusion in event data
 
-### Deployment to Mainnet + Multiple Networks
+### Deployment Configurations
 
-#### Required Changes for Production
+#### Development Setup
+```bash
+# Quick start for development
+./run.sh dev
 
-#### 1. Rindexer Configuration
-**Current**: Already supports multiple networks
-**Required**: Add network configurations in `rindexer.yaml`:
-
-```yaml
-networks:
-  - name: mainnet
-    chain_id: 1
-    rpc: ${MAINNET_RPC_URL}
-    
-  - name: polygon
-    chain_id: 137
-    rpc: ${POLYGON_RPC_URL}
-    
-  - name: arbitrum
-    chain_id: 42161
-    rpc: ${ARBITRUM_RPC_URL}
-    
-  - name: optimism
-    chain_id: 10
-    rpc: ${OPTIMISM_RPC_URL}
+# Environment variables automatically set:
+DATABASE_URL="postgresql://postgres:password@localhost:5432/auction"
+FACTORY_ADDRESS="0x335796f7A0F72368D1588839e38f163d90C92C80"
+START_BLOCK="0"
 ```
 
-#### 2. Contract Deployment
-**Per Network Requirements**:
-- Deploy AuctionFactory on each target network
-- Update `rindexer.yaml` with factory addresses:
-```yaml
-addresses:
-  mainnet: ["${FACTORY_ADDRESS_MAINNET}"]
-  polygon: ["${FACTORY_ADDRESS_POLYGON}"]
-  arbitrum: ["${FACTORY_ADDRESS_ARBITRUM}"]
+#### Production Setup
+```bash
+# Requires .env.production with:
+DATABASE_URL="postgresql://user:pass@prod-db:5432/auction"
+NETWORKS_ENABLED="ethereum,polygon,arbitrum"
+ETHEREUM_RPC_URL="https://mainnet.infura.io/v3/..."
+POLYGON_RPC_URL="https://polygon-mainnet.infura.io/v3/..."
+ARBITRUM_RPC_URL="https://arb-mainnet.g.alchemy.com/v2/..."
+ETHEREUM_FACTORY_ADDRESS="0x..."
+POLYGON_FACTORY_ADDRESS="0x..."
+ARBITRUM_FACTORY_ADDRESS="0x..."
+
+# Then start:
+./run.sh prod
 ```
 
-#### 3. Database Migration
-**Current schema is production-ready** ✅
-- Multi-chain support built-in
-- TimescaleDB optimization included
-- Performance indexes configured
+## Recent Improvements & Fixes
 
-#### 4. API Configuration
-**Minimal changes needed**:
-- Update chain metadata in API
-- Configure RPC endpoints per network
-- Set up proper error handling for network failures
+### Code Quality
+1. **Naming Consistency**: Eliminated "AuctionHouse" terminology
+2. **Type Safety**: Fixed undefined reference bugs in components
+3. **React Best Practices**: Fixed key prop warnings
+4. **Error Handling**: Added null safety for API responses
 
-#### 5. Frontend Updates
-**Minor additions needed**:
-- Add new chain configurations in `chainData.ts`
-- Update chain icon mappings
-- Configure block explorers per network
+### Performance
+1. **Polling Instead of WebSockets**: More reliable for development
+2. **Query Optimization**: Updated query keys to match new naming
+3. **Component Efficiency**: Reduced re-renders with proper key handling
+
+### Developer Experience
+1. **Unified Run Script**: Single script for all deployment modes
+2. **Better Error Messages**: Improved validation and error reporting
+3. **Environment Management**: Clear separation of dev/mock/prod configs
+4. **Documentation**: Updated to reflect current architecture
+
+## Migration Guide
+
+### For Existing Deployments
+1. **Database**: Run migration 004 to rename tables
+2. **API**: Update any hardcoded endpoint references
+3. **Frontend**: Clear browser cache due to route changes
+4. **Scripts**: Replace old run scripts with new unified script
+
+### For New Deployments
+1. **Use new run script**: `./run.sh [mode]`
+2. **Configure environment**: Copy appropriate `.env.*` file
+3. **Follow updated documentation**: All references now use "auction" terminology
 
 ## Scaling Considerations
 
-### Multi-Indexer Architecture
+### Current Capabilities
+- ✅ **Multi-network ready**: Native support for multiple blockchains
+- ✅ **Scalable database**: TimescaleDB optimized for time-series data
+- ✅ **Event-driven**: Reliable blockchain event processing with Rindexer
+- ✅ **Type-safe**: Full TypeScript implementation
+- ✅ **Mode flexibility**: Easy switching between dev/mock/prod
 
-**Option 1: Single Rindexer Instance (Current)**
-- ✅ Simpler deployment
-- ✅ Unified database
-- ❌ Single point of failure
-- ❌ Slower sync for high-throughput chains
-
-**Option 2: Multiple Rindexer Instances (Recommended for Production)**
-```yaml
-# docker-compose.yml
-indexer-mainnet:
-  environment:
-    NETWORKS: "mainnet"
-    DATABASE_URL: postgresql://...
-    
-indexer-polygon:
-  environment:
-    NETWORKS: "polygon"
-    DATABASE_URL: postgresql://...
-```
-
-### Database Partitioning
-**Current**: Single database with chain_id discrimination
-**Future**: Consider chain-specific table partitioning for massive scale:
-```sql
-CREATE TABLE auction_sales_mainnet PARTITION OF auction_sales 
-FOR VALUES IN (1);
-```
-
-## Production Deployment Steps
-
-### 1. Infrastructure Setup
-```bash
-# Deploy database
-docker-compose up postgres redis
-
-# Initialize schema
-psql $DATABASE_URL < data/postgres/schema.sql
-```
-
-### 2. Contract Deployment
-```bash
-# Per network deployment
-brownie run scripts/deploy/factory.py --network mainnet
-brownie run scripts/deploy/factory.py --network polygon
-brownie run scripts/deploy/factory.py --network arbitrum
-```
-
-### 3. Indexer Configuration
-```bash
-# Update environment variables
-export MAINNET_RPC_URL="https://eth-mainnet.alchemyapi.io/v2/YOUR_KEY"
-export POLYGON_RPC_URL="https://polygon-mainnet.alchemyapi.io/v2/YOUR_KEY"
-export FACTORY_ADDRESS_MAINNET="0x..."
-export FACTORY_ADDRESS_POLYGON="0x..."
-
-# Deploy indexers
-docker-compose --profile indexer up -d
-```
-
-### 4. API & Frontend
-```bash
-# API deployment
-docker-compose --profile api up -d
-
-# Frontend deployment
-docker-compose --profile frontend up -d
-```
-
-## Risk Assessment & Recommendations
-
-### Strengths ✅
-- **Multi-chain ready**: Architecture supports multiple networks natively
-- **Scalable database**: TimescaleDB optimized for time-series data
-- **Event-driven**: Reliable blockchain event processing with Rindexer
-- **Type-safe**: Full TypeScript implementation
-- **Real-time capable**: WebSocket support for live updates
-
-### Potential Issues ⚠️
-1. **RPC dependency**: Single point of failure per network
-2. **Database growth**: Time-series data can grow large
-3. **Network synchronization**: Different networks may sync at different rates
-4. **Error handling**: Need robust retry mechanisms for RPC failures
-
-### Recommendations 📋
+### Production Recommendations
 
 #### Immediate (For Mainnet Deploy)
-1. **RPC redundancy**: Configure fallback RPC providers
-2. **Monitoring**: Add health checks for each network indexer
-3. **Rate limiting**: Implement API rate limiting for public endpoints
-4. **Error recovery**: Add automatic retry mechanisms
+1. **Use unified script**: `./run.sh prod` for consistent deployment
+2. **Environment validation**: Script validates all required variables
+3. **Multi-network indexing**: Rindexer handles multiple chains automatically
+4. **Health monitoring**: Built-in health checks for all services
 
 #### Medium Term
-1. **Data retention policies**: Implement data archiving for old rounds
-2. **Caching layer**: Redis caching for frequently accessed data
+1. **Database optimization**: Implement data retention policies
+2. **API caching**: Redis caching for frequently accessed data
 3. **Load balancing**: Multiple API instances for high availability
-4. **Metrics**: Comprehensive monitoring dashboard
-
-#### Long Term
-1. **Multi-region deployment**: Geographic distribution
-2. **Database sharding**: Chain-specific database partitioning
-3. **Event streaming**: Kafka for real-time event processing
-4. **Analytics pipeline**: Separate OLAP system for complex queries
+4. **Monitoring**: Comprehensive metrics dashboard
 
 ## Conclusion
 
-The current architecture is **well-designed for multi-chain deployment** with minimal additional work required. The database schema, API design, and frontend components all include native multi-chain support. The primary requirements for mainnet deployment are:
+The architecture has been **significantly improved and unified**:
 
-1. **Contract deployment** on target networks
-2. **RPC endpoint configuration** for each network
-3. **Environment variable setup** for production
-4. **Infrastructure deployment** via Docker Compose
+1. **Consistent Naming**: All "AuctionHouse" references updated to "Auction"
+2. **Simplified Operations**: Single `run.sh` script for all deployment modes
+3. **Better Developer Experience**: Clear separation of dev/mock/prod environments
+4. **Production Ready**: Multi-network support with proper environment management
+5. **Code Quality**: Fixed React warnings and type safety issues
 
-The system can scale from the current single-network testnet to a multi-chain production environment with **no breaking changes** to the core architecture.
+The system can seamlessly operate in three modes:
+- **Development**: Full blockchain + database simulation
+- **Mock**: Fast UI-only testing with hardcoded data  
+- **Production**: Multi-network blockchain indexing
+
+**No breaking changes** are required for existing deployments beyond running database migrations and updating deployment scripts.
