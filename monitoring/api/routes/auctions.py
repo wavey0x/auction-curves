@@ -6,6 +6,7 @@ FastAPI routes for Auction endpoints with new data structure.
 from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional, List
 from datetime import datetime, timedelta
+from blockchain_data import normalize_address
 
 from models.auction import (
     AuctionResponse,
@@ -60,8 +61,8 @@ def get_mock_auctions() -> List[AuctionListItem]:
             want_token=want_token,
             current_round=current_round,
             last_kicked=datetime.now() - timedelta(hours=i),
-            decay_rate_percent=0.5 + (i % 10) * 0.1,
-            update_interval_minutes=1.0 + (i % 5) * 0.5
+            decay_rate=0.995 - (i % 10) * 0.001,
+            update_interval=36 + (i % 5) * 6
         )
         auctions.append(auction)
     
@@ -113,6 +114,8 @@ async def list_auctions(
 @router.get("/{auction}", response_model=AuctionResponse)
 async def get_auction(auction: str):
     """Get detailed Auction information"""
+    # Normalize the auction address to checksummed format
+    auction = normalize_address(auction)
     
     from models.auction import AuctionParameters, AuctionActivity
     
@@ -186,6 +189,8 @@ async def get_auction_rounds(
     limit: int = Query(50, ge=1, le=100)
 ):
     """Get historical rounds for a specific Auction and token"""
+    # Normalize the auction address to checksummed format
+    auction = normalize_address(auction)
     
     rounds = []
     for i in range(1, min(limit + 1, 6)):  # Up to 5 rounds
@@ -199,7 +204,7 @@ async def get_auction_rounds(
             available_amount=str(i * 100 * 10**18) if is_active else "0",
             time_remaining=1800 if is_active else 0,
             seconds_elapsed=1800 if is_active else 3600,
-            total_sales=i * 3,
+            total_takes=i * 3,
             progress_percentage=100.0 if not is_active else 50.0
         )
         rounds.append(round_info)
@@ -211,24 +216,28 @@ async def get_auction_rounds(
         total_rounds=len(rounds)
     )
 
-@router.get("/{auction}/sales", response_model=List[AuctionSale])
-async def get_auction_sales(
+# New takes endpoint
+@router.get("/{auction}/takes", response_model=List[Take])
+async def get_auction_takes(
     auction: str,
     round_id: Optional[int] = None,
     limit: int = Query(50, ge=1, le=100)
 ):
-    """Get sales for a specific Auction, optionally filtered by round"""
+    """Get takes for a specific Auction, optionally filtered by round"""
+    # Normalize the auction address to checksummed format
+    auction = normalize_address(auction)
     
-    sales = []
+    takes = []
     for round_num in range(1, 4):  # 3 rounds
         if round_id and round_num != round_id:
             continue
             
-        sales_in_round = 3 + round_num
-        for sale_seq in range(1, sales_in_round + 1):
-            sale = AuctionSale(
+        takes_in_round = 3 + round_num
+        for sale_seq in range(1, takes_in_round + 1):
+            take = Take(
                 sale_id=f"{auction}-{round_num}-{sale_seq}",
                 auction=auction,
+                chain_id=31337,
                 round_id=round_num,
                 sale_seq=sale_seq,
                 taker=f"0x{(round_num * 10 + sale_seq):040x}",
@@ -239,9 +248,10 @@ async def get_auction_sales(
                 tx_hash=f"0x{(round_num * 100 + sale_seq):062x}",
                 block_number=1000 + round_num * 10 + sale_seq
             )
-            sales.append(sale)
+            takes.append(take)
     
-    return sales[:limit]
+    return takes[:limit]
+
 
 @router.get("/{auction}/price-history", response_model=PriceHistoryResponse)
 async def get_price_history(
@@ -250,6 +260,8 @@ async def get_price_history(
     hours: int = Query(24, ge=1, le=168)  # Up to 1 week
 ):
     """Get price history for charting"""
+    # Normalize the auction address to checksummed format
+    auction = normalize_address(auction)
     
     from models.auction import PriceHistoryPoint
     

@@ -21,23 +21,24 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import { formatAddress, formatTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 
 const RoundDetails: React.FC = () => {
-  const { auctionAddress, roundId } = useParams<{
+  const { chainId, auctionAddress, roundId } = useParams<{
+    chainId: string
     auctionAddress: string
     roundId: string
   }>()
 
   // Fetch auction details
   const { data: auctionDetails, isLoading: detailsLoading } = useQuery({
-    queryKey: ['auction', auctionAddress],
-    queryFn: () => apiClient.getAuction(auctionAddress!),
-    enabled: !!auctionAddress
+    queryKey: ['auction', chainId, auctionAddress],
+    queryFn: () => apiClient.getAuction(auctionAddress!, parseInt(chainId!)),
+    enabled: !!chainId && !!auctionAddress
   })
 
-  // Fetch sales for this specific round
+  // Fetch takes for this specific round
   const { data: sales, isLoading: salesLoading } = useQuery({
-    queryKey: ['auctionSales', auctionAddress, roundId],
-    queryFn: () => apiClient.getAuctionSales(auctionAddress!, parseInt(roundId!)),
-    enabled: !!auctionAddress && !!roundId
+    queryKey: ['auctionTakes', chainId, auctionAddress, roundId],
+    queryFn: () => apiClient.getAuctionTakes(auctionAddress!, parseInt(chainId!), parseInt(roundId!)),
+    enabled: !!chainId && !!auctionAddress && !!roundId
   })
 
   // Fetch tokens for symbol resolution
@@ -128,7 +129,7 @@ const RoundDetails: React.FC = () => {
             
             <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
               <Link 
-                to={`/auction/${auctionAddress}`}
+                to={`/auction/${chainId}/${auctionAddress}`}
                 className="hover:text-primary-400 transition-colors"
               >
                 Auction {formatAddress(auctionAddress!, 8)}
@@ -201,7 +202,7 @@ const RoundDetails: React.FC = () => {
                 </div>
                 
                 <div>
-                  <span className="text-sm text-gray-500">Started At</span>
+                  <span className="text-sm text-gray-500">Kicked At</span>
                   <div className="text-gray-200">
                     {new Date(roundInfo.kicked_at).toLocaleString()}
                   </div>

@@ -11,6 +11,22 @@ from typing import List, Dict, Any
 # Connect to Anvil
 w3 = Web3(Web3.HTTPProvider("http://localhost:8545"))
 
+def normalize_address(address: str) -> str:
+    """
+    Normalize an Ethereum address to checksummed format.
+    
+    Args:
+        address: Raw address string (can be mixed case, lowercase, or uppercase)
+        
+    Returns:
+        Checksummed address string following EIP-55
+    """
+    try:
+        return Web3.to_checksum_address(address)
+    except Exception:
+        # If Web3 checksum fails, return lowercase as fallback
+        return address.lower()
+
 def load_deployment_info():
     """Load deployment information"""
     try:

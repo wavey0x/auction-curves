@@ -47,21 +47,21 @@ class AuctionRoundInfo(BaseModel):
     available_amount: Optional[str] = Field(None, description="Tokens still available")
     time_remaining: Optional[int] = Field(None, description="Seconds until round ends")
     seconds_elapsed: int = Field(..., description="Seconds since round started")
-    total_sales: int = Field(0, description="Number of sales in this round")
+    total_takes: int = Field(0, description="Number of takes in this round")
     progress_percentage: Optional[float] = Field(None, description="Percentage of tokens sold")
 
-class AuctionSale(BaseModel):
-    """Individual sale within an auction round"""
-    sale_id: str = Field(..., description="Unique sale identifier: {auction}-{roundId}-{saleSeq}")
+class Take(BaseModel):
+    """Individual take within an auction round"""
+    sale_id: str = Field(..., description="Unique take identifier: {auction}-{roundId}-{saleSeq}")
     auction: str = Field(..., description="Auction contract address")
-    chain_id: int = Field(..., description="Chain ID where this sale occurred")
-    round_id: int = Field(..., description="Round ID this sale belongs to")
-    sale_seq: int = Field(..., description="Sale sequence number within round (1, 2, 3...)")
+    chain_id: int = Field(..., description="Chain ID where this take occurred")
+    round_id: int = Field(..., description="Round ID this take belongs to")
+    sale_seq: int = Field(..., description="Take sequence number within round (1, 2, 3...)")
     taker: str = Field(..., description="Address that made the purchase")
     amount_taken: str = Field(..., description="Amount of tokens purchased")
     amount_paid: str = Field(..., description="Amount paid in want token")
-    price: str = Field(..., description="Price per token at time of sale")
-    timestamp: datetime = Field(..., description="When the sale occurred")
+    price: str = Field(..., description="Price per token at time of take")
+    timestamp: datetime = Field(..., description="When the take occurred")
     tx_hash: str = Field(..., description="Transaction hash")
     block_number: int = Field(..., description="Block number")
 
@@ -70,8 +70,8 @@ class AuctionActivity(BaseModel):
     total_participants: int = Field(0, description="Number of unique participants")
     total_volume: str = Field("0", description="Total volume in want token")
     total_rounds: int = Field(0, description="Total rounds kicked")
-    total_sales: int = Field(0, description="Total sales across all rounds")
-    recent_sales: List[AuctionSale] = Field(default_factory=list, description="Recent sales")
+    total_takes: int = Field(0, description="Total takes across all rounds")
+    recent_takes: List[Take] = Field(default_factory=list, description="Recent takes")
 
 class AuctionResponse(BaseModel):
     """Complete Auction information response"""
@@ -110,8 +110,8 @@ class AuctionListItem(BaseModel):
     last_kicked: Optional[datetime] = None
     
     # Quick stats
-    decay_rate_percent: float = Field(..., description="Decay rate as percentage")
-    update_interval_minutes: float = Field(..., description="Update interval in minutes")
+    decay_rate: float = Field(..., description="Decay rate per step (e.g., 0.995)")
+    update_interval: int = Field(..., description="Update interval in seconds")
 
 class AuctionListResponse(BaseModel):
     """Paginated Auction list response"""
@@ -165,7 +165,7 @@ class SystemStats(BaseModel):
     active_auctions: int = Field(..., description="Number of active auctions")
     unique_tokens: int = Field(..., description="Number of unique tokens")
     total_rounds: int = Field(..., description="Total number of rounds")
-    total_sales: int = Field(..., description="Total number of sales")
+    total_takes: int = Field(..., description="Total number of takes")
     total_participants: int = Field(..., description="Total number of participants")
 
 class WebSocketMessage(BaseModel):
@@ -192,9 +192,9 @@ class AuctionRoundKickMessage(WebSocketMessage):
     round_id: int = Field(..., description="New round ID")
     initial_amount: str = Field(..., description="Initial available amount")
 
-class AuctionSaleMessage(WebSocketMessage):
-    """Auction sale WebSocket message"""
-    type: str = "auction_sale"
+class TakeMessage(WebSocketMessage):
+    """Auction take WebSocket message"""
+    type: str = "take"
     auction: str = Field(..., description="Auction address")
     from_token: str = Field(..., description="Token sold")
     round_id: int = Field(..., description="Round ID")
@@ -210,7 +210,7 @@ class AuctionSummary(BaseModel):
     address: str
     want_token: str
     total_kicks: int  # Maps to total_rounds
-    total_takes: int  # Maps to total_sales
+    total_takes: int  # Maps to total_takes
     total_volume: str
     current_price: Optional[str] = None
     status: str = 'active'  # 'active' | 'inactive'
@@ -219,7 +219,7 @@ class AuctionSummary(BaseModel):
 class ActivityEvent(BaseModel):
     """Legacy activity event - maps to AuctionSale or round kick"""
     id: str
-    event_type: str  # 'kick' | 'take'  -> 'round_kick' | 'sale'
+    event_type: str  # 'kick' | 'take'  -> 'round_kick' | 'take'
     auction_address: str  # Maps to auction
     chain_id: int = Field(..., description="Chain ID where event occurred")
     from_token: str
@@ -233,4 +233,8 @@ class ActivityEvent(BaseModel):
     
     # New fields for round/sale tracking
     round_id: Optional[int] = None
-    sale_seq: Optional[int] = None
+    take_seq: Optional[int] = None
+
+# Backward compatibility aliases
+AuctionSale = Take  # For backward compatibility
+AuctionSaleMessage = TakeMessage  # For backward compatibility

@@ -1,0 +1,56 @@
+2025-08-31 16:08:42,658 - __main__ - INFO - Loaded configuration for 6 networks
+2025-08-31 16:08:42,658 - __main__ - INFO - Loaded ABI: auction (direct ABI array)
+2025-08-31 16:08:42,658 - __main__ - INFO - Loaded ABI: auction_factory (direct ABI array)
+2025-08-31 16:08:42,658 - __main__ - INFO - Loaded ABI: erc20 (direct ABI array)
+2025-08-31 16:08:42,658 - __main__ - INFO - Loaded ABI: legacy_auction (direct ABI array)
+2025-08-31 16:08:42,658 - __main__ - INFO - Loaded ABI: legacy_auction_factory (direct ABI array)
+2025-08-31 16:08:42,690 - __main__ - INFO - Database connection established
+2025-08-31 16:08:42,696 - __main__ - INFO - Starting indexer for networks: ethereum
+2025-08-31 16:08:43,265 - __main__ - INFO - Connected to ethereum (chain_id: 1) at block 23263415
+2025-08-31 16:08:43,271 - __main__ - INFO - Loaded 0 existing auctions for chain 1
+2025-08-31 16:08:43,435 - __main__ - INFO - Converted factory address to 0xcfa510188884f199fcc6e750764faabe6e56ec40
+2025-08-31 16:08:43,440 - __main__ - INFO - Initialized factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1 starting from block 21835027
+2025-08-31 16:08:43,440 - __main__ - INFO - Processing factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1 from block 21835028 to 23263415
+2025-08-31 16:08:43,440 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 10,000 blocks, 1,418,388 remaining (at block 21,845,027)
+2025-08-31 16:08:43,879 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 20,000 blocks, 1,408,388 remaining (at block 21,855,027)
+2025-08-31 16:08:44,274 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 30,000 blocks, 1,398,388 remaining (at block 21,865,027)
+2025-08-31 16:08:44,687 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 40,000 blocks, 1,388,388 remaining (at block 21,875,027)
+2025-08-31 16:08:45,107 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 50,000 blocks, 1,378,388 remaining (at block 21,885,027)
+2025-08-31 16:08:45,543 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 60,000 blocks, 1,368,388 remaining (at block 21,895,027)
+2025-08-31 16:08:46,029 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 70,000 blocks, 1,358,388 remaining (at block 21,905,027)
+2025-08-31 16:08:46,406 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 80,000 blocks, 1,348,388 remaining (at block 21,915,027)
+2025-08-31 16:08:47,060 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 90,000 blocks, 1,338,388 remaining (at block 21,925,027)
+2025-08-31 16:08:47,648 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 100,000 blocks, 1,328,388 remaining (at block 21,935,027)
+2025-08-31 16:08:48,296 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 110,000 blocks, 1,318,388 remaining (at block 21,945,027)
+2025-08-31 16:08:49,298 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 120,000 blocks, 1,308,388 remaining (at block 21,955,027)
+2025-08-31 16:08:50,680 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 130,000 blocks, 1,298,388 remaining (at block 21,965,027)
+2025-08-31 16:08:51,320 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 140,000 blocks, 1,288,388 remaining (at block 21,975,027)
+2025-08-31 16:08:52,072 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 150,000 blocks, 1,278,388 remaining (at block 21,985,027)
+2025-08-31 16:08:52,627 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 160,000 blocks, 1,268,388 remaining (at block 21,995,027)
+2025-08-31 16:08:53,450 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 170,000 blocks, 1,258,388 remaining (at block 22,005,027)
+2025-08-31 16:08:54,102 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 180,000 blocks, 1,248,388 remaining (at block 22,015,027)
+2025-08-31 16:08:55,211 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 190,000 blocks, 1,238,388 remaining (at block 22,025,027)
+2025-08-31 16:08:56,300 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 200,000 blocks, 1,228,388 remaining (at block 22,035,027)
+2025-08-31 16:08:57,198 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 210,000 blocks, 1,218,388 remaining (at block 22,045,027)
+2025-08-31 16:08:58,198 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 220,000 blocks, 1,208,388 remaining (at block 22,055,027)
+2025-08-31 16:08:58,802 - __main__ - INFO - 🎉 Found 2 auction deployment events in blocks 22045028-22055027
+2025-08-31 16:09:00,398 - __main__ - INFO - ✅ Discovered token: crvUSD (Curve.Fi USD Stablecoin) at 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E on chain 1
+2025-08-31 16:09:00,398 - __main__ - INFO - DEBUG: Inserting factory_address='0xCfA510188884F199fcC6e750764FAAbE6e56ec40' (type: <class 'str'>)
+2025-08-31 16:09:00,403 - __main__ - INFO - Added auction 0x3dD8a7385931c127A853B167E1a595e3f2Bd520C on chain 1 from factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40
+2025-08-31 16:09:01,106 - __main__ - INFO - DEBUG: Inserting factory_address='0xCfA510188884F199fcC6e750764FAAbE6e56ec40' (type: <class 'str'>)
+2025-08-31 16:09:01,108 - __main__ - INFO - Added auction 0xbD3DF3213C749D3A258d52e7c1a50ac829f73097 on chain 1 from factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40
+2025-08-31 16:09:02,321 - __main__ - INFO - ✅ Discovered token: CRV (Curve DAO Token) at 0xD533a949740bb3306d119CC777fa900bA034cd52 on chain 1
+2025-08-31 16:09:02,465 - __main__ - INFO - Created round 1 for auction 0x3dD8a7385931c127A853B167E1a595e3f2Bd520C on chain 1
+2025-08-31 16:09:03,312 - __main__ - INFO - ✅ Discovered token: MORPHO (Morpho Token) at 0x58D97B57BB95320F9a05dC918Aef65434969c2B2 on chain 1
+2025-08-31 16:09:03,472 - __main__ - INFO - Created round 2 for auction 0x3dD8a7385931c127A853B167E1a595e3f2Bd520C on chain 1
+2025-08-31 16:09:04,266 - __main__ - INFO - ✅ Added token 0xD533a949740bb3306d119CC777fa900bA034cd52 to enabled tokens for auction 0x3dD8a7385931c127A853B167E1a595e3f2Bd520C on chain 1
+2025-08-31 16:09:04,412 - __main__ - INFO - ✅ Added token 0x58D97B57BB95320F9a05dC918Aef65434969c2B2 to enabled tokens for auction 0x3dD8a7385931c127A853B167E1a595e3f2Bd520C on chain 1
+2025-08-31 16:09:06,305 - __main__ - INFO - ✅ Discovered token: STRDY (Sturdy Token) at 0xaeB3607eC434454ceB308f5Cd540875efb54309A on chain 1
+2025-08-31 16:09:06,471 - __main__ - INFO - ✅ Added token 0xaeB3607eC434454ceB308f5Cd540875efb54309A to enabled tokens for auction 0xbD3DF3213C749D3A258d52e7c1a50ac829f73097 on chain 1
+2025-08-31 16:09:06,472 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 230,000 blocks, 1,198,388 remaining (at block 22,065,027)
+2025-08-31 16:09:10,370 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 240,000 blocks, 1,188,388 remaining (at block 22,075,027)
+2025-08-31 16:09:13,750 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 250,000 blocks, 1,178,388 remaining (at block 22,085,027)
+2025-08-31 16:09:17,294 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 260,000 blocks, 1,168,388 remaining (at block 22,095,027)
+2025-08-31 16:09:20,534 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 270,000 blocks, 1,158,388 remaining (at block 22,105,027)
+2025-08-31 16:09:23,232 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 280,000 blocks, 1,148,388 remaining (at block 22,115,027)
+2025-08-31 16:09:26,387 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 290,000 blocks, 1,138,388 remaining (at block 22,125,027)

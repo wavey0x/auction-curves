@@ -11,9 +11,9 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 -- Simple token info cache (since Rindexer focuses on events, not token metadata)
 CREATE TABLE tokens (
     id SERIAL PRIMARY KEY,
-    address VARCHAR(42) UNIQUE NOT NULL,
-    symbol VARCHAR(20),
-    name VARCHAR(100),
+    address VARCHAR(100) UNIQUE NOT NULL,
+    symbol VARCHAR(50),
+    name VARCHAR(200),
     decimals INTEGER,
     chain_id INTEGER NOT NULL DEFAULT 1,
     
@@ -34,7 +34,7 @@ CREATE INDEX idx_tokens_chain_id ON tokens (chain_id);
 -- Track individual auction contracts across chains
 -- Each auction contract gets one entry with its metadata and configuration
 CREATE TABLE auctions (
-    auction_address VARCHAR(42) NOT NULL,
+    auction_address VARCHAR(100) NOT NULL,
     chain_id INTEGER NOT NULL DEFAULT 1,
     
     -- Auction parameters (renamed from ParameterizedAuction)
@@ -46,17 +46,17 @@ CREATE TABLE auctions (
     starting_price DECIMAL(30,0), -- dynamic pricing value
     
     -- Token addresses
-    want_token VARCHAR(42),
+    want_token VARCHAR(100),
     
     -- Governance info
-    deployer VARCHAR(42),
-    receiver VARCHAR(42),
-    governance VARCHAR(42),
+    deployer VARCHAR(100),
+    receiver VARCHAR(100),
+    governance VARCHAR(100),
     
     -- Discovery metadata
     discovered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    factory_address VARCHAR(42),
-    auction_version VARCHAR(10) DEFAULT '0.1.0', -- Contract version: 0.0.1 (legacy) or 0.1.0 (new)
+    factory_address VARCHAR(100),
+    auction_version VARCHAR(20) DEFAULT '0.1.0', -- Contract version: 0.0.1 (legacy) or 0.1.0 (new)
     
     -- Derived fields for UI
     decay_rate_percent DECIMAL(10,4), -- Calculated decay rate as percentage
@@ -71,15 +71,15 @@ CREATE INDEX idx_auctions_factory ON auctions (factory_address);
 CREATE INDEX idx_auctions_chain ON auctions (chain_id);
 
 -- ============================================================================
--- AUCTION ROUND TRACKING
+-- ROUND TRACKING
 -- ============================================================================
 -- Track rounds within each Auction (supplements Rindexer kick events)
 -- Each kick creates a new round with incremental round_id per Auction
-CREATE TABLE auction_rounds (
-    auction_address VARCHAR(42) NOT NULL,
+CREATE TABLE rounds (
+    auction_address VARCHAR(100) NOT NULL,
     chain_id INTEGER NOT NULL DEFAULT 1,
     round_id INTEGER NOT NULL, -- Incremental per Auction: 1, 2, 3...
-    from_token VARCHAR(42) NOT NULL,
+    from_token VARCHAR(100) NOT NULL,
     
     -- Round data
     kicked_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -99,36 +99,36 @@ CREATE TABLE auction_rounds (
     
     -- Block data
     block_number BIGINT NOT NULL,
-    transaction_hash VARCHAR(66) NOT NULL,
+    transaction_hash VARCHAR(100) NOT NULL,
     
     PRIMARY KEY (auction_address, chain_id, round_id)
     -- FOREIGN KEY (auction_address, chain_id) REFERENCES auctions(auction_address, chain_id) -- Removed: not needed
 );
 
--- Create indexes for auction_rounds table
-CREATE INDEX idx_auction_rounds_active ON auction_rounds (is_active);
-CREATE INDEX idx_auction_rounds_kicked_at ON auction_rounds (kicked_at);
-CREATE INDEX idx_auction_rounds_chain ON auction_rounds (chain_id);
-CREATE INDEX idx_auction_rounds_from_token ON auction_rounds (from_token);
+-- Create indexes for rounds table
+CREATE INDEX idx_rounds_active ON rounds (is_active);
+CREATE INDEX idx_rounds_kicked_at ON rounds (kicked_at);
+CREATE INDEX idx_rounds_chain ON rounds (chain_id);
+CREATE INDEX idx_rounds_from_token ON rounds (from_token);
 
--- Note: auction_rounds is NOT a hypertable (kept as regular table for better performance)
+-- Note: rounds is NOT a hypertable (kept as regular table for better performance)
 
 -- ============================================================================
--- AUCTION SALES TRACKING
+-- TAKES TRACKING
 -- ============================================================================
--- Track individual sales within rounds (supplements Rindexer take events)
--- Each take/sale gets a sequence number within the round
-CREATE TABLE auction_sales (
-    sale_id VARCHAR(100), -- Format: {auction}-{roundId}-{saleSeq}
-    auction_address VARCHAR(42) NOT NULL,
+-- Track individual takes within rounds (supplements Rindexer take events)
+-- Each take gets a sequence number within the round
+CREATE TABLE takes (
+    sale_id VARCHAR(200), -- Format: {auction}-{roundId}-{saleSeq}
+    auction_address VARCHAR(100) NOT NULL,
     chain_id INTEGER NOT NULL DEFAULT 1,
     round_id INTEGER NOT NULL,
     sale_seq INTEGER NOT NULL, -- Sequence within round: 1, 2, 3...
     
     -- Sale data
-    taker VARCHAR(42) NOT NULL,
-    from_token VARCHAR(42) NOT NULL,
-    to_token VARCHAR(42) NOT NULL, -- want_token
+    taker VARCHAR(100) NOT NULL,
+    from_token VARCHAR(100) NOT NULL,
+    to_token VARCHAR(100) NOT NULL, -- want_token
     amount_taken DECIMAL(30,0) NOT NULL, -- Amount of from_token purchased
     amount_paid DECIMAL(30,0) NOT NULL, -- Amount of to_token paid
     price DECIMAL(30,0) NOT NULL, -- Price per from_token at time of sale
@@ -139,32 +139,45 @@ CREATE TABLE auction_sales (
     
     -- Block data
     block_number BIGINT NOT NULL,
-    transaction_hash VARCHAR(66) NOT NULL,
+    transaction_hash VARCHAR(100) NOT NULL,
     log_index INTEGER NOT NULL,
     
     PRIMARY KEY (sale_id, timestamp)
     -- FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id) -- Removed: not needed
 );
 
--- Create indexes for auction_sales table
-CREATE INDEX idx_auction_sales_timestamp ON auction_sales (timestamp);
-CREATE INDEX idx_auction_sales_chain ON auction_sales (chain_id);
-CREATE INDEX idx_auction_sales_round ON auction_sales (auction_address, chain_id, round_id);
-CREATE INDEX idx_auction_sales_taker ON auction_sales (taker);
-CREATE INDEX idx_auction_sales_tx_hash ON auction_sales (transaction_hash);
+-- Create indexes for takes table
+CREATE INDEX idx_takes_timestamp ON takes (timestamp);
+CREATE INDEX idx_takes_chain ON takes (chain_id);
+CREATE INDEX idx_takes_round ON takes (auction_address, chain_id, round_id);
+CREATE INDEX idx_takes_taker ON takes (taker);
+CREATE INDEX idx_takes_tx_hash ON takes (transaction_hash);
 
--- Make auction_sales a hypertable for time-series optimization
-SELECT create_hypertable('auction_sales', 'timestamp', if_not_exists => TRUE);
+-- Make takes a hypertable for time-series optimization
+SELECT create_hypertable('takes', 'timestamp', if_not_exists => TRUE);
+
+-- ============================================================================
+-- INDEXER STATE TRACKING
+-- ============================================================================
+-- Track indexer progress per blockchain network
+CREATE TABLE indexer_state (
+    chain_id INTEGER PRIMARY KEY,
+    last_indexed_block INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for indexer_state table
+CREATE INDEX idx_indexer_state_updated ON indexer_state (updated_at);
 
 -- ============================================================================
 -- PRICE HISTORY TRACKING
 -- ============================================================================
 -- Track price changes over time for each round (for charting)
 CREATE TABLE price_history (
-    auction_address VARCHAR(42) NOT NULL,
+    auction_address VARCHAR(100) NOT NULL,
     chain_id INTEGER NOT NULL DEFAULT 1,
     round_id INTEGER NOT NULL,
-    from_token VARCHAR(42) NOT NULL,
+    from_token VARCHAR(100) NOT NULL,
     
     -- Price data
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -206,12 +219,12 @@ ON CONFLICT (address, chain_id) DO NOTHING;
 -- ============================================================================
 -- TRIGGERS AND FUNCTIONS
 -- ============================================================================
--- Trigger to update auction_rounds statistics when sales happen
+-- Trigger to update rounds statistics when takes happen
 CREATE OR REPLACE FUNCTION update_round_statistics()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Update the auction round statistics
-    UPDATE auction_rounds 
+    -- Update the round statistics
+    UPDATE rounds 
     SET 
         total_sales = total_sales + 1,
         total_volume_sold = total_volume_sold + NEW.amount_taken,
@@ -228,9 +241,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to automatically update round statistics on new sales
+-- Trigger to automatically update round statistics on new takes
 CREATE TRIGGER trigger_update_round_statistics
-    AFTER INSERT ON auction_sales
+    AFTER INSERT ON takes
     FOR EACH ROW
     EXECUTE FUNCTION update_round_statistics();
 
@@ -238,7 +251,7 @@ CREATE TRIGGER trigger_update_round_statistics
 CREATE OR REPLACE FUNCTION check_round_expiry()
 RETURNS void AS $$
 BEGIN
-    UPDATE auction_rounds ar
+    UPDATE rounds ar
     SET is_active = FALSE,
         time_remaining = 0
     FROM auctions ahp
@@ -301,12 +314,12 @@ $$ LANGUAGE plpgsql;
 -- INDEXES FOR PERFORMANCE
 -- ============================================================================
 -- Additional indexes for common query patterns
-CREATE INDEX IF NOT EXISTS idx_auction_rounds_active_kicked_at 
-    ON auction_rounds (kicked_at DESC) 
+CREATE INDEX IF NOT EXISTS idx_rounds_active_kicked_at 
+    ON rounds (kicked_at DESC) 
     WHERE is_active = TRUE;
 
-CREATE INDEX IF NOT EXISTS idx_auction_sales_recent 
-    ON auction_sales (timestamp DESC, auction_address, round_id, sale_seq);
+CREATE INDEX IF NOT EXISTS idx_takes_recent 
+    ON takes (timestamp DESC, auction_address, round_id, sale_seq);
 
 -- Note: Cannot create time-based partial indexes with NOW() in schema
 -- CREATE INDEX IF NOT EXISTS idx_price_history_recent 
@@ -331,15 +344,15 @@ SELECT
     )::INTEGER as calculated_time_remaining,
     -- Calculate seconds elapsed
     EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
-FROM auction_rounds ar
+FROM rounds ar
 JOIN auctions ahp 
     ON ar.auction_address = ahp.auction_address 
     AND ar.chain_id = ahp.chain_id
 WHERE ar.is_active = TRUE
 ORDER BY ar.kicked_at DESC;
 
--- View for recent sales with full context
-CREATE OR REPLACE VIEW recent_auction_sales AS
+-- View for recent takes with full context
+CREATE OR REPLACE VIEW recent_takes AS
 SELECT 
     als.*,
     ar.kicked_at as round_kicked_at,
@@ -350,8 +363,8 @@ SELECT
     t2.symbol as to_token_symbol,
     t2.name as to_token_name,
     t2.decimals as to_token_decimals
-FROM auction_sales als
-JOIN auction_rounds ar 
+FROM takes als
+JOIN rounds ar 
     ON als.auction_address = ar.auction_address 
     AND als.chain_id = ar.chain_id 
     AND als.round_id = ar.round_id
@@ -371,11 +384,11 @@ ORDER BY als.timestamp DESC;
 -- ============================================================================
 COMMENT ON TABLE tokens IS 'Token metadata cache for display purposes across multiple chains';
 COMMENT ON TABLE auctions IS 'Main auction contracts table - one entry per deployed auction contract';
-COMMENT ON TABLE auction_rounds IS 'Tracks individual rounds within Auctions, created by kick events';
-COMMENT ON TABLE auction_sales IS 'Tracks individual sales within rounds, created by take events';
+COMMENT ON TABLE rounds IS 'Tracks individual rounds within Auctions, created by kick events';
+COMMENT ON TABLE takes IS 'Tracks individual takes within rounds, created by take events';
 COMMENT ON TABLE price_history IS 'Time-series price data for charting and analytics';
 COMMENT ON VIEW active_auction_rounds IS 'Active rounds with calculated time remaining and elapsed time';
-COMMENT ON VIEW recent_auction_sales IS 'Recent sales with full token and round context';
+COMMENT ON VIEW recent_takes IS 'Recent takes with full token and round context';
 
 -- Note about Rindexer integration:
 -- This schema works alongside Rindexer's automatic table generation.

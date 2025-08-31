@@ -1,0 +1,61 @@
+abis:
+  auction: ./abis/Auction.json
+  auction_factory: ./abis/AuctionFactory.json
+  erc20: ./abis/ERC20.json
+  legacy_auction: ./abis/LegacyAuction.json
+  legacy_auction_factory: ./abis/LegacyAuctionFactory.json
+database:
+  url: ${DATABASE_URL}
+indexer:
+  block_batch_size: 15000
+  enable_price_tracking: true
+  log_level: INFO
+  max_retries: 3
+  poll_interval: 10
+  price_tracking_interval: 60
+networks:
+  arbitrum:
+    chain_id: 42161
+    factories:
+      - address: ${ARBITRUM_FACTORY_ADDRESS}
+        start_block: ${ARBITRUM_START_BLOCK}
+        type: modern
+    rpc_url: ${ARBITRUM_RPC_URL}
+  base:
+    chain_id: 8453
+    factories:
+      - address: ${BASE_FACTORY_ADDRESS}
+        start_block: ${BASE_START_BLOCK}
+        type: modern
+    rpc_url: ${BASE_RPC_URL}
+  ethereum:
+    chain_id: 1
+    factories:
+      - address: 1185442114663109339474012828157636123306352897088
+        start_block: 21835027
+        type: legacy
+    rpc_url: ${ETHEREUM_RPC_URL}
+  local:
+    chain_id: 31337
+    factories:
+      - address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+        start_block: 57
+        type: modern
+      - address: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        start_block: 57
+        type: legacy
+    rpc_url: http://localhost:8545
+  optimism:
+    chain_id: 10
+    factories:
+      - address: ${OPTIMISM_FACTORY_ADDRESS}
+        start_block: ${OPTIMISM_START_BLOCK}
+        type: modern
+    rpc_url: ${OPTIMISM_RPC_URL}
+  polygon:
+    chain_id: 137
+    factories:
+      - address: ${POLYGON_FACTORY_ADDRESS}
+        start_block: ${POLYGON_START_BLOCK}
+        type: modern
+    rpc_url: ${POLYGON_RPC_URL}

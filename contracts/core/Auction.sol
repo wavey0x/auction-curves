@@ -37,6 +37,9 @@ contract Auction is Governance2Step, ReentrancyGuard {
     /// @notice Emitted when the step decay rate is updated.
     event UpdatedStepDecayRate(uint256 indexed stepDecayRate);
 
+    /// @notice Emitted when tokens are taken from an auction.
+    event Take(address indexed from, address indexed taker, uint256 amountTaken, uint256 amountPaid);
+
     /// @dev Store address and scaler in one slot.
     struct TokenInfo {
         address tokenAddress;
@@ -580,6 +583,9 @@ contract Auction is Governance2Step, ReentrancyGuard {
 
         // Pull `want`.
         ERC20(_want).safeTransferFrom(msg.sender, receiver, needed);
+        
+        // Emit take event
+        emit Take(_from, msg.sender, _amountTaken, needed);
     }
 
     /// @dev Validates a COW order signature.

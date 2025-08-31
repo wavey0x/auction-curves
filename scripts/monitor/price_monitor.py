@@ -134,7 +134,7 @@ class PriceMonitor:
                     ap.auction_length,
                     ap.starting_price,
                     EXTRACT(EPOCH FROM (NOW() - ar.kicked_at)) as seconds_elapsed
-                FROM auction_rounds ar
+                FROM rounds ar
                 LEFT JOIN auctions ap ON ar.auction_address = ap.auction_address
                 WHERE ar.is_active = TRUE
                 ORDER BY ar.kicked_at DESC

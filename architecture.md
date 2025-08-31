@@ -31,61 +31,58 @@ The Auction System is a comprehensive monorepo implementing a Dutch auction moni
 - `AuctionTokenEnabled/Disabled`: Token pair management
 - `UpdatedStartingPrice`: Dynamic price updates
 
-### 2. Blockchain Indexing (`/indexer/rindexer/`)
+### 2. Blockchain Indexing (`/indexer/`)
 
-#### Rindexer Configuration Files
-- **`rindexer.yaml`**: Generated from template using factory pattern (replaces old individual auction approach)
-- **`rindexer.template.yaml`**: Template with factory discovery configuration 
-- **`generate_config.py`**: Simplified script that only replaces factory addresses
-- **`rindexer-multi.yaml`**: Multi-network production configuration
+#### Custom Web3.py Indexer
+- **`indexer.py`**: Main indexer implementation with factory pattern discovery
+- **`requirements.txt`**: Python dependencies (web3, asyncpg, asyncio)
+- **`config.yaml`**: Factory addresses and network configuration
+- **Real-time processing**: 5-second blockchain polling with immediate database updates
 
 #### Current Network Configuration
-```yaml
-networks:
-  - local: chain_id 31337, RPC http://localhost:8545
-  - mainnet: chain_id 1, RPC ${MAINNET_RPC_URL}
-  - arbitrum: chain_id 42161, RPC ${ARBITRUM_RPC_URL}
+```python
+# indexer/indexer.py - Network configuration
+CHAIN_CONFIGS = {
+    31337: {  # Local Anvil
+        'rpc_url': 'http://localhost:8545',
+        'modern_factory': '0x63fea6E447F120B8Faf85B53cdaD8348e645D80E',
+        'legacy_factory': '0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7'
+    }
+}
 ```
 
-#### Rindexer Factory Pattern Configuration  
-**Template-Based Generation** (New Approach):
-```yaml
-# Factory discovery for modern auctions (v0.1.0)
-- name: Auction
-  details:
-    - network: local
-      factory:
-        address: {{MODERN_FACTORY_ADDRESS}}  # Replaced by generate_config.py
-        abi: "./abis/AuctionFactory.json"
-        event_name: DeployedNewAuction
-        input_name: auction
-      start_block: {{START_BLOCK}}
-  abi: "./abis/Auction.json"
-  include_events:
-    - AuctionKicked      # → auction_kicked table (ALL modern auctions)
-    - AuctionEnabled     # → auction_enabled table (ALL modern auctions)
-
-# Factory discovery for legacy auctions (v0.0.1)  
-- name: LegacyAuction
-  details:
-    - network: local
-      factory:
-        address: {{LEGACY_FACTORY_ADDRESS}}  # Replaced by generate_config.py
-        abi: "./abis/LegacyAuctionFactory.json"
-        event_name: DeployedNewAuction
-        input_name: auction
-      start_block: {{START_BLOCK}}
-  abi: "./abis/LegacyAuction.json"
-  include_events:
-    - AuctionKicked      # → legacy_auction_kicked table (ALL legacy auctions)
-    - AuctionEnabled     # → legacy_auction_enabled table (ALL legacy auctions)
+#### Custom Web3.py Indexer Pattern
+**Factory Discovery Implementation**:
+```python
+# indexer/indexer.py - Factory pattern event discovery
+async def process_factory_events(chain_id, config):
+    # Monitor DeployedNewAuction events from factory
+    factory_filter = factory_contract.events.DeployedNewAuction.create_filter(
+        fromBlock=start_block
+    )
+    
+    # Automatically discover new auction deployments
+    for event in web3.eth.get_filter_logs(factory_filter):
+        auction_address = event['args']['auction']
+        # Cache auction parameters with human-readable values
+        await cache_auction_parameters(auction_address, chain_id)
+        
+    # Monitor AuctionKicked events from all discovered auctions
+    for auction_address in discovered_auctions:
+        auction_filter = auction_contract.events.AuctionKicked.create_filter(
+            fromBlock=start_block
+        )
+        # Process kicks → auction_rounds table
+        # Process sales → auction_sales table
 ```
 
-**Environment Variables (Simplified):**
+**Environment Variables:**
 ```bash  
 DATABASE_URL="postgresql://postgres:password@localhost:5432/auction"
-# Factory addresses auto-detected from deployment_info.json
-# No individual auction addresses needed anymore!
+LOCAL_FACTORY_ADDRESS="0x63fea6E447F120B8Faf85B53cdaD8348e645D80E"
+LOCAL_LEGACY_FACTORY_ADDRESS="0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7"
+LOCAL_START_BLOCK="194"
+ANVIL_RPC_URL="http://localhost:8545"
 ```
 
 ### 3. Database Layer (`/data/postgres/`)
@@ -100,23 +97,20 @@ All tables include `chain_id` fields for multi-chain support:
 - **auction_sales**: Individual sales with sequence numbers per round
 - **price_history**: Time-series price data for analytics
 
-**Rindexer Auto-Generated Tables (Factory Discovery - Unified):**
-- **deployed_new_auction**: Factory deployment events (both modern & legacy)
-- **auction_kicked**: ALL modern auction kick events in one table
-- **auction_enabled**: ALL modern auction enable events in one table  
-- **auction_disabled**: ALL modern auction disable events in one table
-- **updated_starting_price**: ALL modern auction price updates in one table
-- **updated_step_decay_rate**: ALL modern auction decay updates in one table
-- **legacy_auction_kicked**: ALL legacy auction kick events in one table
-- **legacy_auction_enabled**: ALL legacy auction enable events in one table
-- **legacy_auction_disabled**: ALL legacy auction disable events in one table  
-- **legacy_auction_updated_starting_price**: ALL legacy auction price updates in one table
+**Custom Indexer Direct Database Population:**
+The Web3.py indexer populates business logic tables directly:
+- **auctions**: Contract parameters with human-readable values (version, decay_rate, update_interval)
+- **auction_rounds**: Auto-incrementing round tracking per auction
+- **auction_sales**: Individual sales with sequence numbers
+- **tokens**: Token metadata automatically discovered and cached
 
-**Factory Pattern Benefits:**
-- ✅ **Automatic Discovery**: New auctions are automatically indexed when deployed
-- ✅ **Unified Tables**: One table per event type, not per contract instance
-- ✅ **Scalable**: No schema changes needed for new auction deployments
-- ✅ **Clean Queries**: Single table contains all events of the same type
+**Custom Indexer Benefits:**
+- ✅ **Factory Discovery**: Automatic detection of new auction deployments
+- ✅ **Human-Readable Values**: All wei/RAY values converted to decimals (0.005 vs 995000000000000000000000000)
+- ✅ **Clean Schema**: Unified column names (version, decay_rate, update_interval)
+- ✅ **Real-Time Processing**: 5-second polling with immediate database updates
+- ✅ **Multi-Version Support**: Handles both legacy (0.0.1) and modern (0.1.0) contracts
+- ✅ **Error Resilience**: Comprehensive error handling and transaction rollback
 
 #### Database Schema
 The database uses a clean structure optimized for multi-chain auction monitoring with proper foreign key relationships and time-series data handling.
@@ -206,7 +200,7 @@ The database uses a clean structure optimized for multi-chain auction monitoring
 - ✅ Anvil blockchain (local)
 - ✅ PostgreSQL (Docker)
 - ✅ Smart contract deployment
-- ✅ Rindexer (local config)
+- ✅ Custom Web3.py indexer
 - ✅ Production API with real data
 - ✅ React UI (dev server)
 - ✅ Price monitoring & activity simulation
@@ -222,7 +216,7 @@ The database uses a clean structure optimized for multi-chain auction monitoring
 - ✅ Multi-network blockchain indexing
 - ✅ Production database
 - ✅ Production API
-- ✅ Rindexer (multi-network config)
+- ✅ Custom Web3.py indexer (multi-network)
 - ⚠️ React UI (optional with `--no-ui` flag)
 
 ## Multi-Chain Architecture Assessment
@@ -247,9 +241,10 @@ The database uses a clean structure optimized for multi-chain auction monitoring
 - Updated routes and component names
 
 **Indexing**:
-- Rindexer configured for multiple networks
-- Separate configs for local vs multi-network
-- Automatic chain_id inclusion in event data
+- Custom Web3.py indexer for multiple networks
+- Factory pattern for automatic auction discovery
+- Direct database population with human-readable values
+- Multi-version contract support (legacy + modern)
 
 ### Deployment Configurations
 
@@ -317,7 +312,7 @@ ARBITRUM_FACTORY_ADDRESS="0x..."
 ### Current Capabilities
 - ✅ **Multi-network ready**: Native support for multiple blockchains
 - ✅ **Scalable database**: TimescaleDB optimized for time-series data
-- ✅ **Event-driven**: Reliable blockchain event processing with Rindexer
+- ✅ **Event-driven**: Reliable blockchain event processing with custom Web3.py indexer
 - ✅ **Type-safe**: Full TypeScript implementation
 - ✅ **Mode flexibility**: Easy switching between dev/mock/prod
 

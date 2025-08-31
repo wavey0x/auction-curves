@@ -159,7 +159,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                     <td>
                       {auctionAddress ? (
                         <Link
-                          to={`/round/${auctionAddress}/${sale.round_id}`}
+                          to={`/round/${sale.chain_id}/${auctionAddress}/${sale.round_id}`}
                           className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
                         >
                           <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
@@ -178,7 +178,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
                   <td>
                     <Link
-                      to={`/auction/${sale.auction}`}
+                      to={`/auction/${sale.chain_id}/${sale.auction}`}
                       className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
                     >
                       {formatAddress(sale.auction)}

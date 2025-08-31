@@ -70,7 +70,14 @@
       "Bash(export DATABASE_URL=postgresql://postgres:password@localhost:5432/auction)",
       "Bash(echo:*)",
       "Read(/Users/wavey/yearn/**)",
-      "Bash(ps:*)"
+      "Bash(ps:*)",
+      "Bash(for db in postgres auction auction_dev)",
+      "Bash(do echo \"=== Database: $db ===\")",
+      "Bash(done)",
+      "Bash(export APP_MODE=prod)",
+      "Bash(export DATABASE_URL=postgresql://wavey@localhost:5433/auction_dev)",
+      "Bash(export:*)",
+      "Bash(PGPASSWORD=password psql:*)"
     ],
     "deny": [],
     "ask": []

@@ -73,14 +73,15 @@ const Dashboard: React.FC = () => {
 
       for (const auction of activeAuctions) {
         try {
-          const sales = await apiClient.getAuctionSales(
+          const sales = await apiClient.getAuctionTakes(
             auction.address,
+            auction.chain_id,
             undefined,
             5
           );
           allSales.push(...sales);
         } catch (error) {
-          console.warn(`Failed to fetch sales for ${auction.address}:`, error);
+          console.warn(`Failed to fetch takes for ${auction.address}:`, error);
         }
       }
 
@@ -283,7 +284,7 @@ const Dashboard: React.FC = () => {
                           >
                             <td>
                               <Link
-                                to={`/round/${round.auction}/${round.round_id}`}
+                                to={`/round/${round.chain_id}/${round.auction}/${round.round_id}`}
                                 className="inline-flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-800/30 rounded-lg transition-all duration-200 group"
                               >
                                 <span className="font-mono text-base font-semibold text-gray-300 group-hover:text-primary-300">
@@ -304,7 +305,7 @@ const Dashboard: React.FC = () => {
 
                             <td>
                               <Link
-                                to={`/auction/${round.auction}`}
+                                to={`/auction/${round.chain_id}/${round.auction}`}
                                 className="font-mono text-sm text-gray-300 hover:text-primary-300 transition-colors"
                               >
                                 {formatAddress(round.auction)}
@@ -496,7 +497,7 @@ const Dashboard: React.FC = () => {
 
                           <td>
                             <Link
-                              to={`/auction/${sale.auction}`}
+                              to={`/auction/${sale.chain_id}/${sale.auction}`}
                               className="font-mono text-sm text-gray-300 hover:text-primary-300 transition-colors"
                             >
                               {formatAddress(sale.auction)}

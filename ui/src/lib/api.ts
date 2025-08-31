@@ -33,8 +33,13 @@ class APIClient {
     if (params?.page) searchParams.append('page', params.page.toString())
     if (params?.limit) searchParams.append('limit', params.limit.toString())
     
+    // Add timestamp to prevent caching
+    searchParams.append('_t', Date.now().toString())
     const url = `/auctions?${searchParams.toString()}`
-    const response = await fetch(`${BASE_URL}${url}`)
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch auctions: ${response.statusText}`)
@@ -43,8 +48,11 @@ class APIClient {
     return response.json()
   }
 
-  async getAuction(address: string): Promise<AuctionDetails> {
-    const response = await fetch(`${BASE_URL}/auctions/${address}`)
+  async getAuction(address: string, chainId: number): Promise<AuctionDetails> {
+    const response = await fetch(`${BASE_URL}/auctions/${chainId}/${address}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch auction: ${response.statusText}`)
@@ -55,11 +63,15 @@ class APIClient {
 
   async getAuctionRounds(
     auctionAddress: string, 
+    chainId: number,
     fromToken: string, 
     limit: number = 50
   ): Promise<AuctionRoundHistory> {
-    const url = `/auctions/${auctionAddress}/rounds?from_token=${fromToken}&limit=${limit}`
-    const response = await fetch(`${BASE_URL}${url}`)
+    const url = `/auctions/${chainId}/${auctionAddress}/rounds?from_token=${fromToken}&limit=${limit}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch auction rounds: ${response.statusText}`)
@@ -68,18 +80,22 @@ class APIClient {
     return response.json()
   }
 
-  async getAuctionSales(
+  async getAuctionTakes(
     auctionAddress: string,
+    chainId: number,
     roundId?: number,
     limit: number = 50
   ): Promise<AuctionSale[]> {
-    let url = `/auctions/${auctionAddress}/sales?limit=${limit}`
+    let url = `/auctions/${chainId}/${auctionAddress}/takes?limit=${limit}`
     if (roundId) url += `&round_id=${roundId}`
     
-    const response = await fetch(`${BASE_URL}${url}`)
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch auction sales: ${response.statusText}`)
+      throw new Error(`Failed to fetch auction takes: ${response.statusText}`)
     }
     
     return response.json()
@@ -87,11 +103,15 @@ class APIClient {
 
   async getPriceHistory(
     auctionAddress: string,
+    chainId: number,
     fromToken: string,
     hours: number = 24
   ): Promise<PriceHistory> {
-    const url = `/auctions/${auctionAddress}/price-history?from_token=${fromToken}&hours=${hours}`
-    const response = await fetch(`${BASE_URL}${url}`)
+    const url = `/auctions/${chainId}/${auctionAddress}/price-history?from_token=${fromToken}&hours=${hours}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch price history: ${response.statusText}`)

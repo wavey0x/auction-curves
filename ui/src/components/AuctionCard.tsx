@@ -22,7 +22,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
   const currentRound = auction.current_round
   
   return (
-    <Link to={`/auction/${auction.address}`}>
+    <Link to={`/auction/${auction.chain_id}/${auction.address}`}>
       <div className="card hover:bg-gray-800/50 transition-colors group">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -140,7 +140,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
               <span>Decay Rate</span>
             </span>
             <div className="font-medium text-gray-200">
-              {auction.decay_rate_percent.toFixed(1)}%
+              {(auction.decay_rate * 100).toFixed(1)}%
             </div>
           </div>
           
@@ -150,7 +150,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
               <span>Update Interval</span>
             </span>
             <div className="font-medium text-gray-200">
-              {auction.update_interval_minutes.toFixed(1)}m
+              {(auction.update_interval / 60).toFixed(1)}m
             </div>
           </div>
         </div>

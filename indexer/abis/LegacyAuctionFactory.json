@@ -2,8 +2,7 @@
   {
     "inputs": [],
     "stateMutability": "nonpayable",
-    "type": "constructor",
-    "name": "constructor"
+    "type": "constructor"
   },
   {
     "anonymous": false,
@@ -23,6 +22,19 @@
     ],
     "name": "DeployedNewAuction",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_AUCTION_LENGTH",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -91,6 +103,45 @@
         "internalType": "address",
         "name": "_governance",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_auctionLength",
+        "type": "uint256"
+      }
+    ],
+    "name": "createNewAuction",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_want",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_governance",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_auctionLength",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",

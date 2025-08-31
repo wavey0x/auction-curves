@@ -3,6 +3,7 @@ export interface Token {
   symbol: string;
   name: string;
   decimals: number;
+  chain_id: number;
 }
 
 export interface AuctionParameters {
@@ -56,8 +57,8 @@ export interface AuctionListItem {
   want_token: Token;
   current_round?: AuctionRoundInfo;
   last_kicked?: string;
-  decay_rate_percent: number;
-  update_interval_minutes: number;
+  decay_rate: number;
+  update_interval: number;
 }
 
 export interface AuctionDetails {

@@ -129,7 +129,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
                   
                   <td>
                     <Link
-                      to={`/auction/${event.auction_address}`}
+                      to={`/auction/${event.chain_id}/${event.auction_address}`}
                       className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
                     >
                       {formatAddress(event.auction_address, 8)}

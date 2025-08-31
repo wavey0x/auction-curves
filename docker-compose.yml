@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: password
       TIMESCALEDB_TELEMETRY: "off"
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./data/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql

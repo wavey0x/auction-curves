@@ -8,8 +8,8 @@ import RoundDetails from "./pages/RoundDetails";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000, // 30 seconds
-      refetchInterval: 30 * 1000, // Refetch every 30 seconds
+      staleTime: 0, // Consider data stale immediately for development
+      refetchInterval: 5 * 1000, // Refetch every 5 seconds
       retry: 2,
     },
   },
@@ -22,9 +22,9 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/auction/:address" element={<AuctionDetails />} />
+            <Route path="/auction/:chainId/:address" element={<AuctionDetails />} />
             <Route
-              path="/round/:auctionAddress/:roundId"
+              path="/round/:chainId/:auctionAddress/:roundId"
               element={<RoundDetails />}
             />
           </Routes>

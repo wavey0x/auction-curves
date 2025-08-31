@@ -155,7 +155,11 @@ class FastDeployment:
             
         print(f"✅ Enabled {enabled_count} token pairs")
         
-        # 5. Save info and generate Rindexer config
+        # 5. Simulate some trading activity
+        print("Simulating trading activity...")
+        self.simulate_takes_and_sales()
+        
+        # 6. Save info and generate Rindexer config
         deployment_data = {
             'legacy_factory_address': self.legacy_factory.address,
             'modern_factory_address': self.modern_factory.address,
@@ -189,6 +193,95 @@ class FastDeployment:
         print(f"📄 Saved: deployment_info.json")
         
         return self
+    
+    def simulate_takes_and_sales(self):
+        """Simulate some trading activity on the deployed auctions"""
+        import time
+        
+        print("🎯 Starting trading simulation...")
+        total_takes = 0
+        total_kicks = 0
+        
+        # Process each auction
+        for auction_info in self.auctions:
+            try:
+                print(f"\n📊 Processing auction {auction_info['from_token']}→{auction_info['to_token']}")
+                
+                # Get auction contract
+                if auction_info['type'] == 'legacy':
+                    auction = LegacyAuction.at(auction_info['address'])
+                else:
+                    auction = Auction.at(auction_info['address'])
+                
+                # Get token contracts
+                from_token_contract = self.tokens[auction_info['from_token']]['contract']
+                want_token_contract = self.tokens[auction_info['to_token']]['contract']
+                want_decimals = self.tokens[auction_info['to_token']]['decimals']
+                
+                # Step 1: Kick the auction to start trading
+                try:
+                    kick_tx = auction.kick(from_token_contract.address, {'from': self.deployer})
+                    total_kicks += 1
+                    print(f"  🚀 Kicked auction (tx: {kick_tx.txid[:10]}...)")
+                    time.sleep(0.2)  # Let the kick settle
+                except Exception as kick_error:
+                    print(f"  ⚠️ Kick failed (might be already kicked): {kick_error}")
+                    # Continue anyway - might already be kicked
+                
+                # Step 2: Simulate 2-4 takes on this auction
+                num_takes = random.randint(2, 4)
+                print(f"  🎲 Attempting {num_takes} takes...")
+                
+                for take_num in range(num_takes):
+                    try:
+                        # Use different taker accounts
+                        taker_account = self.receivers[take_num % len(self.receivers)]
+                        
+                        # Check available amount
+                        try:
+                            available = auction.available()
+                            if available == 0:
+                                print(f"    ⏭️ Take #{take_num + 1}: No tokens available")
+                                break
+                        except Exception:
+                            print(f"    ⏭️ Take #{take_num + 1}: Cannot check availability")
+                            continue
+                        
+                        # Calculate take amount (5-25% of available)
+                        take_percentage = random.uniform(0.05, 0.25)
+                        take_amount = max(1, int(available * take_percentage))
+                        
+                        # Mint want tokens to taker for payment
+                        payment_amount = take_amount * 2  # Give extra for payment
+                        want_token_contract.mint(taker_account.address, payment_amount, {'from': self.deployer})
+                        
+                        # Approve auction to spend want tokens
+                        want_token_contract.approve(auction.address, payment_amount, {'from': taker_account})
+                        
+                        # Execute the take
+                        take_tx = auction.take(take_amount, {'from': taker_account})
+                        total_takes += 1
+                        print(f"    ✅ Take #{take_num + 1}: {take_amount} tokens (tx: {take_tx.txid[:10]}...)")
+                        
+                        # Small delay between takes
+                        time.sleep(0.3)
+                        
+                    except Exception as take_error:
+                        print(f"    ❌ Take #{take_num + 1} failed: {str(take_error)[:80]}...")
+                        continue
+                
+            except Exception as auction_error:
+                print(f"  ⚠️ Auction processing error: {str(auction_error)[:80]}...")
+                continue
+        
+        print(f"\n🎉 Trading simulation complete!")
+        print(f"   Total kicks: {total_kicks}")
+        print(f"   Total takes: {total_takes}")
+        print(f"   Auctions processed: {len(self.auctions)}")
+        
+        # Give the indexer time to process all events
+        print("⏱️ Waiting for indexer to process events...")
+        time.sleep(5)
     
     def generate_rindexer_config(self, deployment_data):
         """Generate Rindexer config from template using factory pattern with deployed addresses"""

@@ -173,12 +173,12 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
           bVal = b.current_round?.is_active ? 1 : 0
           break
         case 'decay_rate':
-          aVal = a.decay_rate_percent
-          bVal = b.decay_rate_percent
+          aVal = a.decay_rate
+          bVal = b.decay_rate
           break
         case 'update_interval':
-          aVal = a.update_interval_minutes
-          bVal = b.update_interval_minutes
+          aVal = a.update_interval
+          bVal = b.update_interval
           break
         case 'last_kicked':
           aVal = a.last_kicked ? new Date(a.last_kicked).getTime() : 0
@@ -382,10 +382,10 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                 const currentRound = auction.current_round
                 
                 return (
-                  <tr key={auction?.address || index} className="group">
+                  <tr key={`${auction?.address}-${auction?.chain_id}-${auction?.current_round?.round_id || 'no-round'}`} className="group">
                     <td>
                       <Link
-                        to={`/auction/${auction?.address}`}
+                        to={`/auction/${auction?.chain_id}/${auction?.address}`}
                         className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
                       >
                         {formatAddress(auction?.address || '')}
@@ -436,7 +436,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     <td>
                       {currentRound ? (
                         <Link
-                          to={`/round/${auction?.address}/${currentRound?.round_id}`}
+                          to={`/round/${auction?.chain_id}/${auction?.address}/${currentRound?.round_id}`}
                           className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
                         >
                           <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
@@ -452,7 +452,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                       <div className="flex items-center space-x-1 text-sm">
                         <TrendingDown className="h-3 w-3 text-gray-400" />
                         <span className="font-medium">
-                          {auction.decay_rate_percent?.toFixed(1) || '0'}%
+                          {((auction.decay_rate || 0) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </td>
@@ -461,7 +461,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                       <div className="flex items-center space-x-1 text-sm">
                         <Clock className="h-3 w-3 text-gray-400" />
                         <span className="font-medium">
-                          {auction.update_interval_minutes?.toFixed(1) || '0'}m
+                          {((auction.update_interval || 0) / 60).toFixed(1)}m
                         </span>
                       </div>
                     </td>

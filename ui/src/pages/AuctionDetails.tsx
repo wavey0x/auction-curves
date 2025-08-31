@@ -32,7 +32,7 @@ import {
 } from "../lib/utils";
 
 const AuctionDetails: React.FC = () => {
-  const { address } = useParams<{ address: string }>();
+  const { chainId, address } = useParams<{ chainId: string; address: string }>();
   const [copiedAddresses, setCopiedAddresses] = useState<Set<string>>(
     new Set()
   );
@@ -43,16 +43,16 @@ const AuctionDetails: React.FC = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["auction", address],
-    queryFn: () => apiClient.getAuction(address!),
-    enabled: !!address,
+    queryKey: ["auction", chainId, address],
+    queryFn: () => apiClient.getAuction(address!, parseInt(chainId!)),
+    enabled: !!chainId && !!address,
   });
 
-  // Fetch recent sales
+  // Fetch recent takes
   const { data: sales } = useQuery({
-    queryKey: ["auctionSales", address],
-    queryFn: () => apiClient.getAuctionSales(address!, undefined, 25),
-    enabled: !!address,
+    queryKey: ["auctionTakes", chainId, address],
+    queryFn: () => apiClient.getAuctionTakes(address!, parseInt(chainId!), undefined, 25),
+    enabled: !!chainId && !!address,
   });
 
   // Fetch tokens for symbol resolution
@@ -97,10 +97,10 @@ const AuctionDetails: React.FC = () => {
 
         <div className="card text-center py-12">
           <h2 className="text-xl font-semibold text-gray-300 mb-2">
-            Auction House Not Found
+            Auction Not Found
           </h2>
           <p className="text-gray-500">
-            The auction house at {formatAddress(address || "", 10)} could not be
+            The auction at {formatAddress(address || "", 10)} could not be
             loaded.
           </p>
         </div>
@@ -125,9 +125,7 @@ const AuctionDetails: React.FC = () => {
           <div>
             <div className="flex items-center space-x-3 mb-2">
               <Home className="h-6 w-6 text-primary-500" />
-              <h1 className="text-2xl font-bold text-gray-100">
-                Auction House
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-100">Auction</h1>
               <ChainIcon chainId={auction.chain_id} size="sm" showName={true} />
             </div>
 
@@ -257,7 +255,7 @@ const AuctionDetails: React.FC = () => {
             <div className="text-center">
               <div className="text-xs text-gray-500 mb-2">Round ID</div>
               <Link
-                to={`/round/${auction.address}/${currentRound.round_id}`}
+                to={`/round/${chainId}/${auction.address}/${currentRound.round_id}`}
                 className="inline-flex items-center space-x-1 text-primary-400 hover:text-primary-300 transition-colors"
               >
                 <span className="font-mono font-semibold">
@@ -404,7 +402,7 @@ const AuctionDetails: React.FC = () => {
             No Sales Yet
           </h4>
           <p className="text-sm text-gray-600">
-            This auction house hasn't had any sales yet.
+            This auction hasn't had any sales yet.
           </p>
         </div>
       )}

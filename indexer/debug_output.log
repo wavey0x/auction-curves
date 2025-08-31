@@ -1,0 +1,14 @@
+2025-08-31 16:16:34,544 - __main__ - INFO - Loaded configuration for 6 networks
+2025-08-31 16:16:34,544 - __main__ - INFO - Loaded ABI: auction (direct ABI array)
+2025-08-31 16:16:34,544 - __main__ - INFO - Loaded ABI: auction_factory (direct ABI array)
+2025-08-31 16:16:34,544 - __main__ - INFO - Loaded ABI: erc20 (direct ABI array)
+2025-08-31 16:16:34,544 - __main__ - INFO - Loaded ABI: legacy_auction (direct ABI array)
+2025-08-31 16:16:34,544 - __main__ - INFO - Loaded ABI: legacy_auction_factory (direct ABI array)
+2025-08-31 16:16:34,570 - __main__ - INFO - Database connection established
+2025-08-31 16:16:34,574 - __main__ - INFO - Starting indexer for networks: ethereum
+2025-08-31 16:16:35,141 - __main__ - INFO - Connected to ethereum (chain_id: 1) at block 23263454
+2025-08-31 16:16:35,204 - __main__ - INFO - Loaded 11 existing auctions for chain 1
+2025-08-31 16:16:35,347 - __main__ - INFO - Converted factory address to 0xcfa510188884f199fcc6e750764faabe6e56ec40
+2025-08-31 16:16:35,352 - __main__ - INFO - Processing factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1 from block 22475028 to 23263454
+2025-08-31 16:16:35,352 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 10,000 blocks, 778,427 remaining (at block 22,485,027)
+2025-08-31 16:16:46,715 - __main__ - INFO - 🔄 Progress: Factory 6e56ec40 processed 20,000 blocks, 768,427 remaining (at block 22,495,027)

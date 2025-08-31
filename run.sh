@@ -181,7 +181,7 @@ kill_existing_processes() {
         
         # Kill any existing processes
         pkill -f anvil 2>/dev/null || true
-        pkill -f rindexer 2>/dev/null || true
+        pkill -f "python.*indexer.py" 2>/dev/null || true
         pkill -f "python.*app.py" 2>/dev/null || true
         pkill -f "uvicorn.*app" 2>/dev/null || true
         pkill -f "brownie.*continuous_activity" 2>/dev/null || true
@@ -202,7 +202,7 @@ kill_existing_processes() {
         
         # Force kill if still running
         pkill -9 -f anvil 2>/dev/null || true
-        pkill -9 -f rindexer 2>/dev/null || true
+        pkill -9 -f "python.*indexer.py" 2>/dev/null || true
         pkill -9 -f "npm run dev" 2>/dev/null || true
         pkill -9 -f vite 2>/dev/null || true
         
@@ -241,9 +241,9 @@ check_prerequisites() {
                 fi
             fi
             
-            # Check rindexer
-            if ! command -v rindexer &> /dev/null; then
-                echo -e "${RED}❌ Rindexer not found. Please install rindexer${NC}"
+            # Check Python3 for custom indexer
+            if ! command -v python3 &> /dev/null; then
+                echo -e "${RED}❌ Python3 not found. Required for custom indexer${NC}"
                 exit 1
             fi
             ;;
@@ -252,8 +252,8 @@ check_prerequisites() {
             ;;
         prod)
             # Production mode requires all components
-            if ! command -v rindexer &> /dev/null; then
-                echo -e "${RED}❌ Rindexer not found. Required for production indexing${NC}"
+            if ! command -v python3 &> /dev/null; then
+                echo -e "${RED}❌ Python3 not found. Required for custom indexer${NC}"
                 exit 1
             fi
             ;;
@@ -266,6 +266,66 @@ check_prerequisites() {
     fi
     
     echo -e "${GREEN}✅ Prerequisites check passed${NC}"
+}
+
+# Check database consistency and create missing tables
+check_database_consistency() {
+    if [ "$MODE" = "mock" ]; then
+        return 0  # No database needed for mock mode
+    fi
+    
+    echo -e "${BLUE}🔍 Checking database consistency...${NC}"
+    
+    # Check if database exists and is accessible
+    if ! psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+        echo -e "${RED}❌ Cannot connect to database: $DATABASE_URL${NC}"
+        return 1
+    fi
+    
+    # List of required tables
+    local required_tables=("auctions" "rounds" "takes" "tokens" "price_history" "indexer_state")
+    local missing_tables=()
+    
+    # Check each required table
+    for table in "${required_tables[@]}"; do
+        if ! psql "$DATABASE_URL" -c "SELECT 1 FROM $table LIMIT 1;" >/dev/null 2>&1; then
+            missing_tables+=("$table")
+        fi
+    done
+    
+    # Report missing tables
+    if [ ${#missing_tables[@]} -gt 0 ]; then
+        echo -e "${YELLOW}⚠️ Missing tables detected: ${missing_tables[*]}${NC}"
+        echo -e "${BLUE}   Applying schema to ensure consistency...${NC}"
+        
+        # Apply schema (will create missing tables)
+        if [ -f "data/postgres/schema.sql" ]; then
+            if psql "$DATABASE_URL" < data/postgres/schema.sql >/dev/null 2>&1; then
+                echo -e "${GREEN}✅ Schema applied successfully${NC}"
+            else
+                echo -e "${RED}❌ Failed to apply schema${NC}"
+                return 1
+            fi
+        else
+            echo -e "${RED}❌ Schema file not found: data/postgres/schema.sql${NC}"
+            return 1
+        fi
+    fi
+    
+    # Verify all tables now exist
+    local still_missing=()
+    for table in "${required_tables[@]}"; do
+        if ! psql "$DATABASE_URL" -c "SELECT 1 FROM $table LIMIT 1;" >/dev/null 2>&1; then
+            still_missing+=("$table")
+        fi
+    done
+    
+    if [ ${#still_missing[@]} -gt 0 ]; then
+        echo -e "${RED}❌ Tables still missing after schema application: ${still_missing[*]}${NC}"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✅ Database consistency check passed${NC}"
 }
 
 # Start blockchain (dev mode only)
@@ -303,12 +363,12 @@ deploy_contracts() {
         if brownie run scripts/deploy/test_deployment.py --network $NETWORK; then
             echo -e "${GREEN}✅ Contracts deployed successfully${NC}"
             
-            # Generate Rindexer config from template with deployed addresses
-            echo -e "${BLUE}📝 Generating Rindexer config from template...${NC}"
-            if python3 generate_config.py; then
-                echo -e "${GREEN}✅ Rindexer config generated successfully${NC}"
+            # Update indexer config with deployed addresses
+            echo -e "${BLUE}📝 Updating indexer config with deployed addresses...${NC}"
+            if python3 scripts/update_indexer_config.py; then
+                echo -e "${GREEN}✅ Indexer config updated successfully${NC}"
             else
-                echo -e "${RED}❌ Failed to generate Rindexer config${NC}"
+                echo -e "${RED}❌ Failed to update indexer config${NC}"
                 exit 1
             fi
         else
@@ -364,32 +424,24 @@ cleanup_dev_data() {
     if [ "$MODE" = "dev" ]; then
         echo -e "${BLUE}🧹 Cleaning dev mode data...${NC}"
         
-        # Clean Rindexer logs and old configs
-        echo -e "${BLUE}   Cleaning Rindexer state files...${NC}"
-        rm -f indexer/rindexer/rindexer.log
-        rm -f indexer/rindexer/rindexer-dev.yaml
-        rm -f indexer/rindexer/*.yaml.backup
-        rm -f indexer/rindexer/*.yaml.old  
-        rm -f indexer/rindexer/*.yaml.broken
+        # Clean indexer logs and temporary files
+        echo -e "${BLUE}   Cleaning indexer state files...${NC}"
+        rm -f indexer/*.log
+        rm -f indexer/config.yaml.backup
         
         # Clean deployment artifacts for fresh start
         echo -e "${BLUE}   Cleaning deployment artifacts...${NC}"
         rm -f deployment_info.json
         
-        # Drop Rindexer schemas and tables (including internal schema for full restart)
-        echo -e "${BLUE}   Dropping Rindexer database schemas...${NC}"
+        # Reset custom indexer state for fresh start
+        echo -e "${BLUE}   Resetting indexer state...${NC}"
         psql "$DATABASE_URL" -c "
-            DROP SCHEMA IF EXISTS auctionlocal_auction_factory CASCADE;
-            DROP SCHEMA IF EXISTS auctionlocal_legacy_auction_factory CASCADE;
-            DROP SCHEMA IF EXISTS auctionlocal_auction CASCADE;
-            DROP SCHEMA IF EXISTS auctionlocal_legacy_auction CASCADE;
-            DROP SCHEMA IF EXISTS auctionlocal_test_auction_1 CASCADE;
-            DROP SCHEMA IF EXISTS rindexer_internal CASCADE;
+            TRUNCATE TABLE indexer_state CASCADE;
         " >/dev/null 2>&1
         
         # Truncate business logic tables (only if they exist)
         echo -e "${BLUE}   Truncating business logic tables...${NC}"
-        for table in auctions auction_rounds auction_sales tokens price_history; do
+        for table in auctions rounds takes tokens price_history; do
             psql "$DATABASE_URL" -c "
                 DO \$\$ BEGIN
                     IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = '$table') THEN
@@ -402,34 +454,45 @@ cleanup_dev_data() {
         # Give database operations time to complete
         sleep 2
         
-        echo -e "${GREEN}✅ Dev data cleaned (Rindexer fully reset)${NC}"
+        echo -e "${GREEN}✅ Dev data cleaned (Custom indexer reset)${NC}"
     fi
 }
 
 # Start indexer (dev and prod modes)
 start_indexer() {
     if [ "$MODE" = "dev" ] || [ "$MODE" = "prod" ]; then
-        echo -e "${BLUE}📊 Starting Rindexer...${NC}"
-        cd indexer/rindexer
+        echo -e "${BLUE}📊 Starting custom indexer...${NC}"
+        cd indexer
+        
+        # Setup Python environment for indexer
+        if [ ! -d "venv" ]; then
+            echo -e "${BLUE}Creating Python environment for indexer...${NC}"
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+        else
+            source venv/bin/activate
+        fi
         
         case $MODE in
             dev)
-                # Config is generated directly as rindexer.yaml by deployment script
-                if [ -f "rindexer.yaml" ]; then
-                    echo -e "${BLUE}Using factory-based config generated from template${NC}"
+                # Run indexer for local network only
+                if [ -f "config.yaml" ]; then
+                    echo -e "${BLUE}Using config with deployed factory addresses${NC}"
                 else
-                    echo -e "${YELLOW}⚠️ Generated config rindexer.yaml not found${NC}"
+                    echo -e "${YELLOW}⚠️ Config file config.yaml not found${NC}"
                 fi
-                DATABASE_URL="$DATABASE_URL" rindexer start indexer &
+                python3 indexer.py --network local &
                 ;;
             prod)
-                DATABASE_URL="$DATABASE_URL" rindexer start indexer &
+                # Run indexer for all configured networks
+                python3 indexer.py &
                 ;;
         esac
         
-        RINDEXER_PID=$!
+        INDEXER_PID=$!
         cd "$SCRIPT_DIR"
-        echo -e "${GREEN}✅ Rindexer started (PID: $RINDEXER_PID)${NC}"
+        echo -e "${GREEN}✅ Custom indexer started (PID: $INDEXER_PID)${NC}"
     fi
 }
 
@@ -516,7 +579,7 @@ show_summary() {
             echo -e "   ✅ Real blockchain (Anvil)"
             echo -e "   ✅ Real database (PostgreSQL)" 
             echo -e "   ✅ Smart contract deployment"
-            echo -e "   ✅ Event indexing (Rindexer)"
+            echo -e "   ✅ Event indexing (Custom Web3.py)"
             echo -e "   ✅ Price monitoring & simulation"
             ;;
         mock)
@@ -546,7 +609,7 @@ show_summary() {
     fi
     
     if [ "$MODE" = "dev" ] || [ "$MODE" = "prod" ]; then
-        echo -e "   📊 Rindexer      (PID: ${RINDEXER_PID:-'N/A'})"
+        echo -e "   📊 Indexer       (PID: ${INDEXER_PID:-'N/A'})"
     fi
 }
 
@@ -555,7 +618,7 @@ cleanup() {
     echo -e "\n${YELLOW}🛑 Shutting down services...${NC}"
     
     # Kill all background processes
-    for pid in $UI_PID $API_PID $ANVIL_PID $RINDEXER_PID $MONITOR_PID $SIMULATOR_PID; do
+    for pid in $UI_PID $API_PID $ANVIL_PID $INDEXER_PID $MONITOR_PID $SIMULATOR_PID; do
         if [ ! -z "$pid" ]; then
             kill $pid 2>/dev/null || true
         fi
@@ -573,6 +636,7 @@ main() {
     cleanup_dev_data
     kill_existing_processes
     check_prerequisites
+    check_database_consistency
     start_blockchain
     deploy_contracts
     start_api

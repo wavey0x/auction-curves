@@ -18,7 +18,7 @@ Open **http://localhost:3000** 🎉
 
 - **Node.js 18+** and **Python 3.9+**
 - **Docker** (for development mode)
-- **Brownie, Foundry, Rindexer** (for development mode)
+- **Brownie, Foundry** (for development mode)
 
 ## 🎯 Operating Modes
 
@@ -41,7 +41,7 @@ Complete local blockchain simulation
 ```
 - ✅ Local Anvil blockchain + PostgreSQL
 - ✅ Smart contract auto-deployment
-- ✅ Real-time event indexing with Rindexer
+- ✅ Real-time event indexing with custom Web3.py indexer
 - ✅ Price monitoring and activity simulation
 - 🌐 **Access**: http://localhost:3000 (UI), http://localhost:8000/docs (API)
 
@@ -53,7 +53,7 @@ Production deployment with real blockchain networks
 ```
 - ✅ Ethereum, Polygon, Arbitrum, Optimism, Base
 - ✅ Production database with real transaction data  
-- ✅ Multi-network event indexing
+- ✅ Multi-network event indexing with custom Web3.py indexer
 - 🌐 **Access**: http://localhost:8000/docs (API)
 
 ## ⚙️ Configuration
@@ -294,7 +294,7 @@ curl http://localhost:8000/docs   # API documentation
 ├── contracts/core/          # Solidity smart contracts
 ├── ui/                     # React TypeScript frontend
 ├── monitoring/api/         # FastAPI backend (production + mock)
-├── indexer/rindexer/       # Multi-network blockchain indexing
+├── indexer/                # Custom Web3.py blockchain indexer
 ├── data/postgres/          # Database schema and migrations
 ├── scripts/                # Deployment and utility scripts
 ├── .env                    # Unified configuration file
@@ -312,8 +312,8 @@ curl http://localhost:8000/docs   # API documentation
 - **[CLAUDE.md](CLAUDE.md)**: LLM-optimized development guide
 
 ### External Documentation
-- **[Rindexer Factory Pattern](https://rindexer.xyz/docs/start-building/yaml-config/contracts#factory)**: Dynamic contract discovery configuration
-- **[Rindexer Configuration](https://rindexer.xyz/docs/start-building/yaml-config)**: Complete YAML configuration reference
+- **[Web3.py Documentation](https://web3py.readthedocs.io/)**: Python Ethereum library
+- **[PostgreSQL Documentation](https://www.postgresql.org/docs/)**: Database reference
 
 ## 🎯 Quick Reference
 

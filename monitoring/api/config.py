@@ -17,6 +17,7 @@ class AppMode(str, Enum):
     DEV = "dev"
     DEVELOPMENT = "development" 
     PRODUCTION = "production"
+    PROD = "prod"  # Alias for production
 
 
 class Settings(BaseSettings):
@@ -33,9 +34,17 @@ class Settings(BaseSettings):
     # Database settings (only used in development/production)
     database_url: Optional[str] = None
     
+    # Mode-specific database URLs
+    dev_database_url: Optional[str] = None
+    prod_database_url: Optional[str] = None
+    mock_database_url: Optional[str] = None
+    
     # Blockchain settings (legacy - for backwards compatibility)
     anvil_rpc_url: str = "http://localhost:8545"
     web3_infura_project_id: Optional[str] = None
+    
+    # Mode-specific Anvil RPC URLs
+    dev_anvil_rpc_url: Optional[str] = None
     
     # Rindexer settings (only used in development/production)
     rindexer_database_url: Optional[str] = None
@@ -43,10 +52,15 @@ class Settings(BaseSettings):
     
     # Factory contract settings (legacy - for backwards compatibility)
     factory_address: Optional[str] = None
-    start_block: int = 0
+    start_block: Optional[int] = 0
     
     # Multi-Network Configuration
     networks_enabled: str = "local"  # Comma-separated list: "ethereum,polygon,arbitrum"
+    
+    # Mode-specific network configurations
+    dev_networks_enabled: Optional[str] = None
+    prod_networks_enabled: Optional[str] = None
+    mock_networks_enabled: Optional[str] = None
     
     # Network-specific RPC URLs
     ethereum_rpc_url: Optional[str] = None
@@ -71,7 +85,7 @@ class Settings(BaseSettings):
     base_start_block: Optional[int] = 1000000
     local_start_block: Optional[int] = 0
     
-    @field_validator('ethereum_start_block', 'polygon_start_block', 'arbitrum_start_block', 
+    @field_validator('start_block', 'ethereum_start_block', 'polygon_start_block', 'arbitrum_start_block', 
                      'optimism_start_block', 'base_start_block', 'local_start_block', mode='before')
     @classmethod
     def parse_start_block(cls, v):
@@ -85,26 +99,39 @@ class Settings(BaseSettings):
                 return None
         return v
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        
-        # Override env file based on APP_MODE
-        @classmethod
-        def customise_sources(cls, init_settings, env_settings, file_secret_settings):
-            app_mode = os.getenv("APP_MODE", "mock")
+    def get_effective_database_url(self) -> Optional[str]:
+        """Get the effective database URL based on app mode"""
+        # First try the generic database_url
+        if self.database_url:
+            return self.database_url
             
-            # Try to load mode-specific env file
-            mode_env_file = f".env.{app_mode}"
-            if os.path.exists(mode_env_file):
-                env_settings.env_file = mode_env_file
+        # Then try mode-specific URLs
+        if self.app_mode in [AppMode.DEV, AppMode.DEVELOPMENT]:
+            return self.dev_database_url
+        elif self.app_mode in [AppMode.PRODUCTION, AppMode.PROD]:
+            return self.prod_database_url  
+        elif self.app_mode == AppMode.MOCK:
+            return self.mock_database_url
             
-            return (
-                init_settings,
-                env_settings,
-                file_secret_settings,
-            )
+        return None
+    
+    def get_effective_networks_enabled(self) -> str:
+        """Get the effective networks enabled based on app mode"""
+        # First try the generic networks_enabled
+        if self.networks_enabled:
+            return self.networks_enabled
+            
+        # Then try mode-specific networks
+        if self.app_mode in [AppMode.DEV, AppMode.DEVELOPMENT]:
+            return self.dev_networks_enabled or "local"
+        elif self.app_mode in [AppMode.PRODUCTION, AppMode.PROD]:
+            return self.prod_networks_enabled or "ethereum,polygon,arbitrum,optimism,base"
+        elif self.app_mode == AppMode.MOCK:
+            return self.mock_networks_enabled or "ethereum,polygon,arbitrum,optimism,base,local"
+            
+        return "local"
+    
+    model_config = {"env_file": "../../.env", "env_file_encoding": "utf-8", "case_sensitive": False, "extra": "ignore"}
 
 
 # Global settings instance
@@ -128,7 +155,7 @@ def is_development_mode() -> bool:
 
 def is_production_mode() -> bool:
     """Check if running in production mode"""
-    return settings.app_mode == AppMode.PRODUCTION
+    return settings.app_mode in [AppMode.PRODUCTION, AppMode.PROD]
 
 
 def requires_database() -> bool:
@@ -208,7 +235,10 @@ SUPPORTED_NETWORKS = {
 
 def get_enabled_networks() -> list:
     """Get list of enabled network names"""
-    return [name.strip() for name in settings.networks_enabled.split(",")]
+    networks_enabled = settings.get_effective_networks_enabled()
+    if not networks_enabled:
+        return []
+    return [name.strip() for name in networks_enabled.split(",") if name.strip()]
 
 
 def get_network_config(network_name: str) -> dict:
@@ -241,23 +271,22 @@ def get_all_network_configs() -> dict:
 def validate_settings():
     """Validate settings based on app mode"""
     if requires_database():
-        if not settings.database_url:
-            raise ValueError(f"DATABASE_URL is required for {settings.app_mode} mode")
+        effective_db_url = settings.get_effective_database_url()
+        if not effective_db_url:
+            raise ValueError(f"Database URL is required for {settings.app_mode} mode")
         
-        if settings.app_mode in [AppMode.DEVELOPMENT, AppMode.DEV]:
-            if not settings.rindexer_database_url:
-                raise ValueError("RINDEXER_DATABASE_URL is required for development mode")
+        # Note: RINDEXER_DATABASE_URL validation removed - it's optional for API operation
     
-    # Validate network configurations
-    if not is_mock_mode():
-        enabled_networks = get_enabled_networks()
-        for network_name in enabled_networks:
-            if network_name not in SUPPORTED_NETWORKS:
-                raise ValueError(f"Unknown network '{network_name}' in NETWORKS_ENABLED")
-            
-            network_config = get_network_config(network_name)
-            if not network_config.get("rpc_url"):
-                raise ValueError(f"RPC URL is required for network '{network_name}'")
+    # Note: Network validation disabled for API - networks are only needed for indexer
+    # if not is_mock_mode():
+    #     enabled_networks = get_enabled_networks()
+    #     for network_name in enabled_networks:
+    #         if network_name not in SUPPORTED_NETWORKS:
+    #             raise ValueError(f"Unknown network '{network_name}' in NETWORKS_ENABLED")
+    #         
+    #         network_config = get_network_config(network_name)
+    #         if not network_config.get("rpc_url"):
+    #             raise ValueError(f"RPC URL is required for network '{network_name}'")
 
 
 # Validate on import

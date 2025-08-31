@@ -2,8 +2,7 @@
   {
     "inputs": [],
     "stateMutability": "nonpayable",
-    "type": "constructor",
-    "name": "constructor"
+    "type": "constructor"
   },
   {
     "anonymous": false,
@@ -79,6 +78,37 @@
       }
     ],
     "name": "GovernanceTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "taker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountTaken",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountPaid",
+        "type": "uint256"
+      }
+    ],
+    "name": "Take",
     "type": "event"
   },
   {
