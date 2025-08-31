@@ -78,7 +78,7 @@ contracts:
       - DeployedNewAuction  # → deployed_new_auction table
     details:
       - network: local
-        address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+        address: "{{MODERN_FACTORY_ADDRESS}}"
         start_block: 0
 
   # LegacyAuctionFactory contract - deploys legacy Auction instances (v0.0.1)
@@ -88,7 +88,7 @@ contracts:
       - DeployedNewAuction  # → deployed_new_auction table
     details:
       - network: local
-        address: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        address: "{{LEGACY_FACTORY_ADDRESS}}"
         start_block: 0
 
   # ============================================================================
@@ -127,7 +127,7 @@ contracts:
         start_block: 0
         factory:
           name: "AuctionFactory"
-          address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+          address: "{{MODERN_FACTORY_ADDRESS}}"
           abi: "./abis/AuctionFactory.json"
           event_name: "DeployedNewAuction"
           input_name: "auction"
@@ -160,7 +160,7 @@ contracts:
         start_block: 0
         factory:
           name: "LegacyAuctionFactory"
-          address: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+          address: "{{LEGACY_FACTORY_ADDRESS}}"
           abi: "./abis/LegacyAuctionFactory.json"
           event_name: "DeployedNewAuction"
           input_name: "auction"

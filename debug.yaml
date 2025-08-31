@@ -5,6 +5,11 @@
 # Purpose: Index auction events from local Anvil blockchain (chain_id: 31337)
 # Mode: no-code (automatic table generation + webhook streams for business logic)
 
+# Debug logging configuration
+logging:
+  level: debug
+  format: json
+
 name: auction-local
 description: "Indexes all events from Dutch auction contracts on local Anvil network"
 project_type: no-code
@@ -21,7 +26,7 @@ project_type: no-code
 #   - updated_starting_price ← UpdatedStartingPrice events
 #
 # Layer 2: Custom Business Logic Tables (via webhook → API → PostgreSQL)
-#   - auction_parameters    ← Contract metadata cache
+#   - auctions              ← Main auction contracts table
 #   - auction_rounds        ← Processed rounds with incremental IDs
 #   - auction_sales         ← Processed sales with calculations  
 #   - tokens                ← Token metadata cache
@@ -36,7 +41,7 @@ project_type: no-code
 networks:
   - name: local
     chain_id: 31337
-    rpc: ${ANVIL_RPC_URL:-http://localhost:8545}
+    rpc: http://localhost:8545
     compute_units_per_second: 330
     disable_logs_bloom_checks: true
 
@@ -44,7 +49,7 @@ networks:
 storage:
   postgres:
     enabled: true
-    connection_string: ${DATABASE_URL}
+    connection_string: postgresql://postgres:password@localhost:5432/auction
     # Rindexer will automatically create tables based on events
 
   csv:
@@ -52,7 +57,7 @@ storage:
 
 # Global configuration
 global:
-  start_block: ${LOCAL_START_BLOCK:-0}
+  start_block: 47
   # end_block: # Empty for live indexing
 
 # ============================================================================
@@ -67,8 +72,8 @@ contracts:
     abi: "./abis/AuctionFactory.json"
     details:
       - network: local
-        address: ${LOCAL_FACTORY_ADDRESS}  # Set by deployment script
-        start_block: ${LOCAL_START_BLOCK:-0}
+        address: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512  # Set by deployment script
+        start_block: 47
         include_events:
           - DeployedNewAuction  # → deployed_new_auction table
 
@@ -77,8 +82,8 @@ contracts:
     abi: "./abis/LegacyAuctionFactory.json"
     details:
       - network: local
-        address: ${LOCAL_LEGACY_FACTORY_ADDRESS:-}  # Optional legacy factory
-        start_block: ${LOCAL_LEGACY_START_BLOCK:-0}
+        address: 0x5FbDB2315678afecb367f032d93F642f64180aa3  # Optional legacy factory
+        start_block: 47
         include_events:
           - DeployedNewAuction  # → deployed_new_auction table
 
@@ -95,11 +100,11 @@ contracts:
       - network: local
         factory:
           name: AuctionFactory                    # References factory above
-          address: ${LOCAL_FACTORY_ADDRESS}       # Same factory address  
+          address: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512       # Same factory address  
           abi: "./abis/AuctionFactory.json"       # Factory ABI
           event_name: DeployedNewAuction          # Event that creates new auctions
           input_name: "auction"                   # Parameter containing new auction address
-        start_block: ${LOCAL_START_BLOCK:-0}
+        start_block: 47
         include_events:
           - AuctionEnabled        # → auction_enabled table
           - AuctionDisabled       # → auction_disabled table  
@@ -114,11 +119,11 @@ contracts:
       - network: local
         factory:
           name: LegacyAuctionFactory              # References legacy factory
-          address: ${LOCAL_LEGACY_FACTORY_ADDRESS:-} # Legacy factory address
+          address: 0x5FbDB2315678afecb367f032d93F642f64180aa3 # Legacy factory address
           abi: "./abis/LegacyAuctionFactory.json" # Legacy factory ABI
           event_name: DeployedNewAuction          # Event that creates new auctions
           input_name: "auction"                   # Parameter containing new auction address
-        start_block: ${LOCAL_LEGACY_START_BLOCK:-0}
+        start_block: 47
         include_events:
           - AuctionEnabled        # → auction_enabled table
           - AuctionDisabled       # → auction_disabled table  
@@ -150,12 +155,12 @@ streams:
     type: webhook
     url: "http://localhost:8000/webhook/process-event"
     events:
-      - DeployedNewAuction    # → Creates auction_parameters entry
+      - DeployedNewAuction    # → Creates auctions entry
       - AuctionKicked         # → Creates auction_rounds entry with incremental ID
       - AuctionEnabled        # → Updates auction state
       - AuctionDisabled       # → Updates auction state
-      - UpdatedStartingPrice  # → Updates auction_parameters
-      - UpdatedStepDecayRate  # → Updates auction_parameters (new contracts only)
+      - UpdatedStartingPrice  # → Updates auctions
+      - UpdatedStepDecayRate  # → Updates auctions (new contracts only)
     filters:
       chain_id: 31337         # Only process local Anvil events
     timeout: 30

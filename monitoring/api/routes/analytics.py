@@ -80,7 +80,7 @@ async def get_token_pair_analysis(db: AsyncSession = Depends(get_db)):
                 COUNT(*) as pair_count,
                 COUNT(DISTINCT ak.auction) as unique_auctions
             FROM auction_kicked ak
-            JOIN auction_parameters ap ON ak.auction = ap.auction_address
+            JOIN auctions ap ON ak.auction = ap.auction_address
             LEFT JOIN tokens t1 ON ak.from_token = t1.address
             LEFT JOIN tokens t2 ON ap.want_token = t2.address  
             GROUP BY ak.from_token, ap.want_token, t1.symbol, t2.symbol

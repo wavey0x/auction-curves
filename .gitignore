@@ -4,3 +4,7 @@ __pycache__
 .hypothesis/
 build/
 reports/
+
+# Generated files
+deployment_info.json
+indexer/rindexer/rindexer-dev.yaml

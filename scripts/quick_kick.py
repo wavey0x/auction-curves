@@ -6,7 +6,7 @@ Quick script to kick auction rounds and generate activity for the UI.
 import json
 import os
 import random
-from brownie import accounts, Auction, MockERC20Enhanced, network
+from brownie import accounts, Auction, LegacyAuction, MockERC20Enhanced, network
 from rich.console import Console
 from rich.progress import track
 
@@ -48,12 +48,16 @@ def kick_auction_rounds():
             continue
             
         try:
-            auction = Auction.at(auction_info['address'])
+            # Use the correct auction contract type based on version
+            if auction_info.get('type') == 'legacy':
+                auction = LegacyAuction.at(auction_info['address'])
+            else:
+                auction = Auction.at(auction_info['address'])
             
             # Find a token to kick
             from_token_address = None
             for symbol, token_info in tokens.items():
-                if symbol != auction_info['want_token']:
+                if symbol != auction_info['to_token']:
                     try:
                         balance = auction.kickable(token_info['address'])
                         if balance > 0:

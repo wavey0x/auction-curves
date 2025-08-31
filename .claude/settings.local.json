@@ -56,7 +56,21 @@
       "Bash(export DATABASE_URL=\"postgresql://postgres:password@localhost:5432/auction\")",
       "Bash(export LOCAL_FACTORY_ADDRESS=\"0x2388d1B9D8e958528643Ef6046c638879E210294\")",
       "Bash(export LOCAL_START_BLOCK=\"0\")",
-      "Bash(export ANVIL_RPC_URL=\"http://localhost:8545\")"
+      "Bash(export ANVIL_RPC_URL=\"http://localhost:8545\")",
+      "Bash(gtimeout:*)",
+      "Bash(export LOCAL_FACTORY_ADDRESS=\"0x5FbDB2315678afecb367f032d93F642f64180aa3\")",
+      "Bash(export LOCAL_FACTORY_ADDRESS=\"0x4c5859f0F772848b2D91F1D83E2Fe57935348029\")",
+      "Bash(export LOCAL_LEGACY_FACTORY_ADDRESS=\"\")",
+      "Bash(export LOCAL_LEGACY_START_BLOCK=\"0\")",
+      "Bash(export LOCAL_FACTORY_ADDRESS=0x63fea6E447F120B8Faf85B53cdaD8348e645D80E)",
+      "Bash(export LOCAL_LEGACY_FACTORY_ADDRESS=0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7)",
+      "Bash(export LOCAL_START_BLOCK=194)",
+      "Bash(export LOCAL_LEGACY_START_BLOCK=194)",
+      "Bash(export ANVIL_RPC_URL=http://localhost:8545)",
+      "Bash(export DATABASE_URL=postgresql://postgres:password@localhost:5432/auction)",
+      "Bash(echo:*)",
+      "Read(/Users/wavey/yearn/**)",
+      "Bash(ps:*)"
     ],
     "deny": [],
     "ask": []

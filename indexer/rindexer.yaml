@@ -1,0 +1,34 @@
+name: auction-local
+project_type: no-code
+
+networks:
+  - name: local
+    chain_id: 31337
+    rpc: http://localhost:8545
+
+storage:
+  postgres:
+    enabled: true
+    connection_string: postgresql://wavey@localhost:5432/auction
+
+global:
+  start_block: 47
+
+contracts:
+  - name: Auction
+    abi: ./abis/Auction.json
+    include_events:
+      - AuctionEnabled
+      - AuctionDisabled
+      - AuctionKicked
+      - UpdatedStartingPrice
+      - UpdatedStepDecayRate
+    details:
+      - network: local
+        start_block: 47
+        factory:
+          name: AuctionFactory
+          address: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+          abi: ./abis/AuctionFactory.json
+          event_name: DeployedNewAuction
+          input_name: auction

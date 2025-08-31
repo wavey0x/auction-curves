@@ -174,6 +174,42 @@ setup_environment() {
     echo -e "${BLUE}   Networks: ${NETWORKS_ENABLED}${NC}"
 }
 
+# Kill existing processes for clean restart
+kill_existing_processes() {
+    if [ "$MODE" = "dev" ]; then
+        echo -e "${BLUE}🔪 Killing existing processes for clean restart...${NC}"
+        
+        # Kill any existing processes
+        pkill -f anvil 2>/dev/null || true
+        pkill -f rindexer 2>/dev/null || true
+        pkill -f "python.*app.py" 2>/dev/null || true
+        pkill -f "uvicorn.*app" 2>/dev/null || true
+        pkill -f "brownie.*continuous_activity" 2>/dev/null || true
+        pkill -f "npm run dev" 2>/dev/null || true
+        pkill -f "vite" 2>/dev/null || true
+        pkill -f "node.*vite" 2>/dev/null || true
+        
+        # Kill processes by port (more reliable for UI)
+        for port in 3000 8000 8545; do
+            pids=$(lsof -ti:$port 2>/dev/null || true)
+            if [ -n "$pids" ]; then
+                echo "$pids" | xargs kill -9 2>/dev/null || true
+            fi
+        done
+        
+        # Give processes time to terminate
+        sleep 3
+        
+        # Force kill if still running
+        pkill -9 -f anvil 2>/dev/null || true
+        pkill -9 -f rindexer 2>/dev/null || true
+        pkill -9 -f "npm run dev" 2>/dev/null || true
+        pkill -9 -f vite 2>/dev/null || true
+        
+        echo -e "${GREEN}✅ Existing processes cleaned${NC}"
+    fi
+}
+
 # Check prerequisites based on mode
 check_prerequisites() {
     echo -e "${BLUE}Checking prerequisites for ${MODE} mode...${NC}"
@@ -186,12 +222,19 @@ check_prerequisites() {
                 exit 1
             fi
             
-            # Check PostgreSQL (development mode uses Docker)
-            if ! pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
-                echo -e "${YELLOW}⚠️ PostgreSQL not running. Starting Docker container...${NC}"
+            # Check PostgreSQL connection with configured DATABASE_URL
+            if ! psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+                echo -e "${YELLOW}⚠️ Cannot connect to PostgreSQL with configured DATABASE_URL${NC}"
+                echo -e "${YELLOW}   Trying to start Docker container...${NC}"
                 if command -v docker-compose &> /dev/null; then
                     docker-compose up -d postgres
                     sleep 5
+                    # Test connection again
+                    if ! psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+                        echo -e "${RED}❌ Still cannot connect to database after starting Docker${NC}"
+                        echo -e "${RED}   Check your DATABASE_URL: $DATABASE_URL${NC}"
+                        exit 1
+                    fi
                 else
                     echo -e "${RED}❌ Please start PostgreSQL manually or install Docker Compose${NC}"
                     exit 1
@@ -259,6 +302,15 @@ deploy_contracts() {
         
         if brownie run scripts/deploy/test_deployment.py --network $NETWORK; then
             echo -e "${GREEN}✅ Contracts deployed successfully${NC}"
+            
+            # Generate Rindexer config from template with deployed addresses
+            echo -e "${BLUE}📝 Generating Rindexer config from template...${NC}"
+            if python3 generate_config.py; then
+                echo -e "${GREEN}✅ Rindexer config generated successfully${NC}"
+            else
+                echo -e "${RED}❌ Failed to generate Rindexer config${NC}"
+                exit 1
+            fi
         else
             echo -e "${RED}❌ Contract deployment failed${NC}"
             exit 1
@@ -307,6 +359,53 @@ start_api() {
     fi
 }
 
+# Clean dev mode data
+cleanup_dev_data() {
+    if [ "$MODE" = "dev" ]; then
+        echo -e "${BLUE}🧹 Cleaning dev mode data...${NC}"
+        
+        # Clean Rindexer logs and old configs
+        echo -e "${BLUE}   Cleaning Rindexer state files...${NC}"
+        rm -f indexer/rindexer/rindexer.log
+        rm -f indexer/rindexer/rindexer-dev.yaml
+        rm -f indexer/rindexer/*.yaml.backup
+        rm -f indexer/rindexer/*.yaml.old  
+        rm -f indexer/rindexer/*.yaml.broken
+        
+        # Clean deployment artifacts for fresh start
+        echo -e "${BLUE}   Cleaning deployment artifacts...${NC}"
+        rm -f deployment_info.json
+        
+        # Drop Rindexer schemas and tables (including internal schema for full restart)
+        echo -e "${BLUE}   Dropping Rindexer database schemas...${NC}"
+        psql "$DATABASE_URL" -c "
+            DROP SCHEMA IF EXISTS auctionlocal_auction_factory CASCADE;
+            DROP SCHEMA IF EXISTS auctionlocal_legacy_auction_factory CASCADE;
+            DROP SCHEMA IF EXISTS auctionlocal_auction CASCADE;
+            DROP SCHEMA IF EXISTS auctionlocal_legacy_auction CASCADE;
+            DROP SCHEMA IF EXISTS auctionlocal_test_auction_1 CASCADE;
+            DROP SCHEMA IF EXISTS rindexer_internal CASCADE;
+        " >/dev/null 2>&1
+        
+        # Truncate business logic tables (only if they exist)
+        echo -e "${BLUE}   Truncating business logic tables...${NC}"
+        for table in auctions auction_rounds auction_sales tokens price_history; do
+            psql "$DATABASE_URL" -c "
+                DO \$\$ BEGIN
+                    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = '$table') THEN
+                        EXECUTE 'TRUNCATE TABLE $table CASCADE';
+                    END IF;
+                END \$\$;
+            " >/dev/null 2>&1
+        done
+        
+        # Give database operations time to complete
+        sleep 2
+        
+        echo -e "${GREEN}✅ Dev data cleaned (Rindexer fully reset)${NC}"
+    fi
+}
+
 # Start indexer (dev and prod modes)
 start_indexer() {
     if [ "$MODE" = "dev" ] || [ "$MODE" = "prod" ]; then
@@ -315,13 +414,16 @@ start_indexer() {
         
         case $MODE in
             dev)
-                export DATABASE_URL="postgresql://postgres:password@localhost:5432/auction"
-                export FACTORY_ADDRESS="0x335796f7A0F72368D1588839e38f163d90C92C80"
-                export START_BLOCK="0"
-                rindexer start indexer &
+                # Config is generated directly as rindexer.yaml by deployment script
+                if [ -f "rindexer.yaml" ]; then
+                    echo -e "${BLUE}Using factory-based config generated from template${NC}"
+                else
+                    echo -e "${YELLOW}⚠️ Generated config rindexer.yaml not found${NC}"
+                fi
+                DATABASE_URL="$DATABASE_URL" rindexer start indexer &
                 ;;
             prod)
-                rindexer start indexer &
+                DATABASE_URL="$DATABASE_URL" rindexer start indexer &
                 ;;
         esac
         
@@ -375,7 +477,7 @@ start_monitoring() {
         
         # Price monitor
         cd scripts/monitor
-        DATABASE_URL="postgresql://postgres:password@localhost:5432/auction" python3 price_monitor.py --once &
+        DATABASE_URL="$DATABASE_URL" python3 price_monitor.py --once &
         MONITOR_PID=$!
         cd "$SCRIPT_DIR"
         echo -e "${GREEN}✅ Price monitor started (PID: $MONITOR_PID)${NC}"
@@ -394,7 +496,7 @@ start_monitoring() {
 
 # Show summary
 show_summary() {
-    echo -e "\n${GREEN}🎉 Auction System is running in ${MODE^^} mode!${NC}"
+    echo -e "\n${GREEN}🎉 Auction System is running in $(echo ${MODE} | tr '[:lower:]' '[:upper:]') mode!${NC}"
     echo -e "\n📍 ${BLUE}Access Points:${NC}"
     
     if [ "$START_UI" = "true" ]; then
@@ -435,7 +537,7 @@ show_summary() {
     if [ "$START_UI" = "true" ]; then
         echo -e "   📱 React UI       (PID: ${UI_PID:-'N/A'})"
     fi
-    echo -e "   🖥️  ${MODE^} API      (PID: ${API_PID:-'N/A'})"
+    echo -e "   🖥️  $(echo ${MODE} | sed 's/./\U&/') API      (PID: ${API_PID:-'N/A'})"
     
     if [ "$MODE" = "dev" ]; then
         echo -e "   🔨 Anvil         (PID: ${ANVIL_PID:-'N/A'})"
@@ -468,6 +570,8 @@ main() {
     trap cleanup SIGINT SIGTERM
     
     setup_environment
+    cleanup_dev_data
+    kill_existing_processes
     check_prerequisites
     start_blockchain
     deploy_contracts

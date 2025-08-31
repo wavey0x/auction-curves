@@ -6,26 +6,21 @@ The Auction System is a comprehensive monorepo implementing a Dutch auction moni
 
 **Auction → AuctionRound → AuctionSale**
 
-- **Auction**: Smart contracts managing Dutch auctions for token swaps (previously called "AuctionHouse")
+- **Auction**: Smart contracts managing Dutch auctions for token swaps
 - **AuctionRound**: Individual auction rounds created by each "kick" with incremental IDs
 - **AuctionSale**: Individual "takes" within rounds with sequence numbers
 
-## Terminology Updates ⚡
-
-**Recent Changes (2024)**:
-- ✅ "AuctionHouse" → "Auction" throughout codebase
-- ✅ All UI routes updated: `/auction-house/:address` → `/auction/:address`
-- ✅ Variable names: `auctionHouse` → `auction`, `auctionAddress`
-- ✅ Database migrations completed (see `migrations/004_rename_auction_house_to_auction.sql`)
-- ✅ Frontend components consolidated and renamed
+## System Architecture
 
 ## Current Architecture Components
 
 ### 1. Smart Contracts (`/contracts/core/`)
 
 #### Core Contracts
-- **Auction.sol**: Main Dutch auction contract with configurable decay parameters (renamed from AuctionHouse.sol)
+- **Auction.sol**: Main Dutch auction contract with configurable decay parameters
 - **AuctionFactory.sol**: Factory for deploying new Auction instances
+- **LegacyAuction.sol**: Legacy auction contract (v0.0.1) with hardcoded decay rates
+- **LegacyAuctionFactory.sol**: Factory for deploying legacy Auction instances
 - **Libraries**: Maths.sol, GPv2Order.sol for auction calculations
 - **Utils**: Clonable.sol, Governance2Step.sol for contract management
 
@@ -39,10 +34,10 @@ The Auction System is a comprehensive monorepo implementing a Dutch auction moni
 ### 2. Blockchain Indexing (`/indexer/rindexer/`)
 
 #### Rindexer Configuration Files
-- **`rindexer.yaml`**: Default configuration
-- **`rindexer-local.yaml`**: Local development (Anvil chain only)
+- **`rindexer.yaml`**: Generated from template using factory pattern (replaces old individual auction approach)
+- **`rindexer.template.yaml`**: Template with factory discovery configuration 
+- **`generate_config.py`**: Simplified script that only replaces factory addresses
 - **`rindexer-multi.yaml`**: Multi-network production configuration
-- **`rindexer_simple.yaml`**: Simplified test configuration
 
 #### Current Network Configuration
 ```yaml
@@ -52,32 +47,79 @@ networks:
   - arbitrum: chain_id 42161, RPC ${ARBITRUM_RPC_URL}
 ```
 
-#### Rindexer Environment Variables
-Development mode:
-```bash
+#### Rindexer Factory Pattern Configuration  
+**Template-Based Generation** (New Approach):
+```yaml
+# Factory discovery for modern auctions (v0.1.0)
+- name: Auction
+  details:
+    - network: local
+      factory:
+        address: {{MODERN_FACTORY_ADDRESS}}  # Replaced by generate_config.py
+        abi: "./abis/AuctionFactory.json"
+        event_name: DeployedNewAuction
+        input_name: auction
+      start_block: {{START_BLOCK}}
+  abi: "./abis/Auction.json"
+  include_events:
+    - AuctionKicked      # → auction_kicked table (ALL modern auctions)
+    - AuctionEnabled     # → auction_enabled table (ALL modern auctions)
+
+# Factory discovery for legacy auctions (v0.0.1)  
+- name: LegacyAuction
+  details:
+    - network: local
+      factory:
+        address: {{LEGACY_FACTORY_ADDRESS}}  # Replaced by generate_config.py
+        abi: "./abis/LegacyAuctionFactory.json"
+        event_name: DeployedNewAuction
+        input_name: auction
+      start_block: {{START_BLOCK}}
+  abi: "./abis/LegacyAuction.json"
+  include_events:
+    - AuctionKicked      # → legacy_auction_kicked table (ALL legacy auctions)
+    - AuctionEnabled     # → legacy_auction_enabled table (ALL legacy auctions)
+```
+
+**Environment Variables (Simplified):**
+```bash  
 DATABASE_URL="postgresql://postgres:password@localhost:5432/auction"
-FACTORY_ADDRESS="0x335796f7A0F72368D1588839e38f163d90C92C80"
-START_BLOCK="0"
+# Factory addresses auto-detected from deployment_info.json
+# No individual auction addresses needed anymore!
 ```
 
 ### 3. Database Layer (`/data/postgres/`)
 
-#### Schema Design (Multi-Chain Native)
+#### Schema Design (Multi-Chain Native with Unified Tables)
 All tables include `chain_id` fields for multi-chain support:
 
+**Custom Business Logic Tables:**
 - **tokens**: Token metadata cache with chain_id
-- **auction_parameters**: Contract parameters per chain (renamed from auction_house_parameters)
+- **auctions**: Contract parameters per chain  
 - **auction_rounds**: Round tracking with incremental round_id per Auction
 - **auction_sales**: Individual sales with sequence numbers per round
 - **price_history**: Time-series price data for analytics
 
-#### Recent Database Migrations
-```sql
--- Migration 004: Rename auction_house tables to auction
-ALTER TABLE auction_house RENAME TO auction;
-ALTER TABLE auction_house_parameters RENAME TO auction_parameters;
--- API query keys updated: "auctionHouseSales" → "auctionSales"
-```
+**Rindexer Auto-Generated Tables (Factory Discovery - Unified):**
+- **deployed_new_auction**: Factory deployment events (both modern & legacy)
+- **auction_kicked**: ALL modern auction kick events in one table
+- **auction_enabled**: ALL modern auction enable events in one table  
+- **auction_disabled**: ALL modern auction disable events in one table
+- **updated_starting_price**: ALL modern auction price updates in one table
+- **updated_step_decay_rate**: ALL modern auction decay updates in one table
+- **legacy_auction_kicked**: ALL legacy auction kick events in one table
+- **legacy_auction_enabled**: ALL legacy auction enable events in one table
+- **legacy_auction_disabled**: ALL legacy auction disable events in one table  
+- **legacy_auction_updated_starting_price**: ALL legacy auction price updates in one table
+
+**Factory Pattern Benefits:**
+- ✅ **Automatic Discovery**: New auctions are automatically indexed when deployed
+- ✅ **Unified Tables**: One table per event type, not per contract instance
+- ✅ **Scalable**: No schema changes needed for new auction deployments
+- ✅ **Clean Queries**: Single table contains all events of the same type
+
+#### Database Schema
+The database uses a clean structure optimized for multi-chain auction monitoring with proper foreign key relationships and time-series data handling.
 
 #### TimescaleDB Integration
 - **Hypertables**: `auction_rounds`, `auction_sales`, `price_history` optimized for time-series
@@ -92,15 +134,15 @@ ALTER TABLE auction_house_parameters RENAME TO auction_parameters;
 - **Development API**: Uses either production or mock based on `APP_MODE` environment
 
 #### RESTful API (FastAPI)
-- **Auction management**: CRUD operations for auctions (updated from auction-houses)
+- **Auction management**: CRUD operations for auctions
 - **Multi-chain endpoints**: Chain-aware data retrieval
-- **Real-time data**: WebSocket support removed, replaced with polling
+- **Real-time data**: Polling-based updates for live monitoring
 - **Pagination**: Efficient data loading
 - **CORS enabled**: Frontend integration ready
 
-#### Key Endpoints (Updated)
-- `/auctions`: List with multi-chain filtering (was `/auction-houses`)
-- `/auctions/{address}`: Individual Auction details (was `/auction-houses/{address}`)
+#### Key Endpoints
+- `/auctions`: List with multi-chain filtering
+- `/auctions/{address}`: Individual Auction details
 - `/auctions/{address}/rounds`: Round history
 - `/auctions/{address}/sales`: Sales data
 - `/chains/{chainId}`: Chain metadata
@@ -114,29 +156,25 @@ ALTER TABLE auction_house_parameters RENAME TO auction_parameters;
 - **Responsive design**: Optimized for monitoring dashboards
 - **Component architecture**: Reusable components for auction data
 
-#### Key Components (Updated)
+#### Key Components
 - **Dashboard**: Overview of active rounds and auctions
 - **ChainIcon**: Multi-network visual indicators with tooltips
-- **SalesTable**: Real-time sales tracking with fixed React key warnings
-- **AuctionsTable**: Filterable auction management (was AuctionHousesTable)
-- **AuctionCard**: Individual auction cards (renamed from AuctionHouseCard)
+- **SalesTable**: Real-time sales tracking
+- **AuctionsTable**: Filterable auction management
+- **AuctionCard**: Individual auction cards
 - **StackedProgressMeter**: Time and volume progress indicators
 
-#### Updated Routes
+#### Routes
 ```typescript
-// New routing structure
 /auction/:address         → AuctionDetails component
 /round/:auctionAddress/:roundId → RoundDetails component
-
-// Old routes (removed):
-/auction-house/:address
 ```
 
-#### UI Fixes Applied
-- ✅ Fixed React key prop warnings in SalesTable and Dashboard
-- ✅ Added null safety for `sale.sale_id` fields
-- ✅ Updated button selected states (darker colors)
-- ✅ Added subtle separators between dashboard buttons
+#### UI Features
+- Real-time polling for live auction data
+- Multi-chain filtering and network indicators
+- Responsive design optimized for monitoring
+- Clean, modern interface with proper accessibility
 
 ### 6. Infrastructure & Deployment
 
@@ -157,15 +195,10 @@ ALTER TABLE auction_house_parameters RENAME TO auction_parameters;
 ./run.sh --help
 ```
 
-**Environment Files**:
-- `.env.development` - Development configuration
-- `.env.mock` - Mock mode configuration  
-- `.env.production` - Production configuration
-
-**Legacy Scripts** (to be removed):
-- `run-dev.sh` → Use `./run.sh dev`
-- `run-mock.sh` → Use `./run.sh mock`
-- `run-prod.sh` → Use `./run.sh prod`
+**Environment Configuration**:
+- Unified `.env` file with mode-based variable switching
+- Automatic configuration based on `APP_MODE` setting
+- Support for dev, mock, and production environments
 
 #### Services by Mode
 

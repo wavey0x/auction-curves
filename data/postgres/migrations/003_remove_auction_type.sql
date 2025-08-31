@@ -14,10 +14,10 @@ SELECT current_database();
 DROP INDEX IF EXISTS idx_auction_params_type;
 
 -- Remove the auction_type column
-ALTER TABLE auction_parameters DROP COLUMN IF EXISTS auction_type;
+ALTER TABLE auctions DROP COLUMN IF EXISTS auction_type;
 
 -- Update table comment
-COMMENT ON TABLE auction_parameters IS 'Auction contract parameters (auction type concept removed)';
+COMMENT ON TABLE auctions IS 'Auction contract parameters (auction type concept removed)';
 
 -- ============================================================================
 -- UPDATE VIEWS TO REMOVE AUCTION TYPE REFERENCES
@@ -39,7 +39,7 @@ SELECT
     -- Calculate seconds elapsed
     EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
 FROM auction_rounds ar
-JOIN auction_parameters ahp 
+JOIN auctions ahp 
     ON ar.auction_address = ahp.auction_address 
     AND ar.chain_id = ahp.chain_id
 WHERE ar.is_active = TRUE
@@ -73,7 +73,7 @@ SELECT
         ELSE 0 
     END as seconds_elapsed
 FROM auctions ah
-LEFT JOIN auction_parameters ahp 
+LEFT JOIN auctions ahp 
     ON ah.address = ahp.auction_address 
     AND ah.chain_id = ahp.chain_id
 LEFT JOIN auction_rounds ar 

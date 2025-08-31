@@ -117,7 +117,7 @@ class PriceMonitor:
                     ap.starting_price,
                     EXTRACT(EPOCH FROM (NOW() - TO_TIMESTAMP(ark.timestamp))) as seconds_elapsed
                 FROM auction_round_kicked ark
-                LEFT JOIN auction_parameters ap ON ark.auction = ap.auction_address
+                LEFT JOIN auctions ap ON ark.auction = ap.auction_address
                 WHERE TO_TIMESTAMP(ark.timestamp) + INTERVAL '1 second' * COALESCE(ap.auction_length, 86400) > NOW()
                 ORDER BY ark.timestamp DESC
             """
@@ -135,7 +135,7 @@ class PriceMonitor:
                     ap.starting_price,
                     EXTRACT(EPOCH FROM (NOW() - ar.kicked_at)) as seconds_elapsed
                 FROM auction_rounds ar
-                LEFT JOIN auction_parameters ap ON ar.auction_address = ap.auction_address
+                LEFT JOIN auctions ap ON ar.auction_address = ap.auction_address
                 WHERE ar.is_active = TRUE
                 ORDER BY ar.kicked_at DESC
             """

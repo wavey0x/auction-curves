@@ -101,10 +101,62 @@ PROD_ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/YOUR_KEY
 - Local Anvil blockchain (chain_id: 31337)
 - PostgreSQL via Docker
 - Smart contract auto-deployment
-- Rindexer with local config
+- **Dynamic Rindexer config generation** (see below)
 - Full API with database integration
 - React dev server with hot reload
 - Price monitoring and activity simulation
+
+**Dev Mode Rindexer Configuration:**
+In development mode, the Rindexer configuration is generated dynamically from deployed contract addresses:
+- `./run.sh dev` deploys contracts and saves addresses to `deployment_info.json`
+- A `rindexer-dev.yaml` config is generated from the template with actual contract addresses
+- This avoids environment variable expansion issues and ensures accurate indexing
+- The generated config includes both factory contracts and individual auction contracts
+- Rindexer state is cleaned on each run for a fresh development environment
+
+**CRITICAL: Rindexer Environment Variable Syntax**
+Rindexer ONLY supports this specific syntax:
+```yaml
+# ✅ CORRECT - rindexer supports this
+address: ${LOCAL_FACTORY_ADDRESS}
+start_block: ${LOCAL_START_BLOCK}
+
+# ❌ WRONG - rindexer does NOT support this
+address: {{MODERN_FACTORY_ADDRESS}}
+start_block: {{START_BLOCK}}
+
+# ❌ AVOID - default values can cause parsing issues
+start_block: ${LOCAL_START_BLOCK:-0}  # This can cause panics
+```
+
+**Template System:**
+- `{{}}` syntax is for OUR deployment script template substitution
+- `${}` syntax is for Rindexer's environment variable expansion
+- These are completely different systems - never mix them!
+
+**✅ IMPLEMENTED: Rindexer Factory Discovery Pattern**
+- ✅ WORKING: Factory pattern properly implemented with unified tables
+- ✅ SCALABLE: Automatically discovers ALL deployed auctions without config changes
+- ✅ UNIFIED: Single table per event type (not per individual auction)
+- ✅ CLEAN: No more individual auction contract entries in configuration
+- ✅ MAINTAINABLE: Only factory addresses need updates for new deployments
+
+**Factory Pattern Configuration:**
+```yaml
+# Single contract entry that discovers ALL modern auctions
+- name: Auction
+  details:
+    - network: local
+      factory:
+        address: {{MODERN_FACTORY_ADDRESS}}
+        abi: "./abis/AuctionFactory.json"
+        event_name: DeployedNewAuction
+        input_name: auction
+      start_block: {{START_BLOCK}}
+  abi: "./abis/Auction.json"
+  include_events:
+    - AuctionKicked  # Goes to unified auction_kicked table
+```
 
 #### Mock Mode (`./run.sh mock`)  
 - Hardcoded test data (no blockchain/database required)
@@ -144,14 +196,33 @@ GET  /system/stats                      # System statistics
 
 ## Database Schema
 
-### Multi-Chain Design
+### Multi-Chain Design with Unified Tables
 All tables include `chain_id` fields for multi-network support:
 
+**Custom Business Logic Tables:**
 - **tokens**: Token metadata cache with chain_id
-- **auction_parameters**: Contract parameters per chain
+- **auctions**: Contract parameters per chain (renamed from auction_parameters)
 - **auction_rounds**: Round tracking with incremental round_id per auction
 - **auction_sales**: Individual sales with sequence numbers per round  
 - **price_history**: Time-series price data optimized with TimescaleDB
+
+**Rindexer Auto-Generated Tables (Factory Discovery):**
+- **deployed_new_auction**: Factory deployment events (both modern & legacy)
+- **auction_kicked**: ALL modern auction kick events (unified table)
+- **auction_enabled**: ALL modern auction enable events (unified table)
+- **auction_disabled**: ALL modern auction disable events (unified table)
+- **updated_starting_price**: ALL modern auction price updates (unified table)
+- **updated_step_decay_rate**: ALL modern auction decay updates (unified table)
+- **legacy_auction_kicked**: ALL legacy auction kick events (unified table)
+- **legacy_auction_enabled**: ALL legacy auction enable events (unified table)
+- **legacy_auction_disabled**: ALL legacy auction disable events (unified table)
+- **legacy_auction_updated_starting_price**: ALL legacy auction price updates (unified table)
+
+### Unified Table Benefits
+- **Scalability**: No new tables needed when new auctions are deployed
+- **Simplified queries**: Single table contains all events of the same type
+- **Factory discovery**: Rindexer automatically finds and indexes new auctions
+- **Clean schema**: Logical separation by event type rather than contract instance
 
 ### Recent Schema Updates
 - Renamed `auction_house` → `auction` (Migration 004)
@@ -421,11 +492,20 @@ npm run lint
 - ✅ Automatic legacy variable mapping
 - ✅ Removed: .env.development, .env.production, .env.mock
 
+### Rindexer Factory Pattern Implementation (Latest)
+- ✅ **Factory Discovery**: Automatic detection of ALL deployed auctions
+- ✅ **Unified Tables**: Single table per event type (not per auction contract)
+- ✅ **Scalable Configuration**: No config changes needed for new auction deployments
+- ✅ **Simplified Setup**: Only factory addresses need to be configured
+- ✅ **Clean Architecture**: Eliminated 10+ individual contract entries
+- ✅ **Template Simplification**: Removed complex individual auction generation logic
+
 ### Code Quality Improvements
 - ✅ Fixed all React key prop warnings
 - ✅ Added null safety for API responses  
 - ✅ Improved TypeScript type coverage
 - ✅ Better error handling and loading states
+- ✅ Eliminated YAML parsing errors with proper factory configuration
 
 ## Performance Considerations
 

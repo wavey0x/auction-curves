@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # Database configuration
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://postgres@localhost:5432/auction"
+    "postgresql://wavey@localhost:5432/auction"  # Fixed default to use correct user
 )
 
 # Convert to async URL if needed
@@ -27,7 +27,7 @@ else:
 # Create async engine
 engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    echo=False,  # Set to True for SQL logging
+    echo=True,  # Enable SQL logging for debugging
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
@@ -115,7 +115,7 @@ class DatabaseQueries:
                 )::INTEGER as calculated_time_remaining,
                 EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
             FROM auction_rounds ar
-            JOIN auction_parameters ahp 
+            JOIN auctions ahp 
                 ON ar.auction_address = ahp.auction_address 
                 AND ar.chain_id = ahp.chain_id
             WHERE ar.is_active = TRUE
@@ -152,7 +152,7 @@ class DatabaseQueries:
                         ahp.auction_length - EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))
                     )::INTEGER
                 ELSE 0 END as time_remaining
-            FROM auction_parameters ahp
+            FROM auctions ahp
             LEFT JOIN auction_rounds ar 
                 ON ahp.auction_address = ar.auction_address 
                 AND ahp.chain_id = ar.chain_id
@@ -192,7 +192,7 @@ class DatabaseQueries:
                 ELSE 0 END as calculated_time_remaining,
                 EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
             FROM auction_rounds ar
-            JOIN auction_parameters ahp 
+            JOIN auctions ahp 
                 ON ar.auction_address = ahp.auction_address 
                 AND ar.chain_id = ahp.chain_id
             WHERE ar.auction_address = :auction_address
@@ -236,7 +236,7 @@ class DatabaseQueries:
                 ON als.auction_address = ar.auction_address 
                 AND als.chain_id = ar.chain_id 
                 AND als.round_id = ar.round_id
-            JOIN auction_parameters ahp 
+            JOIN auctions ahp 
                 ON als.auction_address = ahp.auction_address 
                 AND als.chain_id = ahp.chain_id
             LEFT JOIN tokens t1 
@@ -326,7 +326,7 @@ class DatabaseQueries:
                 COUNT(DISTINCT ar.round_id) as total_rounds,
                 COUNT(als.sale_id) as total_sales,
                 COUNT(DISTINCT als.taker) as total_participants
-            FROM auction_parameters ahp
+            FROM auctions ahp
             LEFT JOIN auction_rounds ar 
                 ON ahp.auction_address = ar.auction_address
                 AND ahp.chain_id = ar.chain_id

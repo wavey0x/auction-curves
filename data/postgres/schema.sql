@@ -29,11 +29,11 @@ CREATE INDEX idx_tokens_address ON tokens (address);
 CREATE INDEX idx_tokens_chain_id ON tokens (chain_id);
 
 -- ============================================================================
--- AUCTION PARAMETERS CACHE
+-- AUCTIONS - MAIN AUCTION CONTRACTS TABLE
 -- ============================================================================
--- Cache for Auction contract parameters (supplements Rindexer event data)
--- This is useful since parameters are immutable and not emitted in every event
-CREATE TABLE auction_parameters (
+-- Track individual auction contracts across chains
+-- Each auction contract gets one entry with its metadata and configuration
+CREATE TABLE auctions (
     auction_address VARCHAR(42) NOT NULL,
     chain_id INTEGER NOT NULL DEFAULT 1,
     
@@ -65,10 +65,10 @@ CREATE TABLE auction_parameters (
     PRIMARY KEY (auction_address, chain_id)
 );
 
--- Create indexes for auction_parameters table
-CREATE INDEX idx_auction_params_deployer ON auction_parameters (deployer);
-CREATE INDEX idx_auction_params_factory ON auction_parameters (factory_address);
-CREATE INDEX idx_auction_params_chain ON auction_parameters (chain_id);
+-- Create indexes for auctions table
+CREATE INDEX idx_auctions_deployer ON auctions (deployer);
+CREATE INDEX idx_auctions_factory ON auctions (factory_address);
+CREATE INDEX idx_auctions_chain ON auctions (chain_id);
 
 -- ============================================================================
 -- AUCTION ROUND TRACKING
@@ -101,8 +101,8 @@ CREATE TABLE auction_rounds (
     block_number BIGINT NOT NULL,
     transaction_hash VARCHAR(66) NOT NULL,
     
-    PRIMARY KEY (auction_address, chain_id, round_id),
-    FOREIGN KEY (auction_address, chain_id) REFERENCES auction_parameters(auction_address, chain_id)
+    PRIMARY KEY (auction_address, chain_id, round_id)
+    -- FOREIGN KEY (auction_address, chain_id) REFERENCES auctions(auction_address, chain_id) -- Removed: not needed
 );
 
 -- Create indexes for auction_rounds table
@@ -111,7 +111,7 @@ CREATE INDEX idx_auction_rounds_kicked_at ON auction_rounds (kicked_at);
 CREATE INDEX idx_auction_rounds_chain ON auction_rounds (chain_id);
 CREATE INDEX idx_auction_rounds_from_token ON auction_rounds (from_token);
 
--- Note: auction_rounds is NOT a hypertable to allow foreign key references from hypertables
+-- Note: auction_rounds is NOT a hypertable (kept as regular table for better performance)
 
 -- ============================================================================
 -- AUCTION SALES TRACKING
@@ -142,8 +142,8 @@ CREATE TABLE auction_sales (
     transaction_hash VARCHAR(66) NOT NULL,
     log_index INTEGER NOT NULL,
     
-    PRIMARY KEY (sale_id, timestamp),
-    FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id)
+    PRIMARY KEY (sale_id, timestamp)
+    -- FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id) -- Removed: not needed
 );
 
 -- Create indexes for auction_sales table
@@ -173,9 +173,9 @@ CREATE TABLE price_history (
     seconds_from_round_start INTEGER NOT NULL,
     
     -- Block context
-    block_number BIGINT NOT NULL,
+    block_number BIGINT NOT NULL
     
-    FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id)
+    -- FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id) -- Removed: not needed
 );
 
 -- Create indexes for price_history table
@@ -241,7 +241,7 @@ BEGIN
     UPDATE auction_rounds ar
     SET is_active = FALSE,
         time_remaining = 0
-    FROM auction_parameters ahp
+    FROM auctions ahp
     WHERE ar.auction_address = ahp.auction_address
         AND ar.chain_id = ahp.chain_id
         AND ar.is_active = TRUE
@@ -332,7 +332,7 @@ SELECT
     -- Calculate seconds elapsed
     EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
 FROM auction_rounds ar
-JOIN auction_parameters ahp 
+JOIN auctions ahp 
     ON ar.auction_address = ahp.auction_address 
     AND ar.chain_id = ahp.chain_id
 WHERE ar.is_active = TRUE
@@ -355,7 +355,7 @@ JOIN auction_rounds ar
     ON als.auction_address = ar.auction_address 
     AND als.chain_id = ar.chain_id 
     AND als.round_id = ar.round_id
-JOIN auction_parameters ahp 
+JOIN auctions ahp 
     ON als.auction_address = ahp.auction_address 
     AND als.chain_id = ahp.chain_id
 LEFT JOIN tokens t1 
@@ -370,7 +370,7 @@ ORDER BY als.timestamp DESC;
 -- COMMENTS
 -- ============================================================================
 COMMENT ON TABLE tokens IS 'Token metadata cache for display purposes across multiple chains';
-COMMENT ON TABLE auction_parameters IS 'Cache of Auction contract parameters (immutable values from deployment)';
+COMMENT ON TABLE auctions IS 'Main auction contracts table - one entry per deployed auction contract';
 COMMENT ON TABLE auction_rounds IS 'Tracks individual rounds within Auctions, created by kick events';
 COMMENT ON TABLE auction_sales IS 'Tracks individual sales within rounds, created by take events';
 COMMENT ON TABLE price_history IS 'Time-series price data for charting and analytics';

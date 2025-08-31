@@ -1,4 +1,4 @@
--- Auction House Analytics Schema
+-- Auction Analytics Schema
 -- This schema adds analytics and calculated fields ON TOP of Rindexer's automatically generated tables
 -- Rindexer will create the base event tables automatically
 

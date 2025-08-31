@@ -8,12 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Any, Optional
 import logging
+import json
 from datetime import datetime, timezone
 
 from config import get_settings, get_cors_origins, is_mock_mode, requires_database, get_all_network_configs, get_enabled_networks
 from services.data_service import get_data_provider, DataProvider
 from models.auction import SystemStats
-from database import get_db
+from database import get_db, check_database_connection
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
@@ -422,7 +423,18 @@ async def process_rindexer_event(event_data: dict):
     """Process events from Rindexer streams for custom business logic"""
     try:
         event_type = event_data.get("event_name")
-        logger.info(f"Processing webhook event: {event_type}")
+        
+        # Comprehensive logging of webhook payload
+        logger.info("="*50)
+        logger.info(f"🔔 WEBHOOK RECEIVED: {event_type}")
+        logger.info(f"📦 Raw payload: {json.dumps(event_data, indent=2)}")
+        
+        # Log database connection status
+        try:
+            db_connected = await check_database_connection()
+            logger.info(f"💾 Database connected: {db_connected}")
+        except Exception as db_check_error:
+            logger.error(f"❌ Database connection check failed: {db_check_error}")
         
         if event_type == "AuctionKicked":
             await handle_auction_kicked(event_data)
@@ -441,22 +453,211 @@ async def process_rindexer_event(event_data: dict):
         else:
             logger.warning(f"Unhandled event type: {event_type}")
         
+        logger.info("✅ Webhook processing completed")
+        logger.info("="*50)
         return {"status": "processed", "event_type": event_type}
     except Exception as e:
-        logger.error(f"Error processing webhook event: {e}")
+        logger.error(f"❌ Error processing webhook event: {e}")
+        logger.info("="*50)
         raise HTTPException(status_code=500, detail="Failed to process webhook event")
+
+
+@app.post("/webhook/test-debug")
+async def test_webhook_debug(event_data: dict):
+    """Debug endpoint to test webhook payload extraction without database operations"""
+    try:
+        event_type = event_data.get("event_name")
+        
+        # Extract data like the real webhook handler
+        event_info = event_data.get("event_data", {})
+        tx_info = event_info.get("transaction_information", {})
+        
+        extracted = {}
+        
+        if event_type == "AuctionKicked":
+            extracted = {
+                "auction_address": (
+                    event_data.get("auction_address") or
+                    event_data.get("auction") or
+                    event_data.get("contract_address") or
+                    tx_info.get("address")
+                ),
+                "from_token": (
+                    event_data.get("from_token") or
+                    event_data.get("from") or
+                    event_info.get("from")
+                ),
+                "available": (
+                    event_data.get("initial_available") or
+                    event_data.get("available") or
+                    event_info.get("available")
+                ),
+                "tx_hash": (
+                    event_data.get("transaction_hash") or
+                    event_data.get("tx_hash") or
+                    tx_info.get("transaction_hash")
+                ),
+                "block_number": (
+                    event_data.get("block_number") or
+                    tx_info.get("block_number")
+                ),
+                "network": tx_info.get("network"),
+            }
+        
+        # Test database connection
+        try:
+            db_connected = await check_database_connection()
+            db_status = "✅ Connected"
+        except Exception as db_error:
+            db_connected = False
+            db_status = f"❌ Failed: {db_error}"
+        
+        return {
+            "event_type": event_type,
+            "raw_payload": event_data,
+            "event_info_keys": list(event_info.keys()) if event_info else [],
+            "tx_info_keys": list(tx_info.keys()) if tx_info else [],
+            "extracted_fields": extracted,
+            "database_status": db_status,
+            "database_connected": db_connected,
+            "would_process": bool(event_type and extracted.get("auction_address") and extracted.get("from_token")),
+            "missing_fields": [k for k, v in extracted.items() if not v] if extracted else []
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "raw_payload": event_data
+        }
+
+
+@app.post("/webhook/test-db-insert")
+async def test_database_insert():
+    """Test endpoint to directly test database insertion"""
+    try:
+        test_data = {
+            "auction_address": "0x1111111111111111111111111111111111111111",
+            "chain_id": 31337,
+            "from_token": "0x2222222222222222222222222222222222222222",
+            "initial_available": "999000000",
+            "block_number": 999,
+            "transaction_hash": "0x9999999999999999999999999999999999999999999999999999999999999999"
+        }
+        
+        logger.info("🧪 TEST DB INSERT - Starting test insertion")
+        
+        async for db in get_db():
+            try:
+                logger.info("🔗 TEST - Got database session")
+                
+                # Same SQL as webhook
+                insert_query = text("""
+                    INSERT INTO auction_rounds (
+                        auction_address, chain_id, round_id, from_token,
+                        kicked_at, initial_available, is_active,
+                        current_price, available_amount, time_remaining, seconds_elapsed,
+                        total_sales, total_volume_sold, progress_percentage,
+                        block_number, transaction_hash
+                    )
+                    VALUES (
+                        :auction_address, :chain_id, 
+                        COALESCE((SELECT MAX(round_id) + 1 FROM auction_rounds WHERE auction_address = :auction_address AND chain_id = :chain_id), 1),
+                        :from_token, NOW(), :initial_available, TRUE,
+                        0, :initial_available, 3600, 0,
+                        0, 0, 0,
+                        :block_number, :transaction_hash
+                    )
+                    RETURNING round_id
+                """)
+                
+                logger.info(f"🗂️ TEST - Insert parameters: {test_data}")
+                
+                result = await db.execute(insert_query, test_data)
+                round_id = result.scalar()
+                
+                logger.info(f"🎯 TEST - Insert result: round_id={round_id}")
+                
+                await db.commit()
+                logger.info(f"✅ TEST - Transaction committed successfully")
+                
+                return {
+                    "status": "success",
+                    "round_id": round_id,
+                    "test_data": test_data
+                }
+                
+            except Exception as db_error:
+                logger.error(f"❌ TEST - Database error: {db_error}")
+                try:
+                    await db.rollback()
+                    logger.info(f"🔄 TEST - Transaction rolled back")
+                except Exception as rollback_error:
+                    logger.error(f"❌ TEST - Rollback failed: {rollback_error}")
+                raise
+            break
+            
+    except Exception as e:
+        logger.error(f"❌ TEST - Error in test database insert: {e}")
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
 
 async def handle_auction_kicked(event_data: dict):
     """Handle AuctionKicked events - increment round counter and fetch prices"""
     try:
-        auction_address = event_data.get("auction_address", event_data.get("auction"))
-        from_token = event_data.get("from_token")
-        to_token = event_data.get("to_token")
-        block_number = event_data.get("block_number")
+        # Handle both array and object formats for event_data
+        event_data_raw = event_data.get("event_data", {})
+        
+        if isinstance(event_data_raw, list):
+            # Array format: event_data: [{...}]
+            if not event_data_raw:
+                logger.warning("Empty event_data array in AuctionKicked event")
+                return
+            event_info = event_data_raw[0]
+        else:
+            # Object format: event_data: {...}
+            event_info = event_data_raw
+        
+        tx_info = event_info.get("transaction_information", {})
+        
+        # Extract fields from correct locations  
+        auction_address = (
+            event_data.get("auction_address") or  # Legacy API format
+            event_data.get("auction") or          # Alternative API format  
+            event_data.get("contract_address") or  # Manual test format
+            tx_info.get("address")                # Rindexer format
+        )
+        
+        from_token = (
+            event_data.get("from_token") or       # Legacy API format
+            event_data.get("from") or             # Manual test format
+            event_info.get("from")                # Rindexer format
+        )
+        
+        # Extract additional AuctionKicked fields
+        round_id = event_info.get("roundId") 
+        initial_available = event_info.get("available")
+        
+        to_token = event_data.get("to_token")     # This might not exist in AuctionKicked events
+        
+        block_number = (
+            event_data.get("block_number") or     # Legacy/manual format
+            tx_info.get("block_number")           # Rindexer format
+        )
+        
+        # Log extracted values for debugging
+        logger.info(f"🔍 EXTRACTED VALUES:")
+        logger.info(f"   auction_address: {auction_address}")
+        logger.info(f"   from_token: {from_token}")
+        logger.info(f"   to_token: {to_token}")
+        logger.info(f"   block_number: {block_number}")
+        logger.info(f"   event_info keys: {list(event_info.keys()) if event_info else 'None'}")
+        logger.info(f"   tx_info keys: {list(tx_info.keys()) if tx_info else 'None'}")
         
         if not auction_address:
-            logger.warning("No auction address in AuctionKicked event")
+            logger.error("❌ No auction address found in AuctionKicked event")
+            logger.error(f"   Searched in: auction_address, auction, contract_address, event_data.transaction_information.address")
             return
         
         # Auto-increment round ID per auction
@@ -476,7 +677,7 @@ async def handle_auction_kicked(event_data: dict):
 async def handle_auction_sale(event_data: dict):
     """Handle sale/take events - record sale and update round statistics"""
     try:
-        auction_address = event_data.get("auction_address", event_data.get("auction"))
+        auction_address = event_data.get("auction_address", event_data.get("auction", event_data.get("contract_address")))
         amount_taken = event_data.get("amount_taken", event_data.get("amount"))
         amount_paid = event_data.get("amount_paid", "0")
         price = event_data.get("price", "0")
@@ -517,9 +718,24 @@ async def handle_auction_sale(event_data: dict):
 async def handle_new_auction_deployed(event_data: dict):
     """Handle new auction deployment - cache contract parameters"""
     try:
-        auction_address = event_data.get("auction", event_data.get("auction_address"))
-        want_token = event_data.get("want", event_data.get("want_token"))
-        factory_address = event_data.get("factory_address", event_data.get("contract_address"))
+        # Handle both array and object formats for event_data
+        event_data_raw = event_data.get("event_data", {})
+        
+        if isinstance(event_data_raw, list):
+            # Array format: event_data: [{...}]
+            if not event_data_raw:
+                logger.warning("Empty event_data array in DeployedNewAuction event")
+                return
+            event_info = event_data_raw[0]
+        else:
+            # Object format: event_data: {...}
+            event_info = event_data_raw
+        
+        tx_info = event_info.get("transaction_information", {})
+        
+        auction_address = event_info.get("auction")
+        want_token = event_info.get("want")
+        factory_address = tx_info.get("address")  # Factory address is in transaction_information
         contract_name = event_data.get("contract_name", "")
         
         if not auction_address:
@@ -529,8 +745,8 @@ async def handle_new_auction_deployed(event_data: dict):
         # Detect auction version based on factory/contract name
         auction_version = detect_auction_version(factory_address, contract_name)
         
-        # Initialize auction parameters cache with version
-        await cache_auction_parameters(auction_address, want_token, factory_address, auction_version)
+        # Initialize auction cache with version
+        await cache_auction(auction_address, want_token, factory_address, auction_version)
         
         logger.info(f"Processed new {auction_version} auction deployment: {auction_address}")
     except Exception as e:
@@ -568,20 +784,71 @@ async def increment_auction_round(auction_address: str, event_data: dict):
             logger.info(f"Mock mode: Would increment round for {auction_address}")
             return
         
-        # Extract event data
-        from_token = event_data.get("from_token")
-        initial_available = event_data.get("initial_available", event_data.get("amount", "0"))
-        block_number = event_data.get("block_number", 0)
-        transaction_hash = event_data.get("transaction_hash", "")
+        # Handle both array and object formats for event_data
+        event_data_raw = event_data.get("event_data", {})
+        
+        if isinstance(event_data_raw, list):
+            # Array format: event_data: [{...}]
+            if not event_data_raw:
+                logger.warning("Empty event_data array in increment_auction_round")
+                return
+            event_info = event_data_raw[0]
+        else:
+            # Object format: event_data: {...}
+            event_info = event_data_raw
+        
+        tx_info = event_info.get("transaction_information", {})
+        
+        from_token = (
+            event_data.get("from_token") or       # Legacy API format
+            event_data.get("from") or             # Manual test format
+            event_info.get("from")                # Rindexer format
+        )
+        
+        initial_available = (
+            event_data.get("initial_available") or
+            event_data.get("available") or
+            event_info.get("available") or
+            event_data.get("amount", "0")
+        )
+        
+        block_number_raw = (
+            event_data.get("block_number") or
+            tx_info.get("block_number", 0)
+        )
+        
+        # Convert hex block number to integer
+        if isinstance(block_number_raw, str) and block_number_raw.startswith("0x"):
+            block_number = int(block_number_raw, 16)
+        else:
+            block_number = int(block_number_raw) if block_number_raw else 0
+        
+        transaction_hash = (
+            event_data.get("transaction_hash") or
+            event_data.get("tx_hash") or
+            tx_info.get("transaction_hash", "")
+        )
+        
         chain_id = event_data.get("chain_id", 31337)  # Default to local Anvil
         
+        # Log extraction for debugging
+        logger.info(f"🔍 INCREMENT ROUND - Extracted data:")
+        logger.info(f"   from_token: {from_token}")
+        logger.info(f"   initial_available: {initial_available}")
+        logger.info(f"   block_number: {block_number}")
+        logger.info(f"   transaction_hash: {transaction_hash}")
+        logger.info(f"   chain_id: {chain_id}")
+        
         if not from_token:
-            logger.warning(f"No from_token in AuctionKicked event for {auction_address}")
+            logger.error(f"❌ No from_token in AuctionKicked event for {auction_address}")
             return
             
+        logger.info(f"💾 Starting database operations for auction {auction_address}")
+        
         # Insert into database
         async for db in get_db():
             try:
+                logger.info(f"🔗 Got database session, starting transaction")
                 # First, deactivate any previous active rounds for this auction
                 deactivate_query = text("""
                     UPDATE auction_rounds 
@@ -589,13 +856,18 @@ async def increment_auction_round(auction_address: str, event_data: dict):
                     WHERE auction_address = :auction_address AND chain_id = :chain_id AND is_active = TRUE
                 """)
                 
-                await db.execute(deactivate_query, {
+                logger.info(f"🔄 Deactivating previous rounds for {auction_address} on chain {chain_id}")
+                deactivate_result = await db.execute(deactivate_query, {
                     "auction_address": auction_address,
                     "chain_id": chain_id
                 })
+                logger.info(f"✅ Deactivated {deactivate_result.rowcount} previous rounds")
                 
                 # Get next round ID and insert new round
-                insert_query = text("""
+                logger.info(f"📝 Inserting new round for {auction_address}")
+                
+                # Build query with direct substitution to avoid parameter conflicts
+                insert_query = f"""
                     INSERT INTO auction_rounds (
                         auction_address, chain_id, round_id, from_token,
                         kicked_at, initial_available, is_active,
@@ -604,33 +876,35 @@ async def increment_auction_round(auction_address: str, event_data: dict):
                         block_number, transaction_hash
                     )
                     VALUES (
-                        :auction_address, :chain_id, 
-                        COALESCE((SELECT MAX(round_id) + 1 FROM auction_rounds WHERE auction_address = :auction_address AND chain_id = :chain_id), 1),
-                        :from_token, NOW(), :initial_available, TRUE,
-                        0, :initial_available, 3600, 0,
+                        '{auction_address}', {chain_id}, 
+                        COALESCE((SELECT MAX(round_id) + 1 FROM auction_rounds WHERE auction_address = '{auction_address}' AND chain_id = {chain_id}), 1),
+                        '{from_token}', NOW(), {initial_available}, TRUE,
+                        0, {initial_available}, 3600, 0,
                         0, 0, 0,
-                        :block_number, :transaction_hash
+                        '{block_number}', '{transaction_hash}'
                     )
                     RETURNING round_id
-                """)
+                """
                 
-                result = await db.execute(insert_query, {
-                    "auction_address": auction_address,
-                    "chain_id": chain_id,
-                    "from_token": from_token,
-                    "initial_available": str(initial_available),
-                    "block_number": block_number,
-                    "transaction_hash": transaction_hash
-                })
+                logger.info(f"🗂️ Insert parameters: auction={auction_address}, chain={chain_id}, from_token={from_token}, available={initial_available}")
+                
+                result = await db.execute(text(insert_query))
                 
                 round_id = result.scalar()
-                await db.commit()
+                logger.info(f"🎯 Insert result: round_id={round_id}")
                 
-                logger.info(f"Created round {round_id} for auction {auction_address} with {initial_available} {from_token}")
+                await db.commit()
+                logger.info(f"✅ Transaction committed successfully")
+                
+                logger.info(f"🎉 Created round {round_id} for auction {auction_address} with {initial_available} {from_token}")
                 
             except Exception as db_error:
-                await db.rollback()
-                logger.error(f"Database error incrementing auction round: {db_error}")
+                logger.error(f"❌ Database error incrementing auction round: {db_error}")
+                try:
+                    await db.rollback()
+                    logger.info(f"🔄 Transaction rolled back")
+                except Exception as rollback_error:
+                    logger.error(f"❌ Rollback failed: {rollback_error}")
                 raise
             break  # Exit the async generator after first iteration
                 
@@ -811,9 +1085,24 @@ async def record_auction_sale(auction_address: str, sale_data: dict):
 async def handle_auction_enabled(event_data: dict):
     """Handle AuctionEnabled events - update auction state"""
     try:
-        auction_address = event_data.get("auction_address", event_data.get("auction"))
-        from_token = event_data.get("from_token")
-        to_token = event_data.get("to_token")
+        # Handle both array and object formats for event_data
+        event_data_raw = event_data.get("event_data", {})
+        
+        if isinstance(event_data_raw, list):
+            # Array format: event_data: [{...}]
+            if not event_data_raw:
+                logger.warning("Empty event_data array in AuctionEnabled event")
+                return
+            event_info = event_data_raw[0]
+        else:
+            # Object format: event_data: {...}
+            event_info = event_data_raw
+        
+        tx_info = event_info.get("transaction_information", {})
+        
+        auction_address = tx_info.get("address")  # Auction address is in transaction_information
+        from_token = event_info.get("from")
+        to_token = event_info.get("to")
         chain_id = event_data.get("chain_id", 31337)
         
         if is_mock_mode():
@@ -838,7 +1127,7 @@ async def handle_auction_enabled(event_data: dict):
 async def handle_auction_disabled(event_data: dict):
     """Handle AuctionDisabled events - update auction state"""
     try:
-        auction_address = event_data.get("auction_address", event_data.get("auction"))
+        auction_address = event_data.get("auction_address", event_data.get("auction", event_data.get("contract_address")))
         from_token = event_data.get("from_token")
         to_token = event_data.get("to_token")
         
@@ -858,8 +1147,23 @@ async def handle_auction_disabled(event_data: dict):
 async def handle_updated_starting_price(event_data: dict):
     """Handle UpdatedStartingPrice events - update auction parameters"""
     try:
-        auction_address = event_data.get("auction_address", event_data.get("auction"))
-        starting_price = event_data.get("starting_price")
+        # Handle both array and object formats for event_data
+        event_data_raw = event_data.get("event_data", {})
+        
+        if isinstance(event_data_raw, list):
+            # Array format: event_data: [{...}]
+            if not event_data_raw:
+                logger.warning("Empty event_data array in UpdatedStartingPrice event")
+                return
+            event_info = event_data_raw[0]
+        else:
+            # Object format: event_data: {...}
+            event_info = event_data_raw
+        
+        tx_info = event_info.get("transaction_information", {})
+        
+        auction_address = tx_info.get("address")  # Auction address is in transaction_information
+        starting_price = event_info.get("startingPrice")
         chain_id = event_data.get("chain_id", 31337)
         
         if is_mock_mode():
@@ -873,7 +1177,7 @@ async def handle_updated_starting_price(event_data: dict):
         async for db in get_db():
             try:
                 update_query = text("""
-                    UPDATE auction_parameters 
+                    UPDATE auctions 
                     SET starting_price = :starting_price
                     WHERE auction_address = :auction_address AND chain_id = :chain_id
                 """)
@@ -900,8 +1204,23 @@ async def handle_updated_starting_price(event_data: dict):
 async def handle_updated_step_decay_rate(event_data: dict):
     """Handle UpdatedStepDecayRate events - update auction parameters"""
     try:
-        auction_address = event_data.get("auction_address", event_data.get("auction"))
-        step_decay_rate = event_data.get("step_decay_rate")
+        # Handle both array and object formats for event_data
+        event_data_raw = event_data.get("event_data", {})
+        
+        if isinstance(event_data_raw, list):
+            # Array format: event_data: [{...}]
+            if not event_data_raw:
+                logger.warning("Empty event_data array in UpdatedStepDecayRate event")
+                return
+            event_info = event_data_raw[0]
+        else:
+            # Object format: event_data: {...}
+            event_info = event_data_raw
+        
+        tx_info = event_info.get("transaction_information", {})
+        
+        auction_address = tx_info.get("address")  # Auction address is in transaction_information
+        step_decay_rate = event_info.get("stepDecayRate")
         chain_id = event_data.get("chain_id", 31337)
         
         if is_mock_mode():
@@ -919,7 +1238,7 @@ async def handle_updated_step_decay_rate(event_data: dict):
                 decay_rate_percent = (1 - decay_rate_decimal) * 100
                 
                 update_query = text("""
-                    UPDATE auction_parameters 
+                    UPDATE auctions 
                     SET step_decay_rate = :step_decay_rate,
                         decay_rate_percent = :decay_rate_percent
                     WHERE auction_address = :auction_address AND chain_id = :chain_id
@@ -994,8 +1313,8 @@ async def cache_token_metadata(token_address: str, chain_id: int):
         logger.error(f"Error caching token metadata: {e}")
 
 
-async def cache_auction_parameters(auction_address: str, want_token: str, factory_address: str, auction_version: str):
-    """Cache immutable auction contract parameters"""
+async def cache_auction(auction_address: str, want_token: str, factory_address: str, auction_version: str):
+    """Cache auction contract metadata and configuration"""
     try:
         if is_mock_mode():
             logger.info(f"Mock mode: Would cache {auction_version} parameters for {auction_address}")
@@ -1025,16 +1344,17 @@ async def cache_auction_parameters(auction_address: str, want_token: str, factor
             try:
                 # Use UPSERT to handle potential duplicates
                 query = text("""
-                    INSERT INTO auction_parameters (
-                        auction_address, chain_id, price_update_interval, step_decay_rate,
+                    INSERT INTO auctions (
+                        auction_address, chain_id, price_update_interval, step_decay, step_decay_rate,
                         auction_length, want_token, factory_address, auction_version,
                         decay_rate_percent, update_interval_minutes, discovered_at
                     )
-                    VALUES (:auction_address, 31337, :price_update_interval, :step_decay_rate,
+                    VALUES (:auction_address, 31337, :price_update_interval, :step_decay, :step_decay_rate,
                             :auction_length, :want_token, :factory_address, :auction_version,
                             :decay_rate_percent, :update_interval_minutes, NOW())
                     ON CONFLICT (auction_address, chain_id) 
                     DO UPDATE SET
+                        step_decay = EXCLUDED.step_decay,
                         step_decay_rate = EXCLUDED.step_decay_rate,
                         price_update_interval = EXCLUDED.price_update_interval,
                         auction_version = EXCLUDED.auction_version,
@@ -1045,6 +1365,7 @@ async def cache_auction_parameters(auction_address: str, want_token: str, factor
                 await db.execute(query, {
                     "auction_address": auction_address,
                     "price_update_interval": price_update_interval,
+                    "step_decay": str(step_decay_rate),  # Use same value as step_decay_rate for backward compatibility
                     "step_decay_rate": str(step_decay_rate),
                     "auction_length": auction_length,
                     "want_token": want_token,

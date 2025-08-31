@@ -119,13 +119,19 @@ PROD_ETHEREUM_FACTORY_ADDRESS=0x_YOUR_DEPLOYED_FACTORY
 - **Database integration**: Events stored with chain_id for multi-chain support
 - **Dynamic contract discovery**: Factory pattern automatically discovers all deployed auctions
 
-#### Dynamic Contract Discovery
-The indexer uses Rindexer's factory pattern to automatically discover and index new auction contracts without manual configuration:
+#### Dynamic Contract Configuration (Dev Mode)
+In development mode, the indexer configuration is generated dynamically to match deployed contracts:
 
-1. **Factory Contracts**: Each network has one or more factory contracts that deploy auction instances
-2. **Automatic Discovery**: When a factory emits `DeployedNewAuction`, Rindexer automatically starts indexing that new auction contract
-3. **Zero Configuration**: No need to hardcode auction addresses - the system scales automatically as new auctions are deployed
-4. **Multi-Network**: Works across all supported networks (Ethereum, Polygon, Arbitrum, Optimism, Base) with unified database storage
+1. **Template-Based**: Uses `rindexer.template.yaml` with placeholder addresses
+2. **Post-Deployment Generation**: After contracts deploy, `deployment_info.json` is used to generate `rindexer-dev.yaml`
+3. **Fresh State**: Rindexer internal state is cleaned on each dev run for consistent testing
+4. **Hardcoded Addresses**: Generated config uses actual deployed addresses, avoiding environment variable expansion issues
+
+**Why Dynamic Generation?**
+- Rindexer environment variable expansion (`${VAR}`) has parsing issues
+- Factory-based auto-discovery causes panics in current Rindexer version
+- Development needs fresh, reproducible environments
+- Generated config ensures accurate indexing of deployed contracts
 
 **Benefits**: Deploy unlimited factories → Deploy unlimited auctions → Automatic indexing with zero configuration drift
 

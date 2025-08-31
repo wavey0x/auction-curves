@@ -11,16 +11,16 @@ SELECT current_database();
 -- ============================================================================
 
 -- Add new stepDecayRate field (replaces step_decay)
-ALTER TABLE auction_parameters 
+ALTER TABLE auctions 
 ADD COLUMN IF NOT EXISTS step_decay_rate DECIMAL(30,0);
 
 -- Update comments to reflect Auction contract
-COMMENT ON TABLE auction_parameters IS 'Cache of Auction contract parameters (renamed from ParameterizedAuction)';
-COMMENT ON COLUMN auction_parameters.step_decay_rate IS 'Step decay rate per 36-second step (e.g., 0.995 * 1e27 for 0.5% decay)';
-COMMENT ON COLUMN auction_parameters.step_decay IS 'DEPRECATED: Use step_decay_rate instead';
+COMMENT ON TABLE auctions IS 'Cache of Auction contract parameters (renamed from ParameterizedAuction)';
+COMMENT ON COLUMN auctions.step_decay_rate IS 'Step decay rate per 36-second step (e.g., 0.995 * 1e27 for 0.5% decay)';
+COMMENT ON COLUMN auctions.step_decay IS 'DEPRECATED: Use step_decay_rate instead';
 
 -- Copy data from step_decay to step_decay_rate if not already done
-UPDATE auction_parameters 
+UPDATE auctions 
 SET step_decay_rate = step_decay 
 WHERE step_decay_rate IS NULL AND step_decay IS NOT NULL;
 
@@ -91,7 +91,7 @@ SELECT
     -- Calculate seconds elapsed
     EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
 FROM auction_rounds ar
-JOIN auction_parameters ahp 
+JOIN auctions ahp 
     ON ar.auction_address = ahp.auction_address 
     AND ar.chain_id = ahp.chain_id
 WHERE ar.is_active = TRUE
@@ -120,9 +120,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger to keep fields in sync during transition period
-DROP TRIGGER IF EXISTS trigger_sync_step_decay_fields ON auction_parameters;
+DROP TRIGGER IF EXISTS trigger_sync_step_decay_fields ON auctions;
 CREATE TRIGGER trigger_sync_step_decay_fields
-    BEFORE UPDATE ON auction_parameters
+    BEFORE UPDATE ON auctions
     FOR EACH ROW
     EXECUTE FUNCTION sync_step_decay_fields();
 
