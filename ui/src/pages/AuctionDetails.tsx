@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "../lib/api";
 import StatsCard from "../components/StatsCard";
-import SalesTable from "../components/SalesTable";
+import TakesTable from "../components/TakesTable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ChainIcon from "../components/ChainIcon";
 import CollapsibleSection from "../components/CollapsibleSection";
@@ -49,7 +49,7 @@ const AuctionDetails: React.FC = () => {
   });
 
   // Fetch recent takes
-  const { data: sales } = useQuery({
+  const { data: takes } = useQuery({
     queryKey: ["auctionTakes", chainId, address],
     queryFn: () => apiClient.getAuctionTakes(address!, parseInt(chainId!), undefined, 25),
     enabled: !!chainId && !!address,
@@ -231,7 +231,7 @@ const AuctionDetails: React.FC = () => {
 
         <StatsCard
           title="Total Sales"
-          value={auction.activity.total_sales}
+          value={auction.activity.total_takes}
           icon={TrendingDown}
           iconColor="text-primary-500"
         />
@@ -310,7 +310,7 @@ const AuctionDetails: React.FC = () => {
             <div className="text-center">
               <div className="text-xs text-gray-500 mb-2">Sales This Round</div>
               <div className="text-gray-200 font-medium text-sm">
-                {currentRound.total_sales}
+                {currentRound.total_takes}
               </div>
             </div>
           </div>
@@ -381,9 +381,9 @@ const AuctionDetails: React.FC = () => {
       </CollapsibleSection>
 
       {/* Recent Sales */}
-      {sales && sales.length > 0 && (
-        <SalesTable
-          sales={sales}
+      {takes && takes.length > 0 && (
+        <TakesTable
+          takes={takes}
           title="Recent Sales"
           tokens={tokens?.tokens}
           showRoundInfo={true}
@@ -393,16 +393,16 @@ const AuctionDetails: React.FC = () => {
       )}
 
       {/* No Sales State */}
-      {(!sales || sales.length === 0) && (
+      {(!takes || takes.length === 0) && (
         <div className="card text-center py-8">
           <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
             <TrendingDown className="h-6 w-6 text-gray-600" />
           </div>
           <h4 className="text-lg font-medium text-gray-400 mb-1">
-            No Sales Yet
+            No Takes Yet
           </h4>
           <p className="text-sm text-gray-600">
-            This auction hasn't had any sales yet.
+            This auction hasn't had any takes yet.
           </p>
         </div>
       )}

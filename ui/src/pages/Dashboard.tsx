@@ -15,11 +15,12 @@ import {
 } from "lucide-react";
 import { apiClient } from "../lib/api";
 import StatsCard from "../components/StatsCard";
-import SalesTable from "../components/SalesTable";
+import TakesTable from "../components/TakesTable";
 import AuctionsTable from "../components/AuctionsTable";
 import StackedProgressMeter from "../components/StackedProgressMeter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import CollapsibleSection from "../components/CollapsibleSection";
+import TokensList from "../components/TokensList";
 import {
   formatAddress,
   formatTokenAmount,
@@ -47,56 +48,97 @@ const Dashboard: React.FC = () => {
   const { data: systemStats, isLoading: statsLoading } = useQuery({
     queryKey: ["systemStats"],
     queryFn: apiClient.getSystemStats,
+    staleTime: 30000, // Cache for 30 seconds - stats don't change frequently
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   const { data: auctionsResponse, isLoading: auctionsLoading } = useQuery({
     queryKey: ["auctions"],
     queryFn: () => apiClient.getAuctions({ limit: 50 }),
+    staleTime: 10000, // Cache for 10 seconds
+  });
+
+  const { data: activeAuctionsResponse, isLoading: activeAuctionsLoading } = useQuery({
+    queryKey: ["auctions", "active"],
+    queryFn: () => apiClient.getAuctions({ status: 'active', limit: 50 }),
+    staleTime: 5000, // Cache for 5 seconds - active status changes more frequently
   });
 
   const { data: tokens } = useQuery({
     queryKey: ["tokens"],
     queryFn: apiClient.getTokens,
+    staleTime: 300000, // Cache for 5 minutes - tokens rarely change
   });
 
-  // Get recent sales activity from auctions
-  const { data: recentSales, isLoading: salesLoading } = useQuery({
-    queryKey: ["recentSales"],
+  // Get takes count for badge (always load for badge display)
+  const { data: takesCount } = useQuery({
+    queryKey: ["recentTakesCount"],
     queryFn: async () => {
-      const auctions = auctionsResponse?.auctions || [];
-      const allSales: AuctionSale[] = [];
+      const activeAuctions = activeAuctionsResponse?.auctions || [];
+      let totalCount = 0;
 
-      // Get sales from first few active auctions
-      const activeAuctions = auctions
-        .filter((ah) => ah.current_round?.is_active)
-        .slice(0, 5);
+      // Get count from first few active auctions (already filtered server-side)
+      const limitedActiveAuctions = activeAuctions.slice(0, 5);
 
-      for (const auction of activeAuctions) {
+      for (const auction of limitedActiveAuctions) {
         try {
-          const sales = await apiClient.getAuctionTakes(
+          const takes = await apiClient.getAuctionTakes(
             auction.address,
             auction.chain_id,
             undefined,
             5
           );
-          allSales.push(...sales);
+          totalCount += takes.length;
+        } catch (error) {
+          console.warn(`Failed to fetch takes count for ${auction.address}:`, error);
+        }
+      }
+
+      return Math.min(totalCount, 25); // Cap at 25 to match full query
+    },
+    enabled: !!activeAuctionsResponse?.auctions?.length,
+    staleTime: 10000, // Cache for 10 seconds
+  });
+
+  // Get recent takes activity from auctions (only load when takes view is selected)
+  const { data: recentTakes, isLoading: takesLoading } = useQuery({
+    queryKey: ["recentTakes"],
+    queryFn: async () => {
+      const activeAuctions = activeAuctionsResponse?.auctions || [];
+      const allTakes: AuctionSale[] = [];
+
+      // Get takes from first few active auctions (already filtered server-side)
+      const limitedActiveAuctions = activeAuctions.slice(0, 5);
+
+      for (const auction of limitedActiveAuctions) {
+        try {
+          const takes = await apiClient.getAuctionTakes(
+            auction.address,
+            auction.chain_id,
+            undefined,
+            5
+          );
+          allTakes.push(...takes);
         } catch (error) {
           console.warn(`Failed to fetch takes for ${auction.address}:`, error);
         }
       }
 
       // Sort by timestamp and take most recent
-      return allSales
+      return allTakes
         .sort(
           (a, b) =>
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         )
         .slice(0, 25);
     },
-    enabled: !!auctionsResponse?.auctions?.length,
+    enabled: !!activeAuctionsResponse?.auctions?.length && activeView === 'takes',
+    staleTime: 10000, // Cache for 10 seconds to prevent redundant fetches
   });
 
-  const isLoading = statsLoading || auctionsLoading || salesLoading;
+  // Only consider takes loading if we're actually on the takes view
+  const isLoading = statsLoading || auctionsLoading || activeAuctionsLoading || 
+    (activeView === 'takes' && takesLoading);
 
   if (isLoading) {
     return (
@@ -125,10 +167,11 @@ const Dashboard: React.FC = () => {
   }
 
   const auctions = auctionsResponse?.auctions || [];
+  const activeAuctions = activeAuctionsResponse?.auctions || [];
 
-  // Get active rounds from auctions
-  const activeRounds = auctions
-    .filter((ah) => ah.current_round?.is_active)
+  // Get active rounds from server-filtered active auctions
+  const activeRounds = activeAuctions
+    .filter((ah) => ah.current_round?.is_active) // Double-check for safety
     .map((ah) => ({
       ...ah.current_round!,
       auction: ah.address,
@@ -169,8 +212,8 @@ const Dashboard: React.FC = () => {
         />
 
         <StatsCard
-          title="Total Sales"
-          value={systemStats?.total_sales || 0}
+          title="Total Takes"
+          value={systemStats?.total_takes || 0}
           icon={TrendingUp}
         />
       </div>
@@ -213,13 +256,13 @@ const Dashboard: React.FC = () => {
             >
               <Activity className="h-4 w-4" />
               <span>Takes</span>
-              {recentSales && recentSales.length > 0 && (
+              {takesCount && takesCount > 0 && (
                 <span className={`${
                   activeView === 'takes'
                     ? 'bg-white/20 text-white'
                     : 'bg-primary-500/20 text-primary-400'
                 } text-xs px-1.5 py-0.5 rounded-full`}>
-                  {recentSales.length}
+                  {takesCount}
                 </span>
               )}
             </button>
@@ -272,9 +315,6 @@ const Dashboard: React.FC = () => {
                     </thead>
                     <tbody>
                       {activeRounds.map((round) => {
-                        const fromSymbols = round.from_tokens
-                          .map((t) => t.symbol)
-                          .join(", ");
                         const wantSymbol = round.want_token.symbol;
 
                         return (
@@ -314,9 +354,11 @@ const Dashboard: React.FC = () => {
 
                             <td>
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium text-gray-200 text-sm">
-                                  {fromSymbols}
-                                </span>
+                                <TokensList 
+                                  tokens={round.from_tokens}
+                                  maxDisplay={2}
+                                  tokenClassName="font-medium text-gray-200 text-sm"
+                                />
                                 <span className="text-gray-500">→</span>
                                 <span className="font-medium text-yellow-400 text-sm">
                                   {wantSymbol}
@@ -372,7 +414,7 @@ const Dashboard: React.FC = () => {
                                     }
                                     amountProgress={round.progress_percentage}
                                     timeRemaining={round.time_remaining}
-                                    totalSales={round.total_sales}
+                                    totalTakes={round.total_takes}
                                     size="sm"
                                   />
                                 </div>
@@ -383,7 +425,7 @@ const Dashboard: React.FC = () => {
                                       {round.progress_percentage.toFixed(0)}%
                                     </span>
                                     <span className="text-xs text-gray-500">
-                                      ({round.total_sales} sales)
+                                      ({round.total_takes} takes)
                                     </span>
                                   </div>
                                   <div className="w-full bg-gray-700 rounded-full h-1">
@@ -434,7 +476,7 @@ const Dashboard: React.FC = () => {
           {/* Takes View */}
           {activeView === 'takes' && (
             <>
-              {recentSales && recentSales.length > 0 ? (
+              {recentTakes && recentTakes.length > 0 ? (
                 <div className="overflow-y-auto max-h-[600px]">
                   <table className="table">
                     <thead className="bg-gray-800/50 sticky top-0">
@@ -451,8 +493,8 @@ const Dashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {recentSales.map((sale, index) => (
-                        <tr key={sale.sale_id || `sale-${index}`} className="group">
+                      {recentTakes.map((sale, index) => (
+                        <tr key={sale.take_id || `take-${index}`} className="group">
                           <td>
                             <div className="flex items-center space-x-2">
                               {getChainInfo(sale.chain_id).explorer !== "#" ? (
@@ -479,7 +521,7 @@ const Dashboard: React.FC = () => {
                               <TrendingDown className="h-4 w-4 text-primary-500" />
                               <div className="text-sm">
                                 <div className="font-mono text-xs text-gray-500">
-                                  R{sale.round_id}S{sale.sale_seq}
+                                  R{sale.round_id}T{sale.take_seq}
                                 </div>
                               </div>
                             </div>

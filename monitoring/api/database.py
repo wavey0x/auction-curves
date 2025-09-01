@@ -81,7 +81,7 @@ class DatabaseQueries:
         if active_only:
             # For active-only, only return auctions with active rounds
             query = text(f"""
-                SELECT DISTINCT
+                SELECT DISTINCT ON (ahp.auction_address, ahp.chain_id)
                     ahp.auction_address,
                     ahp.chain_id,
                     ar.round_id,
@@ -92,21 +92,52 @@ class DatabaseQueries:
                     ar.available_amount,
                     ar.time_remaining,
                     ar.seconds_elapsed,
-                    ar.total_sales,
+                    ar.total_takes,
                     ar.progress_percentage,
                     ahp.want_token,
                     ahp.decay_rate,
                     ahp.update_interval,
                     ahp.auction_length,
-                    TRUE as is_active
+                    TRUE as is_active,
+                    -- Want token info
+                    wt.symbol as want_token_symbol,
+                    wt.name as want_token_name,
+                    wt.decimals as want_token_decimals,
+                    -- From token info (from current round if any)
+                    ft.symbol as from_token_symbol,
+                    ft.name as from_token_name,
+                    ft.decimals as from_token_decimals,
+                    -- Get enabled tokens as JSON array
+                    (
+                        SELECT COALESCE(
+                            json_agg(
+                                json_build_object(
+                                    'address', et.token_address,
+                                    'symbol', COALESCE(et_tokens.symbol, 'Unknown'),
+                                    'name', COALESCE(et_tokens.name, 'Unknown'),
+                                    'decimals', COALESCE(et_tokens.decimals, 18),
+                                    'chain_id', et.chain_id
+                                ) ORDER BY et.enabled_at ASC
+                            ), '[]'::json
+                        )
+                        FROM enabled_tokens et
+                        LEFT JOIN tokens et_tokens ON LOWER(et.token_address) = LOWER(et_tokens.address) AND et.chain_id = et_tokens.chain_id
+                        WHERE et.auction_address = ahp.auction_address AND et.chain_id = ahp.chain_id
+                    ) as from_tokens_json
                 FROM auctions ahp
                 INNER JOIN rounds ar 
                     ON ahp.auction_address = ar.auction_address 
                     AND ahp.chain_id = ar.chain_id
                     AND ar.is_active = TRUE
+                LEFT JOIN tokens wt
+                    ON LOWER(ahp.want_token) = LOWER(wt.address)
+                    AND ahp.chain_id = wt.chain_id
+                LEFT JOIN tokens ft
+                    ON LOWER(ar.from_token) = LOWER(ft.address)
+                    AND ar.chain_id = ft.chain_id
                 WHERE 1=1
                 {chain_filter}
-                ORDER BY ar.kicked_at DESC
+                ORDER BY ahp.auction_address, ahp.chain_id, ar.kicked_at DESC
             """)
         else:
             # For all auctions, get each auction once with their most recent active round (if any)
@@ -122,7 +153,7 @@ class DatabaseQueries:
                     COALESCE(ar.available_amount, 0) as available_amount,
                     COALESCE(ar.time_remaining, 0) as time_remaining,
                     COALESCE(ar.seconds_elapsed, 0) as seconds_elapsed,
-                    COALESCE(ar.total_sales, 0) as total_sales,
+                    COALESCE(ar.total_takes, 0) as total_takes,
                     COALESCE(ar.progress_percentage, 0) as progress_percentage,
                     ahp.want_token,
                     ahp.decay_rate,
@@ -186,7 +217,7 @@ class DatabaseQueries:
                 ar.available_amount as current_available,
                 ar.current_price,
                 ar.is_active as has_active_round,
-                ar.total_sales as current_round_sales,
+                ar.total_takes as current_round_takes,
                 ar.progress_percentage,
                 -- Token info for want_token
                 t2.symbol as want_token_symbol,
@@ -284,8 +315,8 @@ class DatabaseQueries:
         return result.fetchall()
     
     @staticmethod
-    async def get_auction_sales(db: AsyncSession, auction_address: str, round_id: int = None, chain_id: int = None, limit: int = 50):
-        """Get sales history for an Auction"""
+    async def get_auction_takes(db: AsyncSession, auction_address: str, round_id: int = None, chain_id: int = None, limit: int = 50):
+        """Get takes history for an Auction"""
         chain_filter = "AND als.chain_id = :chain_id" if chain_id else ""
         round_filter = "AND als.round_id = :round_id" if round_id else ""
         
@@ -384,27 +415,18 @@ class DatabaseQueries:
     
     @staticmethod
     async def get_system_stats(db: AsyncSession, chain_id: int = None):
-        """Get overall system statistics"""
-        chain_filter = "WHERE ahp.chain_id = :chain_id" if chain_id else ""
+        """Get overall system statistics using optimized subqueries"""
+        chain_filter = "WHERE chain_id = :chain_id" if chain_id else ""
+        auction_filter = "WHERE auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else ")")
         
         query = text(f"""
             SELECT 
-                COUNT(DISTINCT ahp.auction_address) as total_auctions,
-                COUNT(DISTINCT CASE WHEN ar.is_active THEN ar.auction_address END) as active_auctions,
-                COUNT(DISTINCT t.address) as unique_tokens,
-                COUNT(DISTINCT ar.round_id) as total_rounds,
-                COUNT(als.sale_id) as total_sales,
-                COUNT(DISTINCT als.taker) as total_participants
-            FROM auctions ahp
-            LEFT JOIN rounds ar 
-                ON ahp.auction_address = ar.auction_address
-                AND ahp.chain_id = ar.chain_id
-            LEFT JOIN takes als
-                ON ar.auction_address = als.auction_address
-                AND ar.chain_id = als.chain_id
-            LEFT JOIN tokens t 
-                ON ahp.chain_id = t.chain_id
-            {chain_filter}
+                (SELECT COUNT(*) FROM auctions {chain_filter}) as total_auctions,
+                (SELECT COUNT(DISTINCT auction_address) FROM rounds {auction_filter} AND is_active = TRUE) as active_auctions,
+                (SELECT COUNT(DISTINCT address) FROM tokens {chain_filter}) as unique_tokens,
+                (SELECT COUNT(*) FROM rounds {auction_filter}) as total_rounds,
+                (SELECT COUNT(*) FROM takes {auction_filter}) as total_takes,
+                (SELECT COUNT(DISTINCT taker) FROM takes {auction_filter}) as total_participants
         """)
         
         params = {"chain_id": chain_id} if chain_id else {}
@@ -412,13 +434,13 @@ class DatabaseQueries:
         return result.fetchone()
     
     @staticmethod
-    async def get_recent_sales_activity(db: AsyncSession, limit: int = 25, chain_id: int = None):
-        """Get recent sales activity across all Auctions"""
+    async def get_recent_takes_activity(db: AsyncSession, limit: int = 25, chain_id: int = None):
+        """Get recent takes activity across all Auctions"""
         chain_filter = "WHERE als.chain_id = :chain_id" if chain_id else ""
         
         query = text(f"""
             SELECT 
-                als.sale_id as id,
+                als.take_id as id,
                 'take' as event_type,
                 als.auction_address,
                 als.chain_id,
@@ -431,7 +453,7 @@ class DatabaseQueries:
                 als.transaction_hash as tx_hash,
                 als.block_number,
                 als.round_id,
-                als.sale_seq
+                als.take_seq
             FROM takes als
             {chain_filter}
             ORDER BY als.timestamp DESC
@@ -587,7 +609,7 @@ class MockDataProvider(DataProvider):
             available_amount="800000000000000000000",
             time_remaining=1800,
             seconds_elapsed=1800,
-            total_sales=5,
+            total_takes=5,
             progress_percentage=20.0
         )
         
@@ -608,8 +630,8 @@ class MockDataProvider(DataProvider):
                 total_participants=10,
                 total_volume="500000000",
                 total_rounds=1,
-                total_sales=5,
-                recent_sales=[]
+                total_takes=5,
+                recent_takes=[]
             ),
             deployed_at=datetime.now() - timedelta(days=30),
             last_kicked=datetime.now() - timedelta(minutes=30)
@@ -642,7 +664,7 @@ class MockDataProvider(DataProvider):
             active_auctions=2,
             total_participants=50,
             total_volume="1000000000",
-            total_sales=100
+            total_takes=100
         )
 
 
@@ -671,7 +693,7 @@ class DatabaseDataProvider(DataProvider):
                         "current_round": {
                             "round_id": auction_row.round_id,
                             "is_active": True,
-                            "total_sales": auction_row.total_sales
+                            "total_takes": auction_row.total_takes
                         } if auction_row.round_id else None,
                         "last_kicked": auction_row.kicked_at,
                         "decay_rate": 0.005,
@@ -760,7 +782,7 @@ class DatabaseDataProvider(DataProvider):
                         available_amount=str(auction_data.current_available or 0),
                         time_remaining=auction_data.time_remaining or 0,
                         seconds_elapsed=0,
-                        total_sales=auction_data.current_round_sales or 0,
+                        total_takes=auction_data.current_round_takes or 0,
                         progress_percentage=auction_data.progress_percentage or 0.0
                     )
                 
@@ -803,19 +825,19 @@ class DatabaseDataProvider(DataProvider):
         """Get takes from database"""
         try:
             async with AsyncSessionLocal() as session:
-                # Use the proper method name for sales/takes
-                takes_data = await DatabaseQueries.get_auction_sales(
+                # Use the proper method name for takes
+                takes_data = await DatabaseQueries.get_auction_takes(
                     session, auction_address, round_id, chain_id, limit
                 )
                 
                 takes = []
                 for take_row in takes_data:
                     take = Take(
-                        sale_id=str(take_row.sale_id) if take_row.sale_id else f"sale_{take_row.sale_seq}",
+                        take_id=str(take_row.take_id) if take_row.take_id else f"take_{take_row.take_seq}",
                         auction=take_row.auction_address,
                         chain_id=take_row.chain_id,
                         round_id=take_row.round_id,
-                        sale_seq=take_row.sale_seq,
+                        take_seq=take_row.take_seq,
                         taker=take_row.taker,
                         amount_taken=str(take_row.amount_taken),
                         amount_paid=str(take_row.amount_paid),
@@ -848,7 +870,7 @@ class DatabaseDataProvider(DataProvider):
                         ar.kicked_at,
                         ar.initial_available,
                         ar.is_active,
-                        ar.total_sales
+                        ar.total_takes
                     FROM rounds ar
                     JOIN auctions ahp 
                         ON LOWER(ar.auction_address) = LOWER(ahp.auction_address) 
@@ -883,7 +905,7 @@ class DatabaseDataProvider(DataProvider):
                         "kicked_at": kicked_at_iso,
                         "initial_available": str(round_row.initial_available) if round_row.initial_available else "0",
                         "is_active": round_row.is_active or False,
-                        "total_sales": round_row.total_sales or 0
+                        "total_takes": round_row.total_takes or 0
                     }
                     rounds.append(round_info)
                 
@@ -918,7 +940,7 @@ class DatabaseDataProvider(DataProvider):
                     active_auctions=stats_data.active_auctions or 0,
                     unique_tokens=stats_data.unique_tokens or 0,
                     total_rounds=stats_data.total_rounds or 0,
-                    total_takes=stats_data.total_sales or 0,  # Using sales as takes count
+                    total_takes=stats_data.total_takes or 0,
                     total_participants=stats_data.total_participants or 0
                 )
         except Exception as e:
@@ -963,7 +985,7 @@ if __name__ == "__main__":
                 tokens = await DatabaseQueries.get_all_tokens(session)
                 logger.info(f"Total tokens: {len(tokens)}")
                 
-                recent_sales = await DatabaseQueries.get_recent_sales_activity(session, limit=5)
-                logger.info(f"Recent sales: {len(recent_sales)}")
+                recent_takes = await DatabaseQueries.get_recent_takes_activity(session, limit=5)
+                logger.info(f"Recent takes: {len(recent_takes)}")
 
     asyncio.run(test_connection())

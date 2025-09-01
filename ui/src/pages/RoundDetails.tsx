@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { apiClient } from '../lib/api'
-import SalesTable from '../components/SalesTable'
+import TakesTable from '../components/TakesTable'
 import StatsCard from '../components/StatsCard'
 import StackedProgressMeter from '../components/StackedProgressMeter'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -35,7 +35,7 @@ const RoundDetails: React.FC = () => {
   })
 
   // Fetch takes for this specific round
-  const { data: sales, isLoading: salesLoading } = useQuery({
+  const { data: takes, isLoading: takesLoading } = useQuery({
     queryKey: ['auctionTakes', chainId, auctionAddress, roundId],
     queryFn: () => apiClient.getAuctionTakes(auctionAddress!, parseInt(chainId!), parseInt(roundId!)),
     enabled: !!chainId && !!auctionAddress && !!roundId
@@ -47,7 +47,7 @@ const RoundDetails: React.FC = () => {
     queryFn: apiClient.getTokens
   })
 
-  const isLoading = detailsLoading || salesLoading
+  const isLoading = detailsLoading || takesLoading
 
   if (isLoading) {
     return (
@@ -59,7 +59,7 @@ const RoundDetails: React.FC = () => {
     )
   }
 
-  if (!auctionDetails || !sales) {
+  if (!auctionDetails || !takes) {
     return (
       <div className="card text-center py-12">
         <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -87,7 +87,7 @@ const RoundDetails: React.FC = () => {
     kicked_at: new Date().toISOString(),
     initial_available: "0",
     is_active: false,
-    total_sales: sales.length,
+    total_takes: takes.length,
     seconds_elapsed: 3600,
     progress_percentage: 100
   }
@@ -96,10 +96,10 @@ const RoundDetails: React.FC = () => {
   const wantToken = auctionDetails.want_token
 
   // Calculate round statistics
-  const totalAmountSold = sales.reduce((sum, sale) => sum + parseFloat(sale.amount_taken), 0)
-  const totalVolume = sales.reduce((sum, sale) => sum + parseFloat(sale.amount_paid), 0)
-  const avgPrice = sales.length > 0 ? sales.reduce((sum, sale) => sum + parseFloat(sale.price), 0) / sales.length : 0
-  const uniqueTakers = new Set(sales.map(sale => sale.taker)).size
+  const totalAmountSold = takes.reduce((sum, sale) => sum + parseFloat(sale.amount_taken), 0)
+  const totalVolume = takes.reduce((sum, sale) => sum + parseFloat(sale.amount_paid), 0)
+  const avgPrice = takes.length > 0 ? takes.reduce((sum, sale) => sum + parseFloat(sale.price), 0) / takes.length : 0
+  const uniqueTakers = new Set(takes.map(sale => sale.taker)).size
 
   return (
     <div className="space-y-6">
@@ -155,14 +155,14 @@ const RoundDetails: React.FC = () => {
       {/* Round Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="Total Sales"
-          value={sales.length}
+          title="Total Takes"
+          value={takes.length}
           icon={Activity}
           iconColor="text-primary-500"
         />
         
         <StatsCard
-          title="Amount Sold"
+          title="Amount Taken"
           value={formatTokenAmount(totalAmountSold.toString(), 18, 2)}
           icon={TrendingDown}
           iconColor="text-success-500"
@@ -273,7 +273,7 @@ const RoundDetails: React.FC = () => {
                 }
                 amountProgress={roundInfo.progress_percentage}
                 timeRemaining={roundInfo.time_remaining}
-                totalSales={roundInfo.total_sales}
+                totalSales={roundInfo.total_takes}
                 size="lg"
               />
             </div>
@@ -289,7 +289,7 @@ const RoundDetails: React.FC = () => {
           
           <div className="space-y-3">
             <Link
-              to={`/auction/${auctionAddress}`}
+              to={`/auction/${chainId}/${auctionAddress}`}
               className="block w-full p-3 text-center bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
             >
               <div className="text-sm font-medium text-gray-200">View Auction</div>
@@ -332,11 +332,11 @@ const RoundDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Sales Table */}
-      {sales.length > 0 ? (
-        <SalesTable
-          sales={sales}
-          title={`Sales in Round R${roundId}`}
+      {/* Takes Table */}
+      {takes.length > 0 ? (
+        <TakesTable
+          takes={takes}
+          title={`Takes in Round R${roundId}`}
           tokens={tokens?.tokens || []}
           maxHeight="max-h-[600px]"
         />
@@ -345,11 +345,11 @@ const RoundDetails: React.FC = () => {
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <TrendingDown className="h-8 w-8 text-gray-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-400 mb-2">No Sales Yet</h3>
+          <h3 className="text-lg font-semibold text-gray-400 mb-2">No Takes Yet</h3>
           <p className="text-gray-600 max-w-md mx-auto">
             {roundInfo.is_active 
-              ? "This round is active but no sales have occurred yet." 
-              : "This round completed without any sales."
+              ? "This round is active but no takes have occurred yet." 
+              : "This round completed without any takes."
             }
           </p>
         </div>

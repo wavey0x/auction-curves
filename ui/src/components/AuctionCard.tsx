@@ -12,6 +12,7 @@ import {
 import type { AuctionListItem } from '../types/auction'
 import { formatAddress, formatTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 import StackedProgressMeter from './StackedProgressMeter'
+import TokensList from './TokensList'
 
 interface AuctionCardProps {
   auction: AuctionListItem
@@ -66,14 +67,11 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1">
               <Coins className="h-3 w-3 text-primary-500" />
-              <div className="flex flex-wrap gap-1">
-                {auction.from_tokens.map((token, index) => (
-                  <span key={token.address} className="text-xs font-medium text-primary-400">
-                    {token.symbol}
-                    {index < auction.from_tokens.length - 1 ? ',' : ''}
-                  </span>
-                ))}
-              </div>
+              <TokensList 
+                tokens={auction.from_tokens}
+                maxDisplay={2}
+                tokenClassName="text-xs font-medium text-primary-400"
+              />
             </div>
             
             <div className="flex items-center space-x-1">
@@ -93,7 +91,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
                 Round R{currentRound.round_id}
               </span>
               <span className="text-xs text-gray-500">
-                {currentRound.total_sales} sales
+                {currentRound.total_takes} takes
               </span>
             </div>
             
@@ -124,7 +122,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
                   timeProgress={(currentRound.seconds_elapsed / (currentRound.seconds_elapsed + currentRound.time_remaining)) * 100}
                   amountProgress={currentRound.progress_percentage}
                   timeRemaining={currentRound.time_remaining}
-                  totalSales={currentRound.total_sales}
+                  totalTakes={currentRound.total_takes}
                   size="sm"
                 />
               </div>

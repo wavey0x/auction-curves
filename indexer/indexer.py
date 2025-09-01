@@ -131,6 +131,14 @@ class AuctionIndexer:
             logger.error(f"Failed to initialize {network_name}: {e}")
             return None
     
+    def _normalize_transaction_hash(self, tx_hash) -> str:
+        """Normalize transaction hash to hex string with 0x prefix"""
+        if isinstance(tx_hash, bytes):
+            return tx_hash.hex()
+        else:
+            tx_str = str(tx_hash)
+            return tx_str if tx_str.startswith('0x') else f'0x{tx_str}'
+    
     def _normalize_address(self, address_raw) -> str:
         """Normalize address to checksummed format, handling YAML int conversion"""
         # Check cache first
@@ -140,8 +148,12 @@ class AuctionIndexer:
         
         # Handle both string and int addresses (YAML parsing issue)
         if isinstance(address_raw, int):
-            address_hex = f"0x{address_raw:040x}"
-            logger.info(f"Converted factory address to {address_hex}")
+            # Handle large integers that represent Ethereum addresses
+            if address_raw > 0:
+                address_hex = f"0x{address_raw:040x}"
+            else:
+                logger.warning(f"Invalid integer address: {address_raw}")
+                return "0x0000000000000000000000000000000000000000"
         else:
             address_hex = str(address_raw)
         
@@ -149,8 +161,10 @@ class AuctionIndexer:
         try:
             from web3 import Web3
             checksummed = Web3.to_checksum_address(address_hex)
-        except Exception:
+            logger.debug(f"Successfully checksummed address: {checksummed}")
+        except Exception as e:
             # Fallback if checksum conversion fails
+            logger.warning(f"Failed to checksum address {address_hex}, using lowercase: {e}")
             checksummed = address_hex.lower()
         
         # Cache the result
@@ -162,14 +176,16 @@ class AuctionIndexer:
         try:
             with self.db_conn.cursor() as cursor:
                 cursor.execute(
-                    "SELECT last_indexed_block FROM indexer_state WHERE chain_id = %s AND LOWER(factory_address) = LOWER(%s)",
+                    "SELECT COALESCE(last_indexed_block, start_block) as block_to_use FROM indexer_state WHERE chain_id = %s AND LOWER(factory_address) = LOWER(%s)",
                     (chain_id, factory_address)
                 )
                 result = cursor.fetchone()
                 if result:
-                    return result['last_indexed_block']
+                    logger.debug(f"Found existing indexer state for factory {factory_address} on chain {chain_id}: block_to_use={result['block_to_use']}")
+                    return result['block_to_use']
                 else:
                     # Initialize factory state if not exists
+                    logger.info(f"No existing indexer state found for factory {factory_address} on chain {chain_id}, initializing...")
                     return self._initialize_factory_state(chain_id, factory_address)
         except psycopg2.Error as e:
             logger.error(f"Error getting last indexed block for factory {factory_address} on chain {chain_id}: {e}")
@@ -187,13 +203,20 @@ class AuctionIndexer:
     def _initialize_factory_state(self, chain_id: int, factory_address: str) -> int:
         """Initialize factory state from config and return start block"""
         # Find factory config to get start block and type
-        for network_config in self.config['networks'].values():
+        logger.debug(f"Looking for factory {factory_address} in config for chain {chain_id}")
+        for network_name, network_config in self.config['networks'].items():
             if network_config.get('chain_id') == chain_id:
+                logger.debug(f"Checking network {network_name} with {len(network_config.get('factories', []))} factories")
                 for factory_config in network_config.get('factories', []):
                     # Handle both string and int addresses (YAML parsing issue)
                     config_address = self._normalize_address(factory_config['address'])
+                    normalized_factory_address = self._normalize_address(factory_address)
                     
-                    if config_address.lower() == factory_address.lower():
+                    logger.debug(f"Factory config: address={factory_config['address']} (type: {type(factory_config['address'])}) -> normalized: {config_address}")
+                    logger.debug(f"Looking for: {factory_address} (type: {type(factory_address)}) -> normalized: {normalized_factory_address}")
+                    logger.debug(f"Match check: {config_address.lower()} == {normalized_factory_address.lower()} -> {config_address.lower() == normalized_factory_address.lower()}")
+                    
+                    if config_address.lower() == normalized_factory_address.lower():
                         start_block = factory_config['start_block']
                         factory_type = factory_config['type']
                         
@@ -214,6 +237,7 @@ class AuctionIndexer:
                             """, (chain_id, checksummed_factory_address, factory_type, start_block, start_block))
                         
                         logger.info(f"Initialized factory {factory_address} on chain {chain_id} starting from block {start_block}")
+                        logger.info(f"Database record created: chain_id={chain_id}, factory_address={checksummed_factory_address}, start_block={start_block}, last_indexed_block={start_block}")
                         return start_block
         
         # Default if factory not found in config
@@ -381,7 +405,7 @@ class AuctionIndexer:
                     SET is_active = FALSE 
                     WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND is_active = TRUE
                 """, (auction_address, chain_id))
-                
+                txn_hash = self._normalize_transaction_hash(event['transactionHash'])
                 # Insert new round
                 cursor.execute("""
                     INSERT INTO rounds (
@@ -394,13 +418,13 @@ class AuctionIndexer:
                 """, (
                     auction_address, chain_id, next_round_id, from_token,
                     timestamp, block['timestamp'], initial_available, initial_available,
-                    event['blockNumber'], event['transactionHash'].hex()
+                    event['blockNumber'], txn_hash
                 ))
             
             logger.info(f"Created round {next_round_id} for auction {auction_address} on chain {chain_id}")
             
         except Exception as e:
-            logger.error(f"Failed to process auction kicked event: {e}")
+            logger.error(f"❌ Failed to process auction kicked event: {e}")
     
     def _process_take(self, event, chain_id: int, auction_address: str) -> None:
         """Process auction take event"""
@@ -416,13 +440,16 @@ class AuctionIndexer:
             logger.debug(f"Processing Take event: auction={auction_address[-8:]}, taker={taker[-8:]}, amount_taken={amount_taken}, amount_paid={amount_paid}")
             
             block = self.web3_connections[chain_id].eth.get_block(event['blockNumber'])
-            timestamp = block['timestamp']  # Use Unix timestamp directly
+            timestamp_unix = block['timestamp']  # Unix timestamp
+            # Convert to datetime for PostgreSQL timestamp with time zone
+            import datetime
+            timestamp = datetime.datetime.fromtimestamp(timestamp_unix, tz=datetime.timezone.utc)
             
             # Find the most recent round; do not require is_active
             with self.db_conn.cursor() as cursor:
                 # Prefer a round whose from_token matches this take's from_token
                 cursor.execute("""
-                    SELECT round_id, from_token, kicked_at, total_sales
+                    SELECT round_id, from_token, kicked_at, total_takes
                     FROM rounds
                     WHERE LOWER(auction_address) = LOWER(%s) 
                       AND chain_id = %s 
@@ -435,7 +462,7 @@ class AuctionIndexer:
                 if not round_data:
                     # Fallback to any most-recent round for this auction
                     cursor.execute("""
-                        SELECT round_id, from_token, kicked_at, total_sales
+                        SELECT round_id, from_token, kicked_at, total_takes
                         FROM rounds
                         WHERE LOWER(auction_address) = LOWER(%s) 
                           AND chain_id = %s 
@@ -447,28 +474,35 @@ class AuctionIndexer:
                 if round_data:
                     round_id = round_data['round_id']
                     kicked_at = round_data['kicked_at']
-                    total_sales = round_data['total_sales'] or 0
-                    logger.debug(f"Using round {round_id} for {auction_address[-8:]}, current total_sales: {total_sales}")
-                    sale_seq = total_sales + 1
+                    total_takes = round_data['total_takes'] or 0
+                    logger.debug(f"Using round {round_id} for {auction_address[-8:]}, current total_takes: {total_takes}")
+                    take_seq = total_takes + 1
                     # Handle both datetime and Unix timestamp formats for kicked_at
                     if isinstance(kicked_at, (int, float)):
-                        seconds_from_start = int(timestamp - kicked_at)
+                        seconds_from_start = int(timestamp_unix - kicked_at)
                     else:
                         import datetime
                         if isinstance(kicked_at, datetime.datetime):
                             kicked_at_timestamp = int(kicked_at.timestamp())
-                            seconds_from_start = int(timestamp - kicked_at_timestamp)
+                            seconds_from_start = int(timestamp_unix - kicked_at_timestamp)
                         else:
                             seconds_from_start = 0
+                    
+                    # Handle negative values (can occur due to out-of-order event processing)
+                    if seconds_from_start < 0:
+                        logger.warning(f"⚠️  Negative seconds_from_start ({seconds_from_start}) for take {auction_address[-8:]}")
+                        logger.warning(f"   timestamp_unix: {timestamp_unix}, kicked_at: {kicked_at}")
+                        logger.warning(f"   This suggests out-of-order event processing or clock skew")
+                        seconds_from_start = 0  # Default to 0 for negative values
                 else:
                     # No round present; still record the take with round_id=0
                     round_id = 0
-                    sale_seq = 1
+                    take_seq = 1
                     seconds_from_start = 0
                     logger.debug(f"No round found for {auction_address[-8:]}; recording take with round_id=0")
                 
-                # Create sale ID
-                sale_id = f"{auction_address}-{round_id}-{sale_seq}"
+                # Create take ID
+                take_id = f"{auction_address}-{round_id}-{take_seq}"
                 
                 # Calculate price (amount_paid / amount_taken)
                 price = amount_paid if amount_taken == 0 else amount_paid // amount_taken
@@ -485,13 +519,12 @@ class AuctionIndexer:
                     return
                     
                 want_token = auction_data['want_token']
-                logger.debug(f"Take: sale_id={sale_id}, from_token={from_token[-8:]}, want_token={want_token[-8:]}, price={price}")
-                
+                txn_hash = self._normalize_transaction_hash(event['transactionHash'])
                 # Insert take record with better error handling
                 try:
                     cursor.execute("""
                         INSERT INTO takes (
-                            sale_id, auction_address, chain_id, round_id, sale_seq,
+                            take_id, auction_address, chain_id, round_id, take_seq,
                             taker, from_token, to_token, amount_taken, amount_paid, price,
                             timestamp, seconds_from_round_start,
                             block_number, transaction_hash, log_index
@@ -499,17 +532,17 @@ class AuctionIndexer:
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                         )
                     """, (
-                        sale_id, auction_address, chain_id, round_id, sale_seq,
+                        take_id, auction_address, chain_id, round_id, take_seq,
                         taker, from_token, want_token, amount_taken, amount_paid, price, 
                         timestamp, seconds_from_start,
-                        event['blockNumber'], event['transactionHash'].hex(), event['logIndex']
+                        event['blockNumber'], txn_hash, event['logIndex']
                     ))
                     
-                    logger.debug(f"Inserted take {sale_id} into database")
+                    logger.debug(f"Inserted take {take_id} into database")
                     
                 except Exception as insert_error:
                     logger.error(f"❌ Failed to insert take into database: {insert_error}")
-                    logger.error(f"Take data: {sale_id}, {auction_address}, {chain_id}, {round_id}, {sale_seq}")
+                    logger.error(f"Take data: {take_id}, {auction_address}, {chain_id}, {round_id}, {take_seq}")
                     raise
                 
                 # Update round statistics if the round exists
@@ -517,24 +550,31 @@ class AuctionIndexer:
                     if round_id != 0:
                         cursor.execute("""
                             UPDATE rounds SET
-                                total_sales = total_sales + 1,
+                                total_takes = total_takes + 1,
                                 total_volume_sold = COALESCE(total_volume_sold, 0) + %s,
                                 available_amount = available_amount - %s
                             WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND round_id = %s
                         """, (amount_taken, amount_taken, auction_address, chain_id, round_id))
                         if cursor.rowcount > 0:
-                            logger.debug(f"Updated round {round_id} stats: +1 sale, -{amount_taken} available")
+                            logger.debug(f"Updated round {round_id} stats: +1 take, -{amount_taken} available")
                         else:
                             logger.debug(f"No existing round row to update for {auction_address[-8:]} round {round_id}")
                 except Exception as update_error:
                     logger.error(f"❌ Failed to update round statistics: {update_error}")
                     # Do not raise; we already recorded the take
             
-            logger.info(f"🎉 Successfully processed take {sale_id} on chain {chain_id}")
+            logger.info(f"🎉 Successfully processed take {take_id} on chain {chain_id}")
             
         except Exception as e:
             logger.error(f"❌ Failed to process Take event for auction {auction_address}: {e}")
-            logger.error(f"Event details: block={event.get('blockNumber', 'unknown')}, tx={event.get('transactionHash', 'unknown').hex() if event.get('transactionHash') else 'unknown'}")
+            tx_hash = event.get('transactionHash', 'unknown')
+            if isinstance(tx_hash, bytes):
+                tx_hash_str = tx_hash.hex()
+            elif tx_hash != 'unknown':
+                tx_hash_str = str(tx_hash)
+            else:
+                tx_hash_str = 'unknown'
+            logger.error(f"Event details: block={event.get('blockNumber', 'unknown')}, tx={tx_hash_str}")
             import traceback
             traceback.print_exc()
     
@@ -673,7 +713,8 @@ class AuctionIndexer:
                     ON CONFLICT (auction_address, chain_id, token_address) DO NOTHING
                 """, (
                     auction_address, chain_id, from_token,
-                    timestamp, event['blockNumber'], event['transactionHash'].hex()
+                    timestamp, event['blockNumber'], 
+                    self._normalize_transaction_hash(event['transactionHash'])
                 ))
                 
                 if cursor.rowcount > 0:
@@ -683,6 +724,165 @@ class AuctionIndexer:
                     
         except Exception as e:
             logger.error(f"Failed to process auction enabled event: {e}")
+    
+    def _detect_takes_from_transfers(self, w3: Web3, chain_id: int, from_block: int, to_block: int) -> None:
+        """Detect takes by monitoring Transfer events from auction contracts"""
+        if chain_id not in self.tracked_auctions:
+            return
+        
+        auction_addresses = list(self.tracked_auctions[chain_id].keys())
+        if not auction_addresses:
+            return
+        
+        # Process auctions in batches to avoid RPC query limits
+        BATCH_SIZE = 20
+        for i in range(0, len(auction_addresses), BATCH_SIZE):
+            batch = auction_addresses[i:i+BATCH_SIZE]
+            try:
+                self._detect_transfers_for_batch(w3, chain_id, batch, from_block, to_block)
+            except Exception as e:
+                logger.error(f"Failed to detect transfers for auction batch {len(batch)} auctions on chain {chain_id}: {e}")
+    
+    def _detect_transfers_for_batch(self, w3: Web3, chain_id: int, auction_batch: List[str], 
+                                   from_block: int, to_block: int) -> None:
+        """Detect transfers for a batch of auctions using raw eth_getLogs"""
+        try:
+            logger.info(f"🔍 Querying Transfer events for {len(auction_batch)} auctions in batch")
+            
+            # ERC20 Transfer event signature: Transfer(address,address,uint256)
+            transfer_topic = w3.keccak(text="Transfer(address,address,uint256)").hex()
+            
+            # Convert auction addresses to padded hex format for topic filtering
+            padded_addresses = []
+            for address in auction_batch:
+                # Remove '0x' prefix and pad to 32 bytes (64 hex chars)
+                padded = address[2:].lower().zfill(64)
+                padded_addresses.append('0x' + padded)
+            
+            # Build filter for transfers FROM any auction in batch
+            filter_params = {
+                'fromBlock': from_block,
+                'toBlock': to_block,
+                'topics': [
+                    transfer_topic,      # Topic 0: Transfer event signature
+                    padded_addresses     # Topic 1: FROM addresses (auction addresses)
+                ]
+            }
+            
+            # Get all Transfer events from these auctions
+            logs = w3.eth.get_logs(filter_params)
+            
+            if logs:
+                logger.info(f"🎯 Found {len(logs)} Transfer events from {len(auction_batch)} auctions in blocks {from_block}-{to_block}")
+                
+                for log in logs:
+                    try:
+                        self._process_raw_transfer_log(log, chain_id, w3)
+                    except Exception as e:
+                        logger.error(f"Failed to process Transfer log: {e}")
+                        
+            else:
+                logger.debug(f"No Transfer events found from {len(auction_batch)} auctions")
+                
+        except Exception as e:
+            logger.error(f"Failed to query Transfer events for auction batch: {e}")
+    
+    def _process_raw_transfer_log(self, log, chain_id: int, w3: Web3) -> None:
+        """Process a raw Transfer log from eth_getLogs"""
+        try:
+            # Decode the Transfer log
+            # log.topics[0] = Transfer event signature
+            # log.topics[1] = from address (padded, this is the auction address)
+            # log.topics[2] = to address (padded, this is the taker)
+            # log.data = amount (uint256)
+            
+            # Extract addresses from topics (remove padding)
+            auction_address = '0x' + log['topics'][1].hex()[-40:]  # Last 20 bytes (40 hex chars)
+            taker_address = '0x' + log['topics'][2].hex()[-40:]    # Last 20 bytes (40 hex chars)
+            
+            # Normalize addresses
+            auction_address = self._normalize_address(auction_address)
+            taker_address = self._normalize_address(taker_address)
+            
+            # Decode amount from data field
+            amount_taken_raw = int(log['data'].hex(), 16)  # Convert hex data to integer
+            
+            # Token address is the contract that emitted the event
+            token_address = self._normalize_address(log['address'])
+            
+            # Get token decimals for normalization
+            token_decimals = self._get_token_decimals(w3, token_address)
+            
+            # Normalize amounts to human-readable format
+            amount_taken = float(amount_taken_raw) / (10 ** token_decimals)
+            amount_paid = amount_taken  # For now, assume 1:1 - we'll improve this later
+            
+            # Ensure transaction hash has 0x prefix
+            tx_hash = log['transactionHash']
+            if isinstance(tx_hash, bytes):
+                tx_hash = '0x' + tx_hash.hex()
+            elif not tx_hash.startswith('0x'):
+                tx_hash = '0x' + tx_hash
+            
+            logger.debug(f"🔄 Processing raw Transfer: token={token_address[-8:]}, auction={auction_address[-8:]}, taker={taker_address[-8:]}, amount={amount_taken} (decimals={token_decimals})")
+            
+            # Create a synthetic Take event structure to reuse existing _process_take logic
+            synthetic_take_event = {
+                'args': {
+                    'taker': taker_address,
+                    'amountTaken': amount_taken,
+                    'amountPaid': amount_paid,
+                    'from': token_address
+                },
+                'blockNumber': log['blockNumber'],
+                'transactionHash': tx_hash,
+                'logIndex': log['logIndex']
+            }
+            
+            # Use existing _process_take logic
+            self._process_take(synthetic_take_event, chain_id, auction_address)
+            
+        except Exception as e:
+            logger.error(f"Failed to process raw transfer log: {e}")
+            tx_hash = log.get('transactionHash')
+            if isinstance(tx_hash, bytes):
+                tx_hash_str = tx_hash.hex()
+            elif tx_hash:
+                tx_hash_str = str(tx_hash)
+            else:
+                tx_hash_str = 'unknown'
+            logger.error(f"Log data: block={log.get('blockNumber')}, tx={tx_hash_str}")
+    
+    def _get_token_decimals(self, w3: Web3, token_address: str) -> int:
+        """Get token decimals, with caching and fallback to 18"""
+        # Check if we already know the decimals from database
+        try:
+            with self.db_conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT decimals FROM tokens 
+                    WHERE LOWER(address) = LOWER(%s)
+                    LIMIT 1
+                """, (token_address,))
+                result = cursor.fetchone()
+                if result and result['decimals'] is not None:
+                    return result['decimals']
+        except Exception as e:
+            logger.debug(f"Could not fetch decimals from database for {token_address[-8:]}: {e}")
+        
+        # Try to call decimals() on the token contract
+        try:
+            erc20_abi = self.contract_abis.get('erc20', [])
+            if erc20_abi:
+                token_contract = w3.eth.contract(address=token_address, abi=erc20_abi)
+                decimals = token_contract.functions.decimals().call()
+                logger.debug(f"Fetched {decimals} decimals for token {token_address[-8:]}")
+                return decimals
+        except Exception as e:
+            logger.debug(f"Could not call decimals() on token {token_address[-8:]}: {e}")
+        
+        # Fallback to 18 decimals (most common)
+        logger.debug(f"Using fallback 18 decimals for token {token_address[-8:]}")
+        return 18
     
     def _process_events_for_network(self, network_name: str, network_config: Dict) -> None:
         """Process events for a specific network"""
@@ -699,6 +899,9 @@ class AuctionIndexer:
         if chain_id not in self.tracked_auctions or len(self.tracked_auctions[chain_id]) == 0:
             logger.info(f"🔄 Loading existing auctions from database for chain {chain_id}")
             self._load_existing_auctions(chain_id)
+            logger.info(f"After loading: chain {chain_id} has {len(self.tracked_auctions.get(chain_id, {}))} tracked auctions")
+        else:
+            logger.info(f"Chain {chain_id} already has {len(self.tracked_auctions[chain_id])} tracked auctions")
         
         w3 = self.web3_connections[chain_id]
         current_block = w3.eth.get_block('latest')['number']
@@ -712,11 +915,17 @@ class AuctionIndexer:
         factory_address_raw = factory_config['address']
         factory_type = factory_config['type']
         
+        # Skip if factory address is empty or invalid (from empty environment variables)
+        if not factory_address_raw or str(factory_address_raw).strip() in ['', 'None', 'none', 'null']:
+            logger.debug(f"Skipping empty/invalid factory address '{factory_address_raw}' on chain {chain_id}")
+            return
+        
         # Handle both string and int addresses (YAML parsing issue) 
         factory_address = self._normalize_address(factory_address_raw)
         
         # Get last indexed block for this specific factory
         last_indexed_block = self._get_last_indexed_block(chain_id, factory_address)
+        logger.info(f"Factory {factory_address} on chain {chain_id}: last_indexed_block={last_indexed_block}, current_block={current_block}")
         
         if last_indexed_block >= current_block:
             logger.debug(f"Factory {factory_address} on chain {chain_id} up to date at block {current_block}")
@@ -774,7 +983,7 @@ class AuctionIndexer:
             # Get deployment events using eth_getLogs
             logger.debug(f"Querying {factory_type} factory {factory_address[-8:]} events from blocks {from_block}-{to_block}")
             event_cls = factory_contract.events.DeployedNewAuction
-            events = self._get_event_logs_with_split(event_cls, from_block, to_block, address=factory_address)
+            events = self._get_event_logs_with_split(event_cls, from_block, to_block)
             if events:
                 logger.info(f"🎉 Found {len(events)} auction deployment events in blocks {from_block}-{to_block}")
             
@@ -788,73 +997,50 @@ class AuctionIndexer:
     
     def _process_auction_events(self, w3: Web3, chain_id: int, from_block: int, to_block: int) -> None:
         """Process auction events for all tracked auctions"""
-        if chain_id not in self.tracked_auctions:
-            logger.debug(f"⚠️ No tracked auctions for chain {chain_id}, skipping auction events processing")
-            return
-        
-        num_tracked = len(self.tracked_auctions[chain_id])
-        if num_tracked == 0:
-            logger.debug(f"⚠️ Empty tracked auctions list for chain {chain_id}")
-            return
             
-        logger.info(f"Processing events for {num_tracked} auctions on chain {chain_id}, blocks {from_block}-{to_block}")
-
         total_take_events = 0
         for auction_address, auction_contract in self.tracked_auctions[chain_id].items():
             # Process AuctionKicked events using eth_getLogs
             try:
                 if hasattr(auction_contract.events, 'AuctionKicked'):
                     kicked_event = auction_contract.events.AuctionKicked
-                    for event in self._get_event_logs_with_split(kicked_event, from_block, to_block, address=auction_contract.address):
+                    for event in self._get_event_logs_with_split(kicked_event, from_block, to_block):
                         self._process_auction_kicked(event, chain_id, auction_address)
             except Exception:
+                logger.error(f"Failed to process AuctionKicked events for {auction_address}: {e}")
                 pass  # Event might not exist in this contract version
             
-            # Process sale events (name varies: Take, AuctionTake, etc.)
-            take_events_found = False
-            for event_name in ['Take', 'AuctionTake', 'Sale']:
-                try:
-                    if hasattr(auction_contract.events, event_name):
-                        logger.debug(f"Checking for {event_name} in {auction_address[-8:]} blocks {from_block}-{to_block}")
-                        event_cls = getattr(auction_contract.events, event_name)
-                        events = self._get_event_logs_with_split(event_cls, from_block, to_block, address=auction_contract.address)
-                        if events:
-                            logger.info(f"🎯 Found {len(events)} {event_name} events for {auction_address[-8:]} in blocks {from_block}-{to_block}")
-                            take_events_found = True
-                            total_take_events += len(events)
-                            for event in events:
-                                self._process_take(event, chain_id, auction_address)
-                            break
-                except Exception as e:
-                    logger.debug(f"Failed to fetch {event_name} for {auction_address[-8:]}: {e}")
-                    continue
-            
-            if not take_events_found:
-                logger.debug(f"No take-like events for {auction_address[-8:]} in {from_block}-{to_block}")
+            # Skip traditional Take event processing since Take events don't actually exist
+            # All takes are detected via Transfer events instead
             
             # Process AuctionEnabled events using eth_getLogs
             try:
                 if hasattr(auction_contract.events, 'AuctionEnabled'):
                     enabled_event = auction_contract.events.AuctionEnabled
-                    for event in self._get_event_logs_with_split(enabled_event, from_block, to_block, address=auction_contract.address):
+                    for event in self._get_event_logs_with_split(enabled_event, from_block, to_block):
                         self._process_auction_enabled(event, chain_id, auction_address)
             except Exception:
                 pass  # Event might not exist in this contract version
 
-        if total_take_events == 0:
-            logger.info(f"No take events found on chain {chain_id} for blocks {from_block}-{to_block}")
+        # Since Take events don't actually exist, detect all takes via Transfer events
+        logger.debug(f"Running Transfer event detection for takes on chain {chain_id} for blocks {from_block}-{to_block}")
+        self._detect_takes_from_transfers(w3, chain_id, from_block, to_block)
 
-    def _get_event_logs_with_split(self, event_cls, from_block: int, to_block: int, min_span: int = 500, address: Optional[str] = None) -> List[Any]:
+    def _get_event_logs_with_split(self, event_cls, from_block: int, to_block: int, 
+                                  argument_filters: Dict = None, min_span: int = 500) -> List[Any]:
         """Fetch logs for an event using eth_getLogs with adaptive range splitting.
 
         - Uses web3.py v6 Event.get_logs() (which calls eth_getLogs under the hood)
         - Splits the block range on provider size/limit errors
+        - Supports argument_filters for Transfer events
         """
         try:
-            # Prefer smaller queries to avoid provider limits
-            if address:
-                return event_cls.get_logs(fromBlock=from_block, toBlock=to_block, address=address)
-            return event_cls.get_logs(fromBlock=from_block, toBlock=to_block)
+            # Build the filter arguments
+            filter_args = {'fromBlock': from_block, 'toBlock': to_block}
+            if argument_filters:
+                filter_args['argument_filters'] = argument_filters
+            
+            return event_cls.get_logs(**filter_args)
         except Exception as e:
             span = to_block - from_block
             # Common provider errors benefit from splitting: too many results, response size exceeded, timeout
@@ -870,8 +1056,8 @@ class AuctionIndexer:
             ])
             if should_split:
                 mid = from_block + span // 2
-                left = self._get_event_logs_with_split(event_cls, from_block, mid, min_span, address)
-                right = self._get_event_logs_with_split(event_cls, mid + 1, to_block, min_span, address)
+                left = self._get_event_logs_with_split(event_cls, from_block, mid, argument_filters, min_span)
+                right = self._get_event_logs_with_split(event_cls, mid + 1, to_block, argument_filters, min_span)
                 return left + right
             # If not a split-worthy error or span is already small, re-raise so caller can log
             raise
@@ -879,6 +1065,8 @@ class AuctionIndexer:
     def _load_existing_auctions(self, chain_id: int) -> None:
         """Load existing auctions from database into tracked_auctions"""
         try:
+            logger.info(f"🔍 Loading existing auctions from database for chain {chain_id}")
+            
             with self.db_conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT auction_address, factory_address, version
@@ -887,6 +1075,7 @@ class AuctionIndexer:
                 """, (chain_id,))
                 
                 auctions = cursor.fetchall()
+                logger.info(f"Found {len(auctions)} auctions in database for chain {chain_id}")
                 
                 if chain_id not in self.tracked_auctions:
                     self.tracked_auctions[chain_id] = {}
@@ -913,9 +1102,19 @@ class AuctionIndexer:
                         version = '0.1.0' if factory_type == 'modern' else '0.0.1'
                     
                     contract_type = 'auction' if version == '0.1.0' else 'legacy_auction'
-                    contract = self._get_contract_instance(w3, address, contract_type)
+                    logger.info(f"Creating {contract_type} contract for auction {address[-8:]} on chain {chain_id}")
                     
-                    self.tracked_auctions[chain_id][address] = contract
+                    try:
+                        contract = self._get_contract_instance(w3, address, contract_type)
+                        
+                        # Debug: Check what events are available
+                        logger.info(f"Contract {address[-8:]} events: {list(contract.events.__dict__.keys())}")
+                        
+                        self.tracked_auctions[chain_id][address] = contract
+                        logger.info(f"Successfully added auction {address[-8:]} to tracked auctions for chain {chain_id}")
+                    except Exception as e:
+                        logger.error(f"Failed to create contract instance for auction {address[-8:]} on chain {chain_id}: {e}")
+                        continue
                     
                 logger.info(f"Loaded {len(auctions)} existing auctions for chain {chain_id}")
                 

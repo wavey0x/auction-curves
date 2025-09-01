@@ -5,7 +5,7 @@ interface StackedProgressMeterProps {
   timeProgress: number // 0-100, percentage of time elapsed
   amountProgress: number // 0-100, percentage of tokens sold
   timeRemaining?: number // seconds remaining
-  totalSales: number // number of sales
+  totalTakes: number // number of takes
   className?: string
   size?: 'sm' | 'md' | 'lg'
 }
@@ -14,7 +14,7 @@ const StackedProgressMeter: React.FC<StackedProgressMeterProps> = ({
   timeProgress,
   amountProgress,
   timeRemaining,
-  totalSales,
+  totalTakes,
   className = '',
   size = 'md'
 }) => {
@@ -55,7 +55,7 @@ const StackedProgressMeter: React.FC<StackedProgressMeterProps> = ({
       {/* Amount Sold Progress Bar */}
       <div>
         <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-green-400 font-medium">Sold ({totalSales})</span>
+          <span className="text-xs text-green-400 font-medium">Taken ({totalTakes})</span>
           <span className="text-xs text-green-400 font-medium">{amountProgress.toFixed(0)}%</span>
         </div>
         <div className={`w-full bg-gray-700 rounded-full ${height}`}>

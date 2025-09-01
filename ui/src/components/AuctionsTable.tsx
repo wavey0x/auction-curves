@@ -20,6 +20,7 @@ import { formatAddress, formatTokenAmount, formatTimeAgo } from '../lib/utils'
 import { apiClient } from '../lib/api'
 import StackedProgressMeter from './StackedProgressMeter'
 import ChainIcon from './ChainIcon'
+import TokensList from './TokensList'
 
 interface AuctionsTableProps {
   auctions: AuctionListItem[]
@@ -404,14 +405,11 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     
                     <td>
                       <div className="flex items-center space-x-2 text-sm">
-                        <div className="flex flex-wrap gap-1">
-                          {(auction.from_tokens || []).map((token, index) => (
-                            <span key={token?.address || index} className="text-primary-400 font-medium">
-                              {token?.symbol}
-                              {index < (auction.from_tokens?.length || 0) - 1 ? ',' : ''}
-                            </span>
-                          ))}
-                        </div>
+                        <TokensList 
+                          tokens={auction.from_tokens || []}
+                          maxDisplay={2}
+                          tokenClassName="text-primary-400 font-medium"
+                        />
                         <span className="text-gray-500">→</span>
                         <span className="text-yellow-400 font-medium">
                           {auction.want_token?.symbol}

@@ -93,7 +93,7 @@ CREATE TABLE rounds (
     seconds_elapsed INTEGER DEFAULT 0, -- Seconds since round started
     
     -- Round statistics
-    total_sales INTEGER DEFAULT 0,
+    total_takes INTEGER DEFAULT 0,
     total_volume_sold DECIMAL(30,0) DEFAULT 0,
     progress_percentage DECIMAL(5,2) DEFAULT 0, -- 0-100%
     
@@ -119,11 +119,11 @@ CREATE INDEX idx_rounds_from_token ON rounds (from_token);
 -- Track individual takes within rounds (supplements Rindexer take events)
 -- Each take gets a sequence number within the round
 CREATE TABLE takes (
-    sale_id VARCHAR(200), -- Format: {auction}-{roundId}-{saleSeq}
+    take_id VARCHAR(200), -- Format: {auction}-{roundId}-{takeSeq}
     auction_address VARCHAR(100) NOT NULL,
     chain_id INTEGER NOT NULL DEFAULT 1,
     round_id INTEGER NOT NULL,
-    sale_seq INTEGER NOT NULL, -- Sequence within round: 1, 2, 3...
+    take_seq INTEGER NOT NULL, -- Sequence within round: 1, 2, 3...
     
     -- Sale data
     taker VARCHAR(100) NOT NULL,
@@ -142,7 +142,7 @@ CREATE TABLE takes (
     transaction_hash VARCHAR(100) NOT NULL,
     log_index INTEGER NOT NULL,
     
-    PRIMARY KEY (sale_id, timestamp)
+    PRIMARY KEY (take_id, timestamp)
     -- FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id) -- Removed: not needed
 );
 
@@ -226,7 +226,7 @@ BEGIN
     -- Update the round statistics
     UPDATE rounds 
     SET 
-        total_sales = total_sales + 1,
+        total_takes = total_takes + 1,
         total_volume_sold = total_volume_sold + NEW.amount_taken,
         progress_percentage = LEAST(100.0, 
             ((total_volume_sold + NEW.amount_taken) * 100.0) / GREATEST(initial_available, 1)
@@ -319,7 +319,7 @@ CREATE INDEX IF NOT EXISTS idx_rounds_active_kicked_at
     WHERE is_active = TRUE;
 
 CREATE INDEX IF NOT EXISTS idx_takes_recent 
-    ON takes (timestamp DESC, auction_address, round_id, sale_seq);
+    ON takes (timestamp DESC, auction_address, round_id, take_seq);
 
 -- Note: Cannot create time-based partial indexes with NOW() in schema
 -- CREATE INDEX IF NOT EXISTS idx_price_history_recent 

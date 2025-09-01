@@ -51,7 +51,7 @@ def get_mock_auctions() -> List[AuctionListItem]:
                 available_amount=str((20 - i) * 100 * 10**18),
                 time_remaining=3600 - (i * 300),
                 seconds_elapsed=i * 300,
-                total_sales=i % 3 + 1,
+                total_takes=i % 3 + 1,
                 progress_percentage=(i * 10) % 80
             )
         
@@ -133,18 +133,18 @@ async def get_auction(auction: str):
         available_amount="750000000000000000000",
         time_remaining=2700,
         seconds_elapsed=2700,
-        total_sales=5,
+        total_takes=5,
         progress_percentage=25.0
     )
     
-    # Mock recent sales
-    recent_sales = []
+    # Mock recent takes
+    recent_takes = []
     for i in range(5):
         sale = AuctionSale(
-            sale_id=f"{auction}-3-{i+1}",
+            take_id=f"{auction}-3-{i+1}",
             auction=auction,
             round_id=3,
-            sale_seq=i + 1,
+            take_seq=i + 1,
             taker=f"0x{i+100:040x}",
             amount_taken=str((i + 1) * 50 * 10**18),
             amount_paid=str((i + 1) * 45000),
@@ -153,14 +153,14 @@ async def get_auction(auction: str):
             tx_hash=f"0x{i+300:062x}",
             block_number=1000 + i
         )
-        recent_sales.append(sale)
+        recent_takes.append(sale)
     
     activity = AuctionActivity(
         total_participants=25,
         total_volume="125000000000",
         total_rounds=3,
-        total_sales=15,
-        recent_sales=recent_sales
+        total_takes=15,
+        recent_takes=recent_takes
     )
     
     return AuctionResponse(
@@ -233,20 +233,20 @@ async def get_auction_takes(
             continue
             
         takes_in_round = 3 + round_num
-        for sale_seq in range(1, takes_in_round + 1):
+        for take_seq in range(1, takes_in_round + 1):
             take = Take(
-                sale_id=f"{auction}-{round_num}-{sale_seq}",
+                take_id=f"{auction}-{round_num}-{take_seq}",
                 auction=auction,
                 chain_id=31337,
                 round_id=round_num,
-                sale_seq=sale_seq,
-                taker=f"0x{(round_num * 10 + sale_seq):040x}",
-                amount_taken=str(sale_seq * 25 * 10**18),
-                amount_paid=str(sale_seq * 22500),
-                price=str(900000 - round_num * 50000 + sale_seq * 1000),
-                timestamp=datetime.now() - timedelta(hours=24 * (4 - round_num), minutes=sale_seq * 15),
-                tx_hash=f"0x{(round_num * 100 + sale_seq):062x}",
-                block_number=1000 + round_num * 10 + sale_seq
+                take_seq=take_seq,
+                taker=f"0x{(round_num * 10 + take_seq):040x}",
+                amount_taken=str(take_seq * 25 * 10**18),
+                amount_paid=str(take_seq * 22500),
+                price=str(900000 - round_num * 50000 + take_seq * 1000),
+                timestamp=datetime.now() - timedelta(hours=24 * (4 - round_num), minutes=take_seq * 15),
+                tx_hash=f"0x{(round_num * 100 + take_seq):062x}",
+                block_number=1000 + round_num * 10 + take_seq
             )
             takes.append(take)
     

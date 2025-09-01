@@ -1,0 +1,98 @@
+2025-08-31 18:10:48,401 - __main__ - INFO - Loaded configuration for 6 networks
+2025-08-31 18:10:48,408 - __main__ - INFO - Loaded ABI: auction (extracted from Brownie artifact)
+2025-08-31 18:10:48,410 - __main__ - INFO - Loaded ABI: auction_factory (extracted from Brownie artifact)
+2025-08-31 18:10:48,412 - __main__ - INFO - Loaded ABI: erc20 (extracted from Brownie artifact)
+2025-08-31 18:10:48,419 - __main__ - INFO - Loaded ABI: legacy_auction (extracted from Brownie artifact)
+2025-08-31 18:10:48,421 - __main__ - INFO - Loaded ABI: legacy_auction_factory (extracted from Brownie artifact)
+2025-08-31 18:10:48,451 - __main__ - INFO - Database connection established
+2025-08-31 18:10:48,458 - __main__ - INFO - Starting indexer for networks: ethereum
+2025-08-31 18:10:49,003 - __main__ - INFO - Connected to ethereum (chain_id: 1) at block 23264024
+2025-08-31 18:10:49,004 - __main__ - INFO - 🔍 Loading existing auctions from database for chain 1
+2025-08-31 18:10:49,011 - __main__ - INFO - Found 23 auctions in database for chain 1
+2025-08-31 18:10:49,011 - __main__ - INFO - Creating legacy_auction contract for auction 36c85a7F on chain 1
+2025-08-31 18:10:49,020 - __main__ - INFO - Contract 36c85a7F events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,020 - __main__ - INFO - Successfully added auction 36c85a7F to tracked auctions for chain 1
+2025-08-31 18:10:49,020 - __main__ - INFO - Creating legacy_auction contract for auction 091328C9 on chain 1
+2025-08-31 18:10:49,029 - __main__ - INFO - Contract 091328C9 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,030 - __main__ - INFO - Successfully added auction 091328C9 to tracked auctions for chain 1
+2025-08-31 18:10:49,030 - __main__ - INFO - Creating legacy_auction contract for auction 6b6b5D3e on chain 1
+2025-08-31 18:10:49,037 - __main__ - INFO - Contract 6b6b5D3e events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,037 - __main__ - INFO - Successfully added auction 6b6b5D3e to tracked auctions for chain 1
+2025-08-31 18:10:49,037 - __main__ - INFO - Creating legacy_auction contract for auction 23467FEa on chain 1
+2025-08-31 18:10:49,043 - __main__ - INFO - Contract 23467FEa events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,043 - __main__ - INFO - Successfully added auction 23467FEa to tracked auctions for chain 1
+2025-08-31 18:10:49,043 - __main__ - INFO - Creating legacy_auction contract for auction 3c6B9A56 on chain 1
+2025-08-31 18:10:49,047 - __main__ - INFO - Contract 3c6B9A56 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,047 - __main__ - INFO - Successfully added auction 3c6B9A56 to tracked auctions for chain 1
+2025-08-31 18:10:49,047 - __main__ - INFO - Creating legacy_auction contract for auction 33e5dF66 on chain 1
+2025-08-31 18:10:49,051 - __main__ - INFO - Contract 33e5dF66 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,051 - __main__ - INFO - Successfully added auction 33e5dF66 to tracked auctions for chain 1
+2025-08-31 18:10:49,051 - __main__ - INFO - Creating legacy_auction contract for auction 770E0260 on chain 1
+2025-08-31 18:10:49,056 - __main__ - INFO - Contract 770E0260 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,057 - __main__ - INFO - Successfully added auction 770E0260 to tracked auctions for chain 1
+2025-08-31 18:10:49,057 - __main__ - INFO - Creating legacy_auction contract for auction 68df93F8 on chain 1
+2025-08-31 18:10:49,061 - __main__ - INFO - Contract 68df93F8 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,061 - __main__ - INFO - Successfully added auction 68df93F8 to tracked auctions for chain 1
+2025-08-31 18:10:49,061 - __main__ - INFO - Creating legacy_auction contract for auction f2Bd520C on chain 1
+2025-08-31 18:10:49,068 - __main__ - INFO - Contract f2Bd520C events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,068 - __main__ - INFO - Successfully added auction f2Bd520C to tracked auctions for chain 1
+2025-08-31 18:10:49,068 - __main__ - INFO - Creating legacy_auction contract for auction 29f73097 on chain 1
+2025-08-31 18:10:49,072 - __main__ - INFO - Contract 29f73097 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,072 - __main__ - INFO - Successfully added auction 29f73097 to tracked auctions for chain 1
+2025-08-31 18:10:49,072 - __main__ - INFO - Creating legacy_auction contract for auction 7CD66131 on chain 1
+2025-08-31 18:10:49,076 - __main__ - INFO - Contract 7CD66131 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,077 - __main__ - INFO - Successfully added auction 7CD66131 to tracked auctions for chain 1
+2025-08-31 18:10:49,077 - __main__ - INFO - Creating legacy_auction contract for auction 3c3E287B on chain 1
+2025-08-31 18:10:49,081 - __main__ - INFO - Contract 3c3E287B events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,081 - __main__ - INFO - Successfully added auction 3c3E287B to tracked auctions for chain 1
+2025-08-31 18:10:49,081 - __main__ - INFO - Creating legacy_auction contract for auction b2D44deA on chain 1
+2025-08-31 18:10:49,087 - __main__ - INFO - Contract b2D44deA events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,088 - __main__ - INFO - Successfully added auction b2D44deA to tracked auctions for chain 1
+2025-08-31 18:10:49,088 - __main__ - INFO - Creating legacy_auction contract for auction a9F5dA43 on chain 1
+2025-08-31 18:10:49,094 - __main__ - INFO - Contract a9F5dA43 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,094 - __main__ - INFO - Successfully added auction a9F5dA43 to tracked auctions for chain 1
+2025-08-31 18:10:49,094 - __main__ - INFO - Creating legacy_auction contract for auction 5058448D on chain 1
+2025-08-31 18:10:49,098 - __main__ - INFO - Contract 5058448D events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,098 - __main__ - INFO - Successfully added auction 5058448D to tracked auctions for chain 1
+2025-08-31 18:10:49,098 - __main__ - INFO - Creating legacy_auction contract for auction cAFB0920 on chain 1
+2025-08-31 18:10:49,102 - __main__ - INFO - Contract cAFB0920 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,102 - __main__ - INFO - Successfully added auction cAFB0920 to tracked auctions for chain 1
+2025-08-31 18:10:49,102 - __main__ - INFO - Creating legacy_auction contract for auction 5d3d28FE on chain 1
+2025-08-31 18:10:49,106 - __main__ - INFO - Contract 5d3d28FE events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,106 - __main__ - INFO - Successfully added auction 5d3d28FE to tracked auctions for chain 1
+2025-08-31 18:10:49,106 - __main__ - INFO - Creating legacy_auction contract for auction 09D92ba6 on chain 1
+2025-08-31 18:10:49,112 - __main__ - INFO - Contract 09D92ba6 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,113 - __main__ - INFO - Successfully added auction 09D92ba6 to tracked auctions for chain 1
+2025-08-31 18:10:49,113 - __main__ - INFO - Creating legacy_auction contract for auction 0843a3A0 on chain 1
+2025-08-31 18:10:49,117 - __main__ - INFO - Contract 0843a3A0 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,117 - __main__ - INFO - Successfully added auction 0843a3A0 to tracked auctions for chain 1
+2025-08-31 18:10:49,117 - __main__ - INFO - Creating legacy_auction contract for auction 1d975F60 on chain 1
+2025-08-31 18:10:49,121 - __main__ - INFO - Contract 1d975F60 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,121 - __main__ - INFO - Successfully added auction 1d975F60 to tracked auctions for chain 1
+2025-08-31 18:10:49,121 - __main__ - INFO - Creating legacy_auction contract for auction 75284A57 on chain 1
+2025-08-31 18:10:49,126 - __main__ - INFO - Contract 75284A57 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,126 - __main__ - INFO - Successfully added auction 75284A57 to tracked auctions for chain 1
+2025-08-31 18:10:49,126 - __main__ - INFO - Creating legacy_auction contract for auction 4ED9f74A on chain 1
+2025-08-31 18:10:49,159 - __main__ - INFO - Contract 4ED9f74A events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,159 - __main__ - INFO - Successfully added auction 4ED9f74A to tracked auctions for chain 1
+2025-08-31 18:10:49,159 - __main__ - INFO - Creating legacy_auction contract for auction 3C861618 on chain 1
+2025-08-31 18:10:49,163 - __main__ - INFO - Contract 3C861618 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 18:10:49,163 - __main__ - INFO - Successfully added auction 3C861618 to tracked auctions for chain 1
+2025-08-31 18:10:49,163 - __main__ - INFO - Loaded 23 existing auctions for chain 1
+2025-08-31 18:10:49,163 - __main__ - INFO - Chain 1 already has 23 tracked auctions
+2025-08-31 18:10:49,301 - __main__ - INFO - Factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1: last_indexed_block=22570027, current_block=23264024
+2025-08-31 18:10:49,301 - __main__ - INFO - Processing factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1 from block 22570028 to 23264024
+2025-08-31 18:10:49,301 - __main__ - INFO - 🔄 Progress: Factory 0xCf..ec40 processed 15,000 blocks, 678,997 remaining (at block 22,585,027)
+2025-08-31 18:10:58,381 - __main__ - INFO - Created round 4 for auction 0x3B41F08d8c482D5eEf26DbCdD3999dBF1d975F60 on chain 1
+2025-08-31 18:10:59,670 - __main__ - INFO - Created round 2 for auction 0x8d56019B30024DE6e22A75fB256442513C861618 on chain 1
+2025-08-31 18:10:59,821 - __main__ - INFO - Created round 3 for auction 0x8d56019B30024DE6e22A75fB256442513C861618 on chain 1
+2025-08-31 18:11:00,023 - __main__ - INFO - Running Transfer event detection for takes on chain 1 for blocks 22570028-22585027
+2025-08-31 18:11:00,023 - __main__ - INFO - 🔍 Querying Transfer events for 20 auctions in batch
+2025-08-31 18:11:03,367 - __main__ - INFO - 🔍 Querying Transfer events for 3 auctions in batch
+2025-08-31 18:11:05,465 - __main__ - INFO - 🎯 Found 1 Transfer events from 3 auctions in blocks 22570028-22585027
+2025-08-31 18:11:05,612 - __main__ - ERROR - ❌ Failed to insert take into database: 'str' object has no attribute 'hex'
+2025-08-31 18:11:05,612 - __main__ - ERROR - Take data: 0x8d56019B30024DE6e22A75fB256442513C861618-1-1, 0x8d56019B30024DE6e22A75fB256442513C861618, 1, 1, 1
+2025-08-31 18:11:05,612 - __main__ - ERROR - ❌ Failed to process Take event for auction 0x8d56019B30024DE6e22A75fB256442513C861618: 'str' object has no attribute 'hex'
+2025-08-31 18:11:05,612 - __main__ - ERROR - Failed to process raw transfer log: 'str' object has no attribute 'hex'
+2025-08-31 18:11:05,612 - __main__ - ERROR - Log data: block=22583321, tx=ac3432b59e76f6deb3110cf3e9aa2faa33fee75f41351e893a0ae1525df83dd8
+2025-08-31 18:11:05,615 - __main__ - INFO - 🔄 Progress: Factory 0xCf..ec40 processed 30,000 blocks, 663,997 remaining (at block 22,600,027)

@@ -1,0 +1,102 @@
+2025-08-31 17:53:02,317 - __main__ - INFO - Loaded configuration for 6 networks
+2025-08-31 17:53:02,325 - __main__ - INFO - Loaded ABI: auction (extracted from Brownie artifact)
+2025-08-31 17:53:02,327 - __main__ - INFO - Loaded ABI: auction_factory (extracted from Brownie artifact)
+2025-08-31 17:53:02,328 - __main__ - INFO - Loaded ABI: erc20 (extracted from Brownie artifact)
+2025-08-31 17:53:02,336 - __main__ - INFO - Loaded ABI: legacy_auction (extracted from Brownie artifact)
+2025-08-31 17:53:02,337 - __main__ - INFO - Loaded ABI: legacy_auction_factory (extracted from Brownie artifact)
+2025-08-31 17:53:02,371 - __main__ - INFO - Database connection established
+2025-08-31 17:53:02,376 - __main__ - INFO - Starting indexer for networks: ethereum
+2025-08-31 17:53:02,912 - __main__ - INFO - Connected to ethereum (chain_id: 1) at block 23263936
+2025-08-31 17:53:02,913 - __main__ - INFO - 🔍 Loading existing auctions from database for chain 1
+2025-08-31 17:53:02,918 - __main__ - INFO - Found 10 auctions in database for chain 1
+2025-08-31 17:53:02,918 - __main__ - INFO - Creating legacy_auction contract for auction 36c85a7F on chain 1
+2025-08-31 17:53:02,923 - __main__ - INFO - Contract 36c85a7F events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,923 - __main__ - INFO - Successfully added auction 36c85a7F to tracked auctions for chain 1
+2025-08-31 17:53:02,923 - __main__ - INFO - Creating legacy_auction contract for auction 091328C9 on chain 1
+2025-08-31 17:53:02,927 - __main__ - INFO - Contract 091328C9 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,927 - __main__ - INFO - Successfully added auction 091328C9 to tracked auctions for chain 1
+2025-08-31 17:53:02,927 - __main__ - INFO - Creating legacy_auction contract for auction 6b6b5D3e on chain 1
+2025-08-31 17:53:02,931 - __main__ - INFO - Contract 6b6b5D3e events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,931 - __main__ - INFO - Successfully added auction 6b6b5D3e to tracked auctions for chain 1
+2025-08-31 17:53:02,931 - __main__ - INFO - Creating legacy_auction contract for auction 23467FEa on chain 1
+2025-08-31 17:53:02,936 - __main__ - INFO - Contract 23467FEa events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,936 - __main__ - INFO - Successfully added auction 23467FEa to tracked auctions for chain 1
+2025-08-31 17:53:02,936 - __main__ - INFO - Creating legacy_auction contract for auction 3c6B9A56 on chain 1
+2025-08-31 17:53:02,940 - __main__ - INFO - Contract 3c6B9A56 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,940 - __main__ - INFO - Successfully added auction 3c6B9A56 to tracked auctions for chain 1
+2025-08-31 17:53:02,941 - __main__ - INFO - Creating legacy_auction contract for auction 33e5dF66 on chain 1
+2025-08-31 17:53:02,945 - __main__ - INFO - Contract 33e5dF66 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,945 - __main__ - INFO - Successfully added auction 33e5dF66 to tracked auctions for chain 1
+2025-08-31 17:53:02,945 - __main__ - INFO - Creating legacy_auction contract for auction 770E0260 on chain 1
+2025-08-31 17:53:02,950 - __main__ - INFO - Contract 770E0260 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,950 - __main__ - INFO - Successfully added auction 770E0260 to tracked auctions for chain 1
+2025-08-31 17:53:02,950 - __main__ - INFO - Creating legacy_auction contract for auction 68df93F8 on chain 1
+2025-08-31 17:53:02,954 - __main__ - INFO - Contract 68df93F8 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,954 - __main__ - INFO - Successfully added auction 68df93F8 to tracked auctions for chain 1
+2025-08-31 17:53:02,954 - __main__ - INFO - Creating legacy_auction contract for auction f2Bd520C on chain 1
+2025-08-31 17:53:02,958 - __main__ - INFO - Contract f2Bd520C events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,958 - __main__ - INFO - Successfully added auction f2Bd520C to tracked auctions for chain 1
+2025-08-31 17:53:02,958 - __main__ - INFO - Creating legacy_auction contract for auction 29f73097 on chain 1
+2025-08-31 17:53:02,962 - __main__ - INFO - Contract 29f73097 events: ['abi', '_events', 'AuctionDisabled', 'AuctionEnabled', 'AuctionKicked', 'GovernanceTransferred', 'Take', 'UpdatedStartingPrice']
+2025-08-31 17:53:02,962 - __main__ - INFO - Successfully added auction 29f73097 to tracked auctions for chain 1
+2025-08-31 17:53:02,962 - __main__ - INFO - Loaded 10 existing auctions for chain 1
+2025-08-31 17:53:02,962 - __main__ - INFO - Chain 1 already has 10 tracked auctions
+2025-08-31 17:53:03,099 - __main__ - INFO - Factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1: last_indexed_block=22060027, current_block=23263936
+2025-08-31 17:53:03,099 - __main__ - INFO - Processing factory 0xCfA510188884F199fcC6e750764FAAbE6e56ec40 on chain 1 from block 22060028 to 23263936
+2025-08-31 17:53:03,099 - __main__ - INFO - 🔄 Progress: Factory 0xCf..ec40 processed 15,000 blocks, 1,188,909 remaining (at block 22,075,027)
+2025-08-31 17:53:04,400 - __main__ - INFO - Checking for Take in 36c85a7F blocks 22060028-22075027
+2025-08-31 17:53:06,449 - __main__ - INFO - Checking for Take in 091328C9 blocks 22060028-22075027
+2025-08-31 17:53:08,712 - __main__ - INFO - Checking for Take in 6b6b5D3e blocks 22060028-22075027
+2025-08-31 17:53:10,909 - __main__ - INFO - Checking for Take in 23467FEa blocks 22060028-22075027
+2025-08-31 17:53:12,960 - __main__ - INFO - Checking for Take in 3c6B9A56 blocks 22060028-22075027
+2025-08-31 17:53:15,095 - __main__ - INFO - Checking for Take in 33e5dF66 blocks 22060028-22075027
+2025-08-31 17:53:17,211 - __main__ - INFO - Checking for Take in 770E0260 blocks 22060028-22075027
+2025-08-31 17:53:18,163 - __main__ - INFO - Checking for Take in 68df93F8 blocks 22060028-22075027
+2025-08-31 17:53:18,863 - __main__ - INFO - Checking for Take in f2Bd520C blocks 22060028-22075027
+2025-08-31 17:53:19,999 - __main__ - INFO - Checking for Take in 29f73097 blocks 22060028-22075027
+2025-08-31 17:53:21,440 - __main__ - INFO - Found 0 traditional take events on chain 1 for blocks 22060028-22075027
+2025-08-31 17:53:21,440 - __main__ - INFO - Running Transfer event detection for additional takes on chain 1 for blocks 22060028-22075027
+2025-08-31 17:53:21,440 - __main__ - INFO - 🔍 Monitoring Transfer events for 10 auctions on chain 1, blocks 22060028-22075027
+2025-08-31 17:53:21,446 - __main__ - INFO - No from_tokens found for auction 36c85a7F on chain 1
+2025-08-31 17:53:21,447 - __main__ - INFO - No from_tokens found for auction 091328C9 on chain 1
+2025-08-31 17:53:21,448 - __main__ - INFO - No from_tokens found for auction 6b6b5D3e on chain 1
+2025-08-31 17:53:21,448 - __main__ - INFO - No from_tokens found for auction 23467FEa on chain 1
+2025-08-31 17:53:21,449 - __main__ - INFO - No from_tokens found for auction 3c6B9A56 on chain 1
+2025-08-31 17:53:21,450 - __main__ - INFO - No from_tokens found for auction 33e5dF66 on chain 1
+2025-08-31 17:53:21,454 - __main__ - INFO - No from_tokens found for auction 770E0260 on chain 1
+2025-08-31 17:53:21,457 - __main__ - INFO - No from_tokens found for auction 68df93F8 on chain 1
+2025-08-31 17:53:21,459 - __main__ - INFO - Found 2 from_tokens for auction f2Bd520C: ['4969c2B2', 'A034cd52']
+2025-08-31 17:53:22,184 - __main__ - INFO - No Transfer events from auction f2Bd520C token 4969c2B2
+2025-08-31 17:53:23,366 - __main__ - INFO - No Transfer events from auction f2Bd520C token A034cd52
+2025-08-31 17:53:23,370 - __main__ - INFO - Found 1 from_tokens for auction 29f73097: ['fb54309A']
+2025-08-31 17:53:24,017 - __main__ - INFO - No Transfer events from auction 29f73097 token fb54309A
+2025-08-31 17:53:24,022 - __main__ - INFO - 🔄 Progress: Factory 0xCf..ec40 processed 30,000 blocks, 1,173,909 remaining (at block 22,090,027)
+2025-08-31 17:53:25,400 - __main__ - INFO - Checking for Take in 36c85a7F blocks 22075028-22090027
+2025-08-31 17:53:26,362 - __main__ - INFO - Checking for Take in 091328C9 blocks 22075028-22090027
+2025-08-31 17:53:27,613 - __main__ - INFO - Checking for Take in 6b6b5D3e blocks 22075028-22090027
+2025-08-31 17:53:28,800 - __main__ - INFO - Checking for Take in 23467FEa blocks 22075028-22090027
+2025-08-31 17:53:29,913 - __main__ - INFO - Checking for Take in 3c6B9A56 blocks 22075028-22090027
+2025-08-31 17:53:30,919 - __main__ - INFO - Checking for Take in 33e5dF66 blocks 22075028-22090027
+2025-08-31 17:53:32,263 - __main__ - INFO - Checking for Take in 770E0260 blocks 22075028-22090027
+2025-08-31 17:53:34,012 - __main__ - INFO - Checking for Take in 68df93F8 blocks 22075028-22090027
+2025-08-31 17:53:35,001 - __main__ - INFO - Checking for Take in f2Bd520C blocks 22075028-22090027
+2025-08-31 17:53:35,925 - __main__ - INFO - Checking for Take in 29f73097 blocks 22075028-22090027
+2025-08-31 17:53:36,514 - __main__ - INFO - Found 0 traditional take events on chain 1 for blocks 22075028-22090027
+2025-08-31 17:53:36,514 - __main__ - INFO - Running Transfer event detection for additional takes on chain 1 for blocks 22075028-22090027
+2025-08-31 17:53:36,514 - __main__ - INFO - 🔍 Monitoring Transfer events for 10 auctions on chain 1, blocks 22075028-22090027
+2025-08-31 17:53:36,518 - __main__ - INFO - No from_tokens found for auction 36c85a7F on chain 1
+2025-08-31 17:53:36,519 - __main__ - INFO - No from_tokens found for auction 091328C9 on chain 1
+2025-08-31 17:53:36,524 - __main__ - INFO - No from_tokens found for auction 6b6b5D3e on chain 1
+2025-08-31 17:53:36,530 - __main__ - INFO - No from_tokens found for auction 23467FEa on chain 1
+2025-08-31 17:53:36,532 - __main__ - INFO - No from_tokens found for auction 3c6B9A56 on chain 1
+2025-08-31 17:53:36,533 - __main__ - INFO - No from_tokens found for auction 33e5dF66 on chain 1
+2025-08-31 17:53:36,534 - __main__ - INFO - No from_tokens found for auction 770E0260 on chain 1
+2025-08-31 17:53:36,535 - __main__ - INFO - No from_tokens found for auction 68df93F8 on chain 1
+2025-08-31 17:53:36,535 - __main__ - INFO - Found 2 from_tokens for auction f2Bd520C: ['4969c2B2', 'A034cd52']
+2025-08-31 17:53:37,081 - __main__ - INFO - No Transfer events from auction f2Bd520C token 4969c2B2
+2025-08-31 17:53:37,973 - __main__ - INFO - No Transfer events from auction f2Bd520C token A034cd52
+2025-08-31 17:53:37,976 - __main__ - INFO - Found 1 from_tokens for auction 29f73097: ['fb54309A']
+2025-08-31 17:53:38,449 - __main__ - INFO - No Transfer events from auction 29f73097 token fb54309A
+2025-08-31 17:53:38,453 - __main__ - INFO - 🔄 Progress: Factory 0xCf..ec40 processed 45,000 blocks, 1,158,909 remaining (at block 22,105,027)
+2025-08-31 17:53:39,539 - __main__ - INFO - Checking for Take in 36c85a7F blocks 22090028-22105027
+2025-08-31 17:53:40,271 - __main__ - INFO - Checking for Take in 091328C9 blocks 22090028-22105027

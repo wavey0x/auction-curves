@@ -52,11 +52,11 @@ class AuctionRoundInfo(BaseModel):
 
 class Take(BaseModel):
     """Individual take within an auction round"""
-    sale_id: str = Field(..., description="Unique take identifier: {auction}-{roundId}-{saleSeq}")
+    take_id: str = Field(..., description="Unique take identifier: {auction}-{roundId}-{takeSeq}")
     auction: str = Field(..., description="Auction contract address")
     chain_id: int = Field(..., description="Chain ID where this take occurred")
     round_id: int = Field(..., description="Round ID this take belongs to")
-    sale_seq: int = Field(..., description="Take sequence number within round (1, 2, 3...)")
+    take_seq: int = Field(..., description="Take sequence number within round (1, 2, 3...)")
     taker: str = Field(..., description="Address that made the purchase")
     amount_taken: str = Field(..., description="Amount of tokens purchased")
     amount_paid: str = Field(..., description="Amount paid in want token")
@@ -198,7 +198,7 @@ class TakeMessage(WebSocketMessage):
     auction: str = Field(..., description="Auction address")
     from_token: str = Field(..., description="Token sold")
     round_id: int = Field(..., description="Round ID")
-    sale_seq: int = Field(..., description="Sale sequence number")
+    take_seq: int = Field(..., description="Take sequence number")
     taker: str = Field(..., description="Address that bought tokens")
     amount_taken: str = Field(..., description="Amount of tokens purchased")
     amount_paid: str = Field(..., description="Amount paid")

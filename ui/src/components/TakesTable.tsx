@@ -14,8 +14,8 @@ import {
   cn,
 } from "../lib/utils";
 
-interface SalesTableProps {
-  sales: AuctionSale[];
+interface TakesTableProps {
+  takes: AuctionSale[];
   title: string;
   maxHeight?: string;
   tokens?: Token[];
@@ -23,8 +23,8 @@ interface SalesTableProps {
   auctionAddress?: string;
 }
 
-const SalesTable: React.FC<SalesTableProps> = ({
-  sales,
+const TakesTable: React.FC<TakesTableProps> = ({
+  takes,
   title,
   maxHeight = "max-h-96",
   tokens = [],
@@ -51,7 +51,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
   const chainInfo = getChainInfo(31337); // Using Anvil chain
 
-  if (sales.length === 0) {
+  if (takes.length === 0) {
     return (
       <div className="card">
         <h3 className="text-lg font-semibold mb-4">{title}</h3>
@@ -59,7 +59,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <TrendingDown className="h-8 w-8 text-gray-600" />
           </div>
-          <p className="text-lg font-medium text-gray-400">No sales yet</p>
+          <p className="text-lg font-medium text-gray-400">No takes yet</p>
           <p className="text-sm text-gray-600">
             Sales will appear here when auction rounds become active
           </p>
@@ -73,7 +73,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold flex items-center space-x-2">
           <span>{title}</span>
-          <span className="badge badge-neutral">{sales.length}</span>
+          <span className="badge badge-neutral">{takes.length}</span>
         </h3>
       </div>
 
@@ -87,7 +87,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
           <table className="table">
             <thead className="bg-gray-800/50 sticky top-0">
               <tr>
-                <th className="text-center">Sale</th>
+                <th className="text-center">Take ID</th>
                 <th className="text-center w-16">Chain</th>
                 <th className="text-center">Transaction</th>
                 {showRoundInfo && <th className="text-center">Round</th>}
@@ -99,17 +99,17 @@ const SalesTable: React.FC<SalesTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {sales.map((sale, index) => (
-                <tr key={sale.sale_id || `sale-${index}`} className="group">
+              {takes.map((take, index) => (
+                <tr key={take.take_id || `take-${index}`} className="group">
                   <td>
                     <div className="flex items-center space-x-1.5">
                       <TrendingDown className="h-3.5 w-3.5 text-primary-500" />
                       <div className="text-sm">
                         <div className="font-mono text-xs text-gray-500 leading-tight">
-                          S{sale.sale_seq}
+                          T{take.take_seq}
                         </div>
                         <div className="font-medium text-primary-400 text-xs leading-tight">
-                          {sale.sale_id ? sale.sale_id.split("-").slice(-2).join("-") : 'N/A'}
+                          {take.take_id ? take.take_id.split("-").slice(-2).join("-") : 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -118,7 +118,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   <td className="w-16 text-center">
                     <div className="flex justify-center">
                       <ChainIcon
-                        chainId={sale.chain_id}
+                        chainId={take.chain_id}
                         size="sm"
                         showName={false}
                       />
@@ -127,25 +127,25 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
                   <td>
                     <div className="flex items-center space-x-2">
-                      {getChainInfo(sale.chain_id).explorer !== "#" ? (
+                      {getChainInfo(take.chain_id).explorer !== "#" ? (
                         <a
-                          href={getTxLink(sale.tx_hash, sale.chain_id)}
+                          href={getTxLink(take.tx_hash, take.chain_id)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
                           title="View transaction"
                         >
-                          <span>{formatAddress(sale.tx_hash)}</span>
+                          <span>{formatAddress(take.tx_hash)}</span>
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       ) : (
                         <button
-                          onClick={() => handleCopy(sale.tx_hash)}
+                          onClick={() => handleCopy(take.tx_hash)}
                           className="font-mono text-sm text-gray-400 hover:text-gray-200 transition-colors flex items-center space-x-1"
                           title="Copy transaction hash"
                         >
-                          <span>{formatAddress(sale.tx_hash)}</span>
-                          {copiedAddresses.has(sale.tx_hash) ? (
+                          <span>{formatAddress(take.tx_hash)}</span>
+                          {copiedAddresses.has(take.tx_hash) ? (
                             <Check className="h-3 w-3 text-primary-500 animate-pulse" />
                           ) : (
                             <Copy className="h-3 w-3" />
@@ -159,17 +159,17 @@ const SalesTable: React.FC<SalesTableProps> = ({
                     <td>
                       {auctionAddress ? (
                         <Link
-                          to={`/round/${sale.chain_id}/${auctionAddress}/${sale.round_id}`}
+                          to={`/round/${take.chain_id}/${auctionAddress}/${take.round_id}`}
                           className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
                         >
                           <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
-                            R{sale.round_id}
+                            R{take.round_id}
                           </span>
                         </Link>
                       ) : (
                         <div className="flex items-center space-x-1">
                           <span className="font-mono text-sm text-gray-300">
-                            R{sale.round_id}
+                            R{take.round_id}
                           </span>
                         </div>
                       )}
@@ -178,20 +178,20 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
                   <td>
                     <Link
-                      to={`/auction/${sale.chain_id}/${sale.auction}`}
+                      to={`/auction/${take.chain_id}/${take.auction}`}
                       className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
                     >
-                      {formatAddress(sale.auction)}
+                      {formatAddress(take.auction)}
                     </Link>
                   </td>
 
                   <td>
                     <div className="text-sm">
                       <div className="font-medium text-gray-200 leading-tight">
-                        {formatTokenAmount(sale.amount_taken, 18, 4)}
+                        {formatTokenAmount(take.amount_taken, 18, 4)}
                       </div>
                       <div className="text-xs text-gray-500 leading-tight">
-                        paid: {formatTokenAmount(sale.amount_paid, 6, 2)}
+                        paid: {formatTokenAmount(take.amount_paid, 6, 2)}
                       </div>
                     </div>
                   </td>
@@ -199,10 +199,10 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   <td>
                     <div className="text-sm">
                       <div className="font-medium text-gray-200 leading-tight">
-                        {formatTokenAmount(sale.price, 18, 6)}
+                        {formatTokenAmount(take.price, 18, 6)}
                       </div>
                       <div className="text-xs text-gray-500 leading-tight">
-                        {formatUSD(parseFloat(sale.price) * 1.5)}{" "}
+                        {formatUSD(parseFloat(take.price) * 1.5)}{" "}
                         {/* Rough USD estimate */}
                       </div>
                     </div>
@@ -210,31 +210,31 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
                   <td>
                     <div className="flex items-center space-x-2">
-                      {getChainInfo(sale.chain_id).explorer !== "#" ? (
+                      {getChainInfo(take.chain_id).explorer !== "#" ? (
                         <a
                           href={`${
-                            getChainInfo(sale.chain_id).explorer
-                          }/address/${sale.taker}`}
+                            getChainInfo(take.chain_id).explorer
+                          }/address/${take.taker}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
                           title="View address on explorer"
                         >
-                          <span>{formatAddress(sale.taker)}</span>
+                          <span>{formatAddress(take.taker)}</span>
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       ) : (
                         <span className="font-mono text-sm text-gray-400">
-                          {formatAddress(sale.taker)}
+                          {formatAddress(take.taker)}
                         </span>
                       )}
 
                       <button
-                        onClick={() => handleCopy(sale.taker)}
+                        onClick={() => handleCopy(take.taker)}
                         className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
                         title="Copy address"
                       >
-                        {copiedAddresses.has(sale.taker) ? (
+                        {copiedAddresses.has(take.taker) ? (
                           <Check className="h-3 w-3 text-primary-500 animate-pulse" />
                         ) : (
                           <Copy className="h-3 w-3" />
@@ -246,9 +246,9 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   <td>
                     <span
                       className="text-sm text-gray-400"
-                      title={new Date(sale.timestamp).toLocaleString()}
+                      title={new Date(take.timestamp).toLocaleString()}
                     >
-                      {formatTimeAgo(new Date(sale.timestamp).getTime() / 1000)}
+                      {formatTimeAgo(new Date(take.timestamp).getTime() / 1000)}
                     </span>
                   </td>
                 </tr>
@@ -261,4 +261,4 @@ const SalesTable: React.FC<SalesTableProps> = ({
   );
 };
 
-export default SalesTable;
+export default TakesTable;

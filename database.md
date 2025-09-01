@@ -89,6 +89,50 @@ DATABASE_URL="postgresql://postgres@localhost:5432/auction"
 DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/auction"
 ```
 
+## Database User Standards
+
+**CRITICAL**: To prevent confusion and ensure consistent access patterns across services, the following database user standards MUST be followed:
+
+### User Account Rules
+
+- **Development Environment**: ALWAYS use `postgres` user account for all database connections
+  - Database: `auction_dev` 
+  - Connection: `postgresql://postgres@localhost:5432/auction_dev` (or 5433 if using Docker)
+  - User MUST have SUPERUSER privileges in PostgreSQL container
+- **Production Environment**: Use `postgres` user for administrative tasks, service-specific users for applications
+  - Database: `auction_prod` or just `auction`
+  - Connection: `postgresql://username:password@prod-host:5432/auction_prod`
+
+### Common Pitfalls to Avoid
+
+- ❌ **DO NOT** use mixed user accounts like `wavey` for development services - this creates confusion
+- ❌ **DO NOT** mix database names (`auction` vs `auction_dev`)  
+- ❌ **DO NOT** assume user permissions - always grant explicit access when setting up
+- ✅ **ALWAYS** verify the exact database user and name before connecting
+- ✅ **ALWAYS** use environment-specific database names (`_dev`, `_prod` suffixes)
+
+### Container Setup Commands
+
+```bash
+# Create postgres user with proper privileges (if needed)
+docker exec auction_postgres psql -U postgres -c "ALTER USER postgres WITH SUPERUSER;"
+
+# Grant all privileges on development database
+docker exec auction_postgres psql -U postgres -d auction_dev -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO postgres;"
+```
+
+### Verification Steps
+
+Always verify database connection settings:
+
+```bash
+# Test connection works
+python3 -c "import psycopg2; conn = psycopg2.connect('postgresql://postgres@localhost:5432/auction_dev'); print('✅ Connection successful')"
+
+# Verify table access
+docker exec auction_postgres psql -U postgres -d auction_dev -c "SELECT COUNT(*) FROM auctions;"
+```
+
 ## Environment Configuration
 
 ### 1. Create Environment File
@@ -123,11 +167,11 @@ READONLY_DATABASE_URL=postgresql://postgres:password@localhost:5433/auction_dev
 psql $DATABASE_URL
 
 # Or directly
-psql -h localhost -p 5432 -U postgres -d auction_house
+psql -h localhost -p 5432 -U postgres -d auction_dev
 
 # Common commands once connected:
 \dt                    # List tables
-\d auction_sales       # Describe table structure
+\d takes              # Describe table structure
 \q                     # Quit
 ```
 
@@ -177,7 +221,7 @@ const pool = new Pool({
 
 - **`auctions`**: Contract parameters and metadata with unix timestamps
 - **`rounds`**: Individual auction rounds (hypertable) with kick timestamps
-- **`takes`**: Sales within rounds (hypertable) with transaction timestamps
+- **`takes`**: Takes within rounds (hypertable) with transaction timestamps
 - **`tokens`**: Token metadata cache with discovery timestamps
 - **`price_history`**: Price data over time (hypertable) with unix timestamps
 - **`indexer_state`**: Per-factory indexer progress tracking
@@ -215,7 +259,7 @@ SELECT * FROM recent_takes LIMIT 10;
 SELECT * FROM active_auction_rounds;
 
 -- Database size
-SELECT pg_size_pretty(pg_database_size('auction_house'));
+SELECT pg_size_pretty(pg_database_size('auction_dev'));
 
 -- Table sizes
 SELECT
@@ -230,7 +274,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ### Data Analysis
 
 ```sql
--- Sales volume by day
+-- Takes volume by day
 SELECT
   DATE_TRUNC('day', timestamp) as day,
   COUNT(*) as takes,
@@ -283,8 +327,8 @@ docker-compose down
 docker-compose up postgres
 
 # Local installation
-createdb auction_house
-psql auction_house < data/postgres/schema.sql
+createdb auction_dev
+psql auction_dev < data/postgres/schema.sql
 ```
 
 **"Permission denied"**
@@ -322,7 +366,7 @@ SELECT add_retention_policy('rounds', INTERVAL '180 days');
 
 ```bash
 # Full database backup
-pg_dump $DATABASE_URL > auction_house_backup.sql
+pg_dump $DATABASE_URL > auction_backup.sql
 
 # Schema only
 pg_dump --schema-only $DATABASE_URL > schema_backup.sql
@@ -335,11 +379,11 @@ pg_dump --data-only $DATABASE_URL > data_backup.sql
 
 ```bash
 # Full restore
-psql $DATABASE_URL < auction_house_backup.sql
+psql $DATABASE_URL < auction_backup.sql
 
 # Or create fresh database and restore
-createdb auction_house_restored
-psql auction_house_restored < auction_house_backup.sql
+createdb auction_restored
+psql auction_restored < auction_backup.sql
 ```
 
 ## Multi-Chain Database Considerations

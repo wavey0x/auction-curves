@@ -23,16 +23,16 @@ export interface AuctionRoundInfo {
   available_amount?: string;
   time_remaining?: number;
   seconds_elapsed: number;
-  total_sales: number;
+  total_takes: number;
   progress_percentage?: number;
 }
 
 export interface AuctionSale {
-  sale_id: string;
+  take_id: string;
   auction: string;
   chain_id: number;
   round_id: number;
-  sale_seq: number;
+  take_seq: number;
   taker: string;
   amount_taken: string;
   amount_paid: string;
@@ -46,8 +46,8 @@ export interface AuctionActivity {
   total_participants: number;
   total_volume: string;
   total_rounds: number;
-  total_sales: number;
-  recent_sales: AuctionSale[];
+  total_takes: number;
+  recent_takes: AuctionSale[];
 }
 
 export interface AuctionListItem {
@@ -102,6 +102,6 @@ export interface SystemStats {
   active_auctions: number;
   unique_tokens: number;
   total_rounds: number;
-  total_sales: number;
+  total_takes: number;
   total_participants: number;
 }

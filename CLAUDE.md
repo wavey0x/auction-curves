@@ -238,19 +238,22 @@ The Web3.py indexer populates business logic tables directly:
 
 #### User Account Rules
 
-- **Development Environment**: ALWAYS use postgres user account for all database connections
+- **Development Environment**: ALWAYS use consistent local user account for all database connections
   - Database: `auction_dev`
-  - Connection: `postgresql://postgres@localhost:5432/auction_dev`
+  - Connection: `postgresql://wavey@localhost:5432/auction_dev` (or your local username)
   - User MUST have SUPERUSER privileges in PostgreSQL container
-- **Production Environment**: Use `postgres` user for administrative tasks, service-specific users for applications
+  - **NEVER mix `postgres` and local user** - pick one and use consistently across all services
+- **Production Environment**: Use service-specific users with minimal required privileges
   - Database: `auction_prod`
-  - Connection: `postgresql://username:password@prod-host:5432/auction_prod`
+  - Connection: `postgresql://app_user:password@prod-host:5432/auction_prod`
 
 #### Common Pitfalls to Avoid
 
-- ❌ **DO NOT** use `postgres` user for development services - this creates confusion
+- ❌ **DO NOT** mix `postgres` and local user (`wavey`) - this is the #1 source of confusion
+- ❌ **DO NOT** use `postgres` superuser for application services in development
 - ❌ **DO NOT** mix database names (`auction` vs `auction_dev`)
 - ❌ **DO NOT** assume user permissions - always grant explicit access when setting up
+- ✅ **ALWAYS** use the same user account across all services in the same environment
 - ✅ **ALWAYS** verify the exact database user and name before connecting
 - ✅ **ALWAYS** use environment-specific database names (`_dev`, `_prod` suffixes)
 
@@ -621,6 +624,7 @@ npm run lint
 - ✅ Better error handling and loading states
 - ✅ Eliminated YAML parsing errors with proper factory configuration
 - ✅ **Database Provider Implementation**: Real SQL queries replacing mock implementations
+- ✅ **Active Auction Filtering**: Changed from client-side to server-side filtering using API `status=active` parameter for better performance
 
 ## Performance Considerations
 

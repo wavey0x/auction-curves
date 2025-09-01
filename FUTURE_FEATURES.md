@@ -218,6 +218,102 @@ def cache_response(ttl: int = 30, key_prefix: str = "api"):
 from .cache import cache
 from .decorators import cache_response
 
+
+---
+
+## Modular Indexer Redesign (Backfill‑Only)
+
+### Objectives
+- Historical backfill only (no WebSockets in phase 1).
+- Clean separation of concerns to add new events/versions without touching the core.
+- Always collect Take events; processors assign each Take to the correct round using business logic: auction address + from_token + timestamp.
+- Provider‑agnostic reliability with adaptive range splitting and idempotent writes.
+
+### Architecture Overview
+- Core (fetch/decode/checkpoint)
+  - Config: load and validate YAML; per‑network settings; enabled events.
+  - ABI Manager: load per contract type/version; resolve event signatures and aliases.
+  - Log Fetcher: `eth_getLogs` with explicit `address` filtering + adaptive range splitter + retries.
+  - Checkpoints: per chain + per contract + per event last block; rewind/override support.
+- Contracts
+  - Discovery: backfill factories to discover auctions or allow direct auction backfill.
+  - Registry: in‑memory set of tracked auction addresses per chain/type/version.
+- Events
+  - Event Registry: maps `contract_type + event_name` to a Processor (supports aliases).
+  - Processors: pure units that validate, transform, and persist.
+    - DeployedNewAuction: register + metadata discovery.
+    - AuctionKicked: create round rows.
+    - Take: collect all Takes, then assign to a round by time+token; persist.
+    - AuctionEnabled, UpdatedStartingPrice, UpdatedStepDecayRate (as needed).
+- Storage
+  - DB Connection + Repositories: `AuctionsRepo`, `RoundsRepo`, `TakesRepo`, `TokensRepo`, `CheckpointRepo`.
+  - Idempotent upserts; dedupe on primary keys.
+
+### Backfill Flow
+1. For each chain, ensure tracked auctions (via factory backfill or an allowlist).
+2. For each tracked auction and enabled event:
+   - Determine the block window from checkpoints.
+   - Fetch logs with `get_logs(address, topics=[topic0], fromBlock, toBlock)` via the splitter.
+   - Decode with ABI Manager; dispatch to the registered Processor.
+   - Persist via repositories; advance the checkpoint.
+
+### Take Processor: Round Matching
+- Inputs: decoded Take args `{from, taker, amountTaken, amountPaid}`, plus `(blockNumber, blockTime, chainId, auctionAddress)`.
+- Steps:
+  - Resolve `want_token` from `auctions`.
+  - Find candidate round by time and token:
+    - Latest round R where `LOWER(from_token) = LOWER(take.from)` and `kicked_at <= take.timestamp` (order by `kicked_at DESC`).
+    - If a later round exists with `kicked_at > R.kicked_at` and `take.timestamp >= next.kicked_at`, try the previous one.
+  - If round found: compute `sale_seq` (e.g., `total_sales + 1` or count of existing takes) and insert.
+  - If none: still persist the Take (see Schema Options) and reconcile later.
+
+### Schema Options (Collect All Takes)
+- A. Staging table `raw_takes` for unmatched Takes (tx_hash, log_index, auction, from, taker, amounts, ts). A reconciliation job assigns `round_id` later. Recommended.
+- B. Make `takes.round_id` nullable; insert immediately with `round_id NULL`; a reconciliation step fills it.
+- D. Regardless of A/B, add a unique constraint `(chain_id, transaction_hash, log_index)` to ensure idempotency.
+
+### Reliability
+- Adaptive splitter: binary split on “too many results/response size/timeout” provider errors.
+- Retries with backoff and jitter.
+- Explicit `address` filter on `get_logs` to avoid cross‑contract noise.
+
+### Configurability
+- YAML schema:
+  - `networks`: `{ rpc_url, chain_id, factories[{ address, start_block, type }] }`.
+  - `indexer`: `{ block_batch_size, poll_interval, log_level, enabled_events: { auction: [...], legacy_auction: [...] } }`.
+  - `events.aliases`: optional mapping for renamed events (e.g., `Take` ⇄ `AuctionSale`).
+  - Toggle staging mode for unmatched Takes (Option A) or nullable round_id (Option B).
+
+### Observability
+- INFO: batch summaries — contracts scanned, window, counts per event.
+- DEBUG: per‑event logs, processor details.
+- Optional metrics: events decoded, inserted, retries, splits.
+
+### Testing
+- Unit: ABI decode fixtures, processor transforms, repo upserts, round matching edge cases.
+- Integration: Anvil deploy of Auction/LegacyAuction, emit Kicked then Takes, assert DB rows and idempotency.
+- CLI smoke: `inspect-tx` on known receipts and `backfill-contract` windows.
+
+### CLI Surface (Phase 1)
+- `backfill --network eth [--from N --to M]`
+- `backfill-contract --network eth --address 0x... --events Take, AuctionKicked`
+- `inspect-tx --network eth --tx 0x...`
+- `status` — show checkpoints and recent counts
+
+### Migration Steps
+1. Scaffold modules: `core/`, `events/`, `processors/`, `storage/`, `cli/`.
+2. Port Config + ABI Manager + Log Fetcher + Splitter.
+3. Implement per‑contract/event Checkpoints.
+4. Implement processors: AuctionKicked, Take (with time+token round matching), DeployedNewAuction.
+5. Add Schema Option A (raw_takes) and unique constraint on `(chain_id, transaction_hash, log_index)`.
+6. Add CLIs (`backfill`, `backfill-contract`, `inspect-tx`); docs and examples.
+7. Replace filter‑based calls and reduce noisy logs.
+
+### Assumptions (Confirmed)
+- Phase 1 is historical backfill only (no WebSockets).
+- Processors assign rounds for Takes using auction address + from_token + timestamp.
+- No provider‑specific constraints assumed initially.
+
 @app.get("/auctions")
 @cache_response(ttl=30, key_prefix="auctions_list")
 async def get_auctions(
