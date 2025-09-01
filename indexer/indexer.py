@@ -361,7 +361,7 @@ class AuctionIndexer:
                     self.tracked_auctions[chain_id] = {}
                 self.tracked_auctions[chain_id][auction_address] = auction_contract
                 
-                logger.info(f"Added auction {auction_address} on chain {chain_id} from factory {factory_address}")
+                logger.info(f"🚀 Auction deployed: {auction_address} on chain {chain_id} from factory {factory_address}")
                 
             except Exception as e:
                 logger.error(f"Failed to fetch auction parameters for {auction_address}: {e}")
@@ -382,14 +382,16 @@ class AuctionIndexer:
             # Discover and store from_token metadata
             self._discover_and_store_token(from_token, chain_id)
             
-            # Convert to human-readable format (assume 18 decimals for now)
-            # TODO: Get actual token decimals from tokens table
-            initial_available = float(initial_available_wei) / 1e18
+            # Convert to human-readable format using actual token decimals
+            w3 = self.web3_connections[chain_id]
+            from_decimals = self._get_token_decimals(w3, from_token)
+            from decimal import Decimal
+            initial_available = Decimal(initial_available_wei) / (Decimal(10) ** from_decimals)
             
             block = self.web3_connections[chain_id].eth.get_block(event['blockNumber'])
             timestamp = block['timestamp']  # Use Unix timestamp directly
             
-            # Get next round ID for this auction
+            # Get next round ID and auction_length for this auction
             with self.db_conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT COALESCE(MAX(round_id), 0) + 1 as next_round_id
@@ -399,29 +401,39 @@ class AuctionIndexer:
                 
                 next_round_id = cursor.fetchone()['next_round_id']
                 
-                # Mark previous rounds as inactive
+                # Get auction_length from auctions table
                 cursor.execute("""
-                    UPDATE rounds 
-                    SET is_active = FALSE 
-                    WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND is_active = TRUE
+                    SELECT auction_length 
+                    FROM auctions 
+                    WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s
                 """, (auction_address, chain_id))
+                
+                auction_row = cursor.fetchone()
+                auction_length = auction_row['auction_length'] if auction_row else 86400  # Default to 24 hours
+                
+                # No need to mark previous rounds as inactive - is_active is now calculated dynamically
                 txn_hash = self._normalize_transaction_hash(event['transactionHash'])
-                # Insert new round
+                # Calculate round timestamps
+                round_start = timestamp
+                round_end = timestamp + auction_length
+                
+                # Insert new round (is_active column removed - now calculated dynamically)
                 cursor.execute("""
                     INSERT INTO rounds (
                         auction_address, chain_id, round_id, from_token,
-                        kicked_at, timestamp, initial_available, is_active,
-                        available_amount, block_number, transaction_hash
+                        kicked_at, timestamp, round_start, round_end,
+                        initial_available, available_amount, 
+                        block_number, transaction_hash
                     ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, TRUE, %s, %s, %s
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                     )
                 """, (
                     auction_address, chain_id, next_round_id, from_token,
-                    timestamp, block['timestamp'], initial_available, initial_available,
-                    event['blockNumber'], txn_hash
+                    timestamp, block['timestamp'], round_start, round_end,
+                    initial_available, initial_available, event['blockNumber'], txn_hash
                 ))
             
-            logger.info(f"Created round {next_round_id} for auction {auction_address} on chain {chain_id}")
+            logger.info(f"⚪ Created round {next_round_id} for auction {auction_address} on chain {chain_id}")
             
         except Exception as e:
             logger.error(f"❌ Failed to process auction kicked event: {e}")
@@ -504,8 +516,12 @@ class AuctionIndexer:
                 # Create take ID
                 take_id = f"{auction_address}-{round_id}-{take_seq}"
                 
-                # Calculate price (amount_paid / amount_taken)
-                price = amount_paid if amount_taken == 0 else amount_paid // amount_taken
+                # Calculate human-readable price (want per 1 from) using human-readable amounts
+                from decimal import Decimal, getcontext
+                getcontext().prec = 50
+                amount_taken_dec = amount_taken if isinstance(amount_taken, Decimal) else Decimal(str(amount_taken))
+                amount_paid_dec = amount_paid if isinstance(amount_paid, Decimal) else Decimal(str(amount_paid))
+                price = Decimal(0) if amount_taken_dec == 0 else (amount_paid_dec / amount_taken_dec)
                 
                 # Get want_token for this auction first
                 cursor.execute("""
@@ -518,8 +534,17 @@ class AuctionIndexer:
                     logger.error(f"❌ Auction {auction_address} not found in database for take processing")
                     return
                     
-                want_token = auction_data['want_token']
+                want_token = (event.get('wantToken') or auction_data['want_token'])
                 txn_hash = self._normalize_transaction_hash(event['transactionHash'])
+                # Idempotency: skip if this (chain_id, tx, log_index) already recorded
+                cursor.execute(
+                    "SELECT 1 FROM takes WHERE chain_id=%s AND transaction_hash=%s AND log_index=%s LIMIT 1",
+                    (chain_id, self._normalize_transaction_hash(event['transactionHash']), event['logIndex'])
+                )
+                if cursor.fetchone():
+                    logger.debug(f"Duplicate take skipped: tx={txn_hash} log_index={event['logIndex']}")
+                    return
+
                 # Insert take record with better error handling
                 try:
                     cursor.execute("""
@@ -548,22 +573,58 @@ class AuctionIndexer:
                 # Update round statistics if the round exists
                 try:
                     if round_id != 0:
-                        cursor.execute("""
-                            UPDATE rounds SET
-                                total_takes = total_takes + 1,
-                                total_volume_sold = COALESCE(total_volume_sold, 0) + %s,
-                                available_amount = available_amount - %s
-                            WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND round_id = %s
-                        """, (amount_taken, amount_taken, auction_address, chain_id, round_id))
-                        if cursor.rowcount > 0:
-                            logger.debug(f"Updated round {round_id} stats: +1 take, -{amount_taken} available")
+                        # Get accurate available amount from blockchain
+                        available_amount_accurate = None
+                        try:
+                            w3 = self.web3_connections[chain_id]
+                            if 'auction' in self.contract_abis:
+                                auction_contract = w3.eth.contract(
+                                    address=Web3.to_checksum_address(auction_address),
+                                    abi=self.contract_abis['auction']
+                                )
+                                available_raw = auction_contract.functions.available(
+                                    Web3.to_checksum_address(from_token)
+                                ).call()
+                                
+                                # Get from_token decimals
+                                from_decimals = self._get_token_decimals(w3, from_token)
+                                
+                                # Convert to human-readable format
+                                from decimal import Decimal
+                                available_amount_accurate = Decimal(available_raw) / (Decimal(10) ** from_decimals)
+                                logger.debug(f"Blockchain available amount for {from_token[-8:]}: {available_amount_accurate}")
+                        except Exception as blockchain_error:
+                            logger.warning(f"Failed to get accurate available amount from blockchain: {blockchain_error}")
+                            # Continue with calculation-based update
+                        
+                        if available_amount_accurate is not None:
+                            # Use accurate blockchain value
+                            cursor.execute("""
+                                UPDATE rounds SET
+                                    total_takes = total_takes + 1,
+                                    total_volume_sold = COALESCE(total_volume_sold, 0) + %s,
+                                    available_amount = %s
+                                WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND round_id = %s
+                            """, (amount_taken, available_amount_accurate, auction_address, chain_id, round_id))
+                            logger.debug(f"Updated round {round_id} stats: +1 take, blockchain available_amount={available_amount_accurate}")
                         else:
+                            # Fallback to calculation-based update
+                            cursor.execute("""
+                                UPDATE rounds SET
+                                    total_takes = total_takes + 1,
+                                    total_volume_sold = COALESCE(total_volume_sold, 0) + %s,
+                                    available_amount = available_amount - %s
+                                WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND round_id = %s
+                            """, (amount_taken, amount_taken, auction_address, chain_id, round_id))
+                            logger.debug(f"Updated round {round_id} stats: +1 take, calculated available_amount")
+                        
+                        if cursor.rowcount == 0:
                             logger.debug(f"No existing round row to update for {auction_address[-8:]} round {round_id}")
                 except Exception as update_error:
                     logger.error(f"❌ Failed to update round statistics: {update_error}")
                     # Do not raise; we already recorded the take
             
-            logger.info(f"🎉 Successfully processed take {take_id} on chain {chain_id}")
+            logger.info(f"🫴 Successfully processed take {take_id} on chain {chain_id}")
             
         except Exception as e:
             logger.error(f"❌ Failed to process Take event for auction {auction_address}: {e}")
@@ -661,9 +722,9 @@ class AuctionIndexer:
                     ))
                     
                     if symbol and name:
-                        logger.info(f"✅ Discovered token: {symbol} ({name}) at {token_address} on chain {chain_id}")
+                        logger.info(f"💾 Caching token: {symbol} ({name}) at {token_address} on chain {chain_id}")
                     else:
-                        logger.info(f"✅ Discovered token (partial metadata) at {token_address} on chain {chain_id}")
+                        logger.info(f"💾 Caching token (partial metadata) at {token_address} on chain {chain_id}")
                 
             except Exception as contract_error:
                 logger.warning(f"Failed to process token contract {token_address}: {type(contract_error).__name__}: {contract_error}")
@@ -747,7 +808,7 @@ class AuctionIndexer:
                                    from_block: int, to_block: int) -> None:
         """Detect transfers for a batch of auctions using raw eth_getLogs"""
         try:
-            logger.info(f"🔍 Querying Transfer events for {len(auction_batch)} auctions in batch")
+            logger.debug(f"🔍 Querying Transfer events for {len(auction_batch)} auctions in batch")
             
             # ERC20 Transfer event signature: Transfer(address,address,uint256)
             transfer_topic = w3.keccak(text="Transfer(address,address,uint256)").hex()
@@ -773,7 +834,7 @@ class AuctionIndexer:
             logs = w3.eth.get_logs(filter_params)
             
             if logs:
-                logger.info(f"🎯 Found {len(logs)} Transfer events from {len(auction_batch)} auctions in blocks {from_block}-{to_block}")
+                logger.debug(f"🎯 Found {len(logs)} Transfer events from {len(auction_batch)} auctions in blocks {from_block}-{to_block}")
                 
                 for log in logs:
                     try:
@@ -788,60 +849,105 @@ class AuctionIndexer:
             logger.error(f"Failed to query Transfer events for auction batch: {e}")
     
     def _process_raw_transfer_log(self, log, chain_id: int, w3: Web3) -> None:
-        """Process a raw Transfer log from eth_getLogs"""
+        """Process a raw Transfer log as a take using on-chain view for amount_paid.
+
+        - Outgoing transfer (from=auction, to=taker) yields amount_taken (from_token base units)
+        - amount_paid computed via getAmountNeeded(..., timestamp) at the same block
+        - price stored as 1e18 scaled want-per-from
+        """
         try:
-            # Decode the Transfer log
-            # log.topics[0] = Transfer event signature
-            # log.topics[1] = from address (padded, this is the auction address)
-            # log.topics[2] = to address (padded, this is the taker)
-            # log.data = amount (uint256)
-            
-            # Extract addresses from topics (remove padding)
-            auction_address = '0x' + log['topics'][1].hex()[-40:]  # Last 20 bytes (40 hex chars)
-            taker_address = '0x' + log['topics'][2].hex()[-40:]    # Last 20 bytes (40 hex chars)
-            
-            # Normalize addresses
-            auction_address = self._normalize_address(auction_address)
-            taker_address = self._normalize_address(taker_address)
-            
-            # Decode amount from data field
-            amount_taken_raw = int(log['data'].hex(), 16)  # Convert hex data to integer
-            
-            # Token address is the contract that emitted the event
-            token_address = self._normalize_address(log['address'])
-            
-            # Get token decimals for normalization
-            token_decimals = self._get_token_decimals(w3, token_address)
-            
-            # Normalize amounts to human-readable format
-            amount_taken = float(amount_taken_raw) / (10 ** token_decimals)
-            amount_paid = amount_taken  # For now, assume 1:1 - we'll improve this later
-            
-            # Ensure transaction hash has 0x prefix
+            # Extract addresses and values
+            auction_address = self._normalize_address('0x' + log['topics'][1].hex()[-40:])
+            taker_address = self._normalize_address('0x' + log['topics'][2].hex()[-40:])
+            from_token = self._normalize_address(log['address'])
+            amount_taken_raw = int(log['data'].hex(), 16)
+
+            block_number = log['blockNumber']
+            block = w3.eth.get_block(block_number)
+            timestamp = int(block['timestamp'])
+
+            # Find auction contract instance
+            contract = self.tracked_auctions.get(chain_id, {}).get(auction_address)
+            if not contract:
+                logger.debug(f"Auction {auction_address[-8:]} not tracked on chain {chain_id}; skipping")
+                return
+
+            # Resolve want token and decimals
+            try:
+                want_token = self._normalize_address(contract.functions.want().call(block_identifier=block_number))
+            except Exception:
+                # Fallback to DB
+                with self.db_conn.cursor() as cursor:
+                    cursor.execute("SELECT want_token FROM auctions WHERE LOWER(auction_address)=LOWER(%s) AND chain_id=%s", (auction_address, chain_id))
+                    row = cursor.fetchone()
+                    want_token = row['want_token'] if row and row['want_token'] else None
+            if not want_token:
+                logger.error(f"Want token unknown for auction {auction_address}")
+                return
+
+            from_decimals = self._get_token_decimals(w3, from_token)
+            want_decimals = self._get_token_decimals(w3, want_token)
+
+            # Compute amount_paid via on-chain view first
+            try:
+                amount_paid_raw = contract.functions.getAmountNeeded(from_token, amount_taken_raw, timestamp).call(block_identifier=block_number)
+            except Exception as e_gan:
+                logger.debug(f"getAmountNeeded failed ({e_gan}); falling back to price()")
+                price_scaled = contract.functions.price(from_token, timestamp).call(block_identifier=block_number)
+                # price_scaled ~ (price_e18 * 10^want) / 1e18
+                amount_paid_raw = (amount_taken_raw * int(price_scaled)) // (10 ** from_decimals)
+
+            # Compute price_e18 (1e18-scaled want per 1 from) and human-readable amounts
+            from decimal import Decimal, getcontext
+            getcontext().prec = 50
+            if amount_taken_raw == 0:
+                price_e18 = 0
+                amt_taken_hr = Decimal(0)
+                amt_paid_hr = Decimal(0)
+            else:
+                # 1e18 scaled price using raw ints and decimals
+                numerator = amount_paid_raw * (10 ** from_decimals) * (10 ** 18)
+                denominator = amount_taken_raw * (10 ** want_decimals)
+                price_e18 = numerator // denominator
+                # Human-readable amounts
+                amt_taken_hr = Decimal(amount_taken_raw) / (Decimal(10) ** from_decimals)
+                amt_paid_hr = Decimal(amount_paid_raw) / (Decimal(10) ** want_decimals)
+
+            # Normalize tx hash
             tx_hash = log['transactionHash']
             if isinstance(tx_hash, bytes):
                 tx_hash = '0x' + tx_hash.hex()
-            elif not tx_hash.startswith('0x'):
-                tx_hash = '0x' + tx_hash
-            
-            logger.debug(f"🔄 Processing raw Transfer: token={token_address[-8:]}, auction={auction_address[-8:]}, taker={taker_address[-8:]}, amount={amount_taken} (decimals={token_decimals})")
-            
-            # Create a synthetic Take event structure to reuse existing _process_take logic
+            elif not str(tx_hash).startswith('0x'):
+                tx_hash = '0x' + str(tx_hash)
+
+            logger.debug(
+                f"Take via Transfer: auction={auction_address[-8:]}, from={from_token[-8:]}, want={want_token[-8:]}, taker={taker_address[-8:]}, "
+                f"amount_taken={amount_taken_raw}, amount_paid={amount_paid_raw}, price_e18={price_e18}"
+            )
+
+            # Build synthetic event and reuse _process_take
+            # Convert amounts to human-readable decimals for DB storage
+            amount_taken_hr = amt_taken_hr
+            amount_paid_hr = amt_paid_hr
+
             synthetic_take_event = {
                 'args': {
                     'taker': taker_address,
-                    'amountTaken': amount_taken,
-                    'amountPaid': amount_paid,
-                    'from': token_address
+                    'amountTaken': amount_taken_hr,
+                    'amountPaid': amount_paid_hr,
+                    'from': from_token
                 },
-                'blockNumber': log['blockNumber'],
+                'blockNumber': block_number,
                 'transactionHash': tx_hash,
-                'logIndex': log['logIndex']
+                'logIndex': log['logIndex'],
+                'price_e18': int(price_e18),
+                'wantToken': want_token,
+                'wantDecimals': want_decimals,
+                'fromDecimals': from_decimals,
             }
-            
-            # Use existing _process_take logic
+
             self._process_take(synthetic_take_event, chain_id, auction_address)
-            
+
         except Exception as e:
             logger.error(f"Failed to process raw transfer log: {e}")
             tx_hash = log.get('transactionHash')
@@ -944,7 +1050,7 @@ class AuctionIndexer:
             blocks_processed = to_block - last_indexed_block
             if blocks_processed > 0 and blocks_processed % 5000 < batch_size:
                 remaining_blocks = current_block - to_block
-                logger.info(f"🔄 Progress: Factory {factory_address[:4]}..{factory_address[-4:]} processed {blocks_processed:,} blocks, {remaining_blocks:,} remaining (at block {to_block:,})")
+                logger.debug(f"Progress: Factory {factory_address[:4]}..{factory_address[-4:]} processed {blocks_processed:,} blocks, {remaining_blocks:,} remaining (at block {to_block:,})")
             
             try:
                 # Process factory events for this specific factory
@@ -985,7 +1091,7 @@ class AuctionIndexer:
             event_cls = factory_contract.events.DeployedNewAuction
             events = self._get_event_logs_with_split(event_cls, from_block, to_block)
             if events:
-                logger.info(f"🎉 Found {len(events)} auction deployment events in blocks {from_block}-{to_block}")
+                logger.info(f"👨‍⚖️ Found {len(events)} auction deployment events in blocks {from_block}-{to_block}")
             
             for event in events:
                 self._process_factory_deployment(event, chain_id, factory_address, factory_type)

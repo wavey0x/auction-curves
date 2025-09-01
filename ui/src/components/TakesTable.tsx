@@ -61,7 +61,7 @@ const TakesTable: React.FC<TakesTableProps> = ({
           </div>
           <p className="text-lg font-medium text-gray-400">No takes yet</p>
           <p className="text-sm text-gray-600">
-            Sales will appear here when auction rounds become active
+            Takes will appear here when auction rounds become active
           </p>
         </div>
       </div>
@@ -188,10 +188,10 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   <td>
                     <div className="text-sm">
                       <div className="font-medium text-gray-200 leading-tight">
-                        {formatTokenAmount(take.amount_taken, 18, 4)}
+                        {formatTokenAmount(take.amount_taken, take.from_token_decimals || 18, 4)} {take.from_token_symbol || '?'}
                       </div>
                       <div className="text-xs text-gray-500 leading-tight">
-                        paid: {formatTokenAmount(take.amount_paid, 6, 2)}
+                        paid: {formatTokenAmount(take.amount_paid, take.to_token_decimals || 18, 2)} {take.to_token_symbol || '?'}
                       </div>
                     </div>
                   </td>
@@ -199,11 +199,10 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   <td>
                     <div className="text-sm">
                       <div className="font-medium text-gray-200 leading-tight">
-                        {formatTokenAmount(take.price, 18, 6)}
+                        {formatTokenAmount(take.price, take.to_token_decimals || 18, 6)} {take.to_token_symbol || '?'}
                       </div>
                       <div className="text-xs text-gray-500 leading-tight">
-                        {formatUSD(parseFloat(take.price) * 1.5)}{" "}
-                        {/* Rough USD estimate */}
+                        per {take.from_token_symbol || '?'}
                       </div>
                     </div>
                   </td>

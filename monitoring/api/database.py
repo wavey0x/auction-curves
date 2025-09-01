@@ -7,7 +7,7 @@ import os
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
@@ -87,18 +87,17 @@ class DatabaseQueries:
                     ar.round_id,
                     ar.from_token,
                     ar.kicked_at,
+                    ar.round_start,
+                    ar.round_end,
                     ar.initial_available,
-                    ar.current_price,
                     ar.available_amount,
-                    ar.time_remaining,
-                    ar.seconds_elapsed,
                     ar.total_takes,
                     ar.progress_percentage,
                     ahp.want_token,
                     ahp.decay_rate,
                     ahp.update_interval,
                     ahp.auction_length,
-                    TRUE as is_active,
+                    (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) as is_active,
                     -- Want token info
                     wt.symbol as want_token_symbol,
                     wt.name as want_token_name,
@@ -128,7 +127,8 @@ class DatabaseQueries:
                 INNER JOIN rounds ar 
                     ON ahp.auction_address = ar.auction_address 
                     AND ahp.chain_id = ar.chain_id
-                    AND ar.is_active = TRUE
+                    AND ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT 
+                AND ar.available_amount > 0
                 LEFT JOIN tokens wt
                     ON LOWER(ahp.want_token) = LOWER(wt.address)
                     AND ahp.chain_id = wt.chain_id
@@ -148,18 +148,21 @@ class DatabaseQueries:
                     COALESCE(ar.round_id, 0) as round_id,
                     COALESCE(ar.from_token, '') as from_token,
                     COALESCE(ar.kicked_at, 0) as kicked_at,
+                    COALESCE(ar.round_start, 0) as round_start,
+                    COALESCE(ar.round_end, 0) as round_end,
                     COALESCE(ar.initial_available, 0) as initial_available,
-                    COALESCE(ar.current_price, 0) as current_price,
                     COALESCE(ar.available_amount, 0) as available_amount,
-                    COALESCE(ar.time_remaining, 0) as time_remaining,
-                    COALESCE(ar.seconds_elapsed, 0) as seconds_elapsed,
                     COALESCE(ar.total_takes, 0) as total_takes,
                     COALESCE(ar.progress_percentage, 0) as progress_percentage,
                     ahp.want_token,
                     ahp.decay_rate,
                     ahp.update_interval,
                     ahp.auction_length,
-                    COALESCE(ar.is_active, FALSE) as is_active,
+                    CASE 
+                        WHEN ar.round_end IS NOT NULL 
+                        THEN (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0)
+                        ELSE FALSE
+                    END as is_active,
                     -- Want token info
                     wt.symbol as want_token_symbol,
                     wt.name as want_token_name,
@@ -197,7 +200,7 @@ class DatabaseQueries:
                     AND ar.chain_id = ft.chain_id
                 WHERE 1=1
                 {chain_filter}
-                ORDER BY ahp.auction_address, ahp.chain_id, ar.is_active DESC NULLS LAST, ar.kicked_at DESC NULLS LAST
+                ORDER BY ahp.auction_address, ahp.chain_id, (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) DESC NULLS LAST, ar.kicked_at DESC NULLS LAST
             """)
         
         params = {"chain_id": chain_id} if chain_id else {}
@@ -212,34 +215,34 @@ class DatabaseQueries:
         query = text(f"""
             SELECT 
                 ahp.*,
-                ar.kicked_at as last_kicked,
-                ar.round_id as current_round_id,
-                ar.available_amount as current_available,
-                ar.current_price,
-                ar.is_active as has_active_round,
-                ar.total_takes as current_round_takes,
-                ar.progress_percentage,
+                -- Get the most recent round info
+                recent_round.kicked_at as last_kicked,
+                recent_round.round_start,
+                recent_round.round_end,
+                recent_round.round_id as current_round_id,
+                recent_round.available_amount as current_available,
+                (recent_round.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND recent_round.available_amount > 0) as has_active_round,
+                recent_round.total_takes as current_round_takes,
+                recent_round.progress_percentage,
                 -- Token info for want_token
                 t2.symbol as want_token_symbol,
                 t2.name as want_token_name,
                 t2.decimals as want_token_decimals,
-                -- Calculate time remaining for current round
-                CASE WHEN ar.is_active THEN
-                    GREATEST(0, 
-                        ahp.auction_length - (EXTRACT(EPOCH FROM NOW()) - ar.kicked_at)
-                    )::INTEGER
-                ELSE 0 END as time_remaining
+                -- Round end timestamp (no calculated fields needed)
+                recent_round.round_end
             FROM auctions ahp
-            LEFT JOIN rounds ar 
-                ON ahp.auction_address = ar.auction_address 
-                AND ahp.chain_id = ar.chain_id
-                AND ar.is_active = TRUE
+            LEFT JOIN LATERAL (
+                SELECT * FROM rounds ar
+                WHERE ar.auction_address = ahp.auction_address 
+                AND ar.chain_id = ahp.chain_id
+                ORDER BY ar.kicked_at DESC NULLS LAST
+                LIMIT 1
+            ) recent_round ON true
             LEFT JOIN tokens t2 
                 ON ahp.want_token = t2.address 
                 AND ahp.chain_id = t2.chain_id
             WHERE LOWER(ahp.auction_address) = LOWER(:auction_address)
             {chain_filter}
-            ORDER BY ar.kicked_at DESC NULLS LAST
             LIMIT 1
         """)
         
@@ -283,14 +286,7 @@ class DatabaseQueries:
             SELECT 
                 ar.*,
                 ahp.want_token,
-                ahp.auction_length,
-                -- Calculate time remaining for active rounds
-                CASE WHEN ar.is_active THEN
-                    GREATEST(0, 
-                        ahp.auction_length - (EXTRACT(EPOCH FROM NOW()) - ar.kicked_at)
-                    )::INTEGER
-                ELSE 0 END as calculated_time_remaining,
-                (EXTRACT(EPOCH FROM NOW()) - ar.kicked_at)::INTEGER as calculated_seconds_elapsed
+                ahp.auction_length
             FROM rounds ar
             JOIN auctions ahp 
                 ON LOWER(ar.auction_address) = LOWER(ahp.auction_address) 
@@ -422,7 +418,7 @@ class DatabaseQueries:
         query = text(f"""
             SELECT 
                 (SELECT COUNT(*) FROM auctions {chain_filter}) as total_auctions,
-                (SELECT COUNT(DISTINCT auction_address) FROM rounds {auction_filter} AND is_active = TRUE) as active_auctions,
+                (SELECT COUNT(DISTINCT auction_address) FROM rounds {auction_filter} AND round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND available_amount > 0) as active_auctions,
                 (SELECT COUNT(DISTINCT address) FROM tokens {chain_filter}) as unique_tokens,
                 (SELECT COUNT(*) FROM rounds {auction_filter}) as total_rounds,
                 (SELECT COUNT(*) FROM takes {auction_filter}) as total_takes,
@@ -604,7 +600,7 @@ class MockDataProvider(DataProvider):
             round_id=1,
             kicked_at=datetime.now() - timedelta(minutes=30),
             initial_available="1000000000000000000000",
-            is_active=True,
+            is_active=True,  # Mock data - would be calculated in real implementation
             current_price="950000",
             available_amount="800000000000000000000",
             time_remaining=1800,
@@ -692,10 +688,12 @@ class DatabaseDataProvider(DataProvider):
                         "want_token": {"address": auction_row.want_token, "symbol": auction_row.want_token_symbol or "Unknown", "name": auction_row.want_token_name or "Unknown", "decimals": auction_row.want_token_decimals or 18, "chain_id": auction_row.chain_id},
                         "current_round": {
                             "round_id": auction_row.round_id,
-                            "is_active": True,
+                            "round_start": auction_row.round_start,
+                            "round_end": auction_row.round_end,
+                            "is_active": auction_row.is_active if hasattr(auction_row, 'is_active') else False,
                             "total_takes": auction_row.total_takes
                         } if auction_row.round_id else None,
-                        "last_kicked": auction_row.kicked_at,
+                        "last_kicked": datetime.fromtimestamp(auction_row.kicked_at, tz=timezone.utc) if auction_row.kicked_at and auction_row.kicked_at != 0 else None,
                         "decay_rate": 0.005,
                         "update_interval": 60
                     }
@@ -775,13 +773,13 @@ class DatabaseDataProvider(DataProvider):
                 if auction_data.has_active_round and auction_data.current_round_id:
                     current_round = AuctionRoundInfo(
                         round_id=auction_data.current_round_id,
-                        kicked_at=datetime.fromtimestamp(auction_data.last_kicked) if auction_data.last_kicked else datetime.now(),
+                        kicked_at=datetime.fromtimestamp(auction_data.last_kicked) if auction_data.last_kicked and auction_data.last_kicked != 0 else datetime.now(),
+                        round_start=auction_data.round_start if hasattr(auction_data, 'round_start') and auction_data.round_start else None,
+                        round_end=auction_data.round_end if hasattr(auction_data, 'round_end') and auction_data.round_end else None,
                         initial_available=str(auction_data.current_available or 0),
                         is_active=auction_data.has_active_round,
-                        current_price=str(auction_data.current_price or 0),
                         available_amount=str(auction_data.current_available or 0),
-                        time_remaining=auction_data.time_remaining or 0,
-                        seconds_elapsed=0,
+                        seconds_elapsed=0,  # Can be calculated on frontend if needed
                         total_takes=auction_data.current_round_takes or 0,
                         progress_percentage=auction_data.progress_percentage or 0.0
                     )
@@ -815,7 +813,7 @@ class DatabaseDataProvider(DataProvider):
                         recent_takes=[]        # TODO: Get from takes table
                     ),
                     deployed_at=datetime.fromtimestamp(auction_data.timestamp) if auction_data.timestamp else datetime.now(),
-                    last_kicked=datetime.fromtimestamp(auction_data.last_kicked) if auction_data.last_kicked else None
+                    last_kicked=datetime.fromtimestamp(auction_data.last_kicked) if auction_data.last_kicked and auction_data.last_kicked != 0 else None
                 )
         except Exception as e:
             logger.error(f"Database error in get_auction_details: {e}")
@@ -844,7 +842,16 @@ class DatabaseDataProvider(DataProvider):
                         price=str(take_row.price),
                         timestamp=take_row.timestamp.isoformat() if hasattr(take_row.timestamp, 'isoformat') else str(take_row.timestamp),
                         tx_hash=take_row.transaction_hash,
-                        block_number=take_row.block_number
+                        block_number=take_row.block_number,
+                        # Add token information
+                        from_token=take_row.from_token,
+                        to_token=take_row.to_token,
+                        from_token_symbol=getattr(take_row, 'from_token_symbol', None),
+                        from_token_name=getattr(take_row, 'from_token_name', None),
+                        from_token_decimals=getattr(take_row, 'from_token_decimals', None),
+                        to_token_symbol=getattr(take_row, 'to_token_symbol', None),
+                        to_token_name=getattr(take_row, 'to_token_name', None),
+                        to_token_decimals=getattr(take_row, 'to_token_decimals', None)
                     )
                     takes.append(take)
                 
@@ -869,7 +876,7 @@ class DatabaseDataProvider(DataProvider):
                         ar.round_id,
                         ar.kicked_at,
                         ar.initial_available,
-                        ar.is_active,
+                        (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) as is_active,
                         ar.total_takes
                     FROM rounds ar
                     JOIN auctions ahp 
@@ -903,6 +910,8 @@ class DatabaseDataProvider(DataProvider):
                     round_info = {
                         "round_id": round_row.round_id,
                         "kicked_at": kicked_at_iso,
+                        "round_start": round_row.round_start if hasattr(round_row, 'round_start') and round_row.round_start else round_row.kicked_at,
+                        "round_end": round_row.round_end if hasattr(round_row, 'round_end') and round_row.round_end else None,
                         "initial_available": str(round_row.initial_available) if round_row.initial_available else "0",
                         "is_active": round_row.is_active or False,
                         "total_takes": round_row.total_takes or 0

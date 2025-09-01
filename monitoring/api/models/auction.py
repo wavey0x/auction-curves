@@ -41,6 +41,8 @@ class AuctionRoundInfo(BaseModel):
     """Information about a specific auction round"""
     round_id: int = Field(..., description="Round ID (1, 2, 3...)")
     kicked_at: datetime = Field(..., description="When this round was kicked")
+    round_start: Optional[int] = Field(None, description="Unix timestamp when round started")
+    round_end: Optional[int] = Field(None, description="Unix timestamp when round ends")
     initial_available: str = Field(..., description="Initial tokens available for this round")
     is_active: bool = Field(..., description="Whether this round is currently active")
     current_price: Optional[str] = Field(None, description="Current price in wei")
@@ -64,6 +66,15 @@ class Take(BaseModel):
     timestamp: datetime = Field(..., description="When the take occurred")
     tx_hash: str = Field(..., description="Transaction hash")
     block_number: int = Field(..., description="Block number")
+    # Token information for display
+    from_token: Optional[str] = Field(None, description="From token address")
+    to_token: Optional[str] = Field(None, description="To token address (want token)")
+    from_token_symbol: Optional[str] = Field(None, description="From token symbol")
+    from_token_name: Optional[str] = Field(None, description="From token name")
+    from_token_decimals: Optional[int] = Field(None, description="From token decimals")
+    to_token_symbol: Optional[str] = Field(None, description="To token symbol")
+    to_token_name: Optional[str] = Field(None, description="To token name") 
+    to_token_decimals: Optional[int] = Field(None, description="To token decimals")
 
 class AuctionActivity(BaseModel):
     """Recent activity for an Auction"""

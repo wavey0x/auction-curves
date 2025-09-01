@@ -17,6 +17,8 @@ export interface AuctionParameters {
 export interface AuctionRoundInfo {
   round_id: number;
   kicked_at: string;
+  round_start?: number;  // Unix timestamp
+  round_end?: number;    // Unix timestamp
   initial_available: string;
   is_active: boolean;
   current_price?: string;
@@ -40,6 +42,15 @@ export interface AuctionSale {
   timestamp: string;
   tx_hash: string;
   block_number: number;
+  // Token information
+  from_token?: string;
+  to_token?: string;
+  from_token_symbol?: string;
+  from_token_name?: string;
+  from_token_decimals?: number;
+  to_token_symbol?: string;
+  to_token_name?: string;
+  to_token_decimals?: number;
 }
 
 export interface AuctionActivity {

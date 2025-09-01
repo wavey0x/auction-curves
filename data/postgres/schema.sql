@@ -83,18 +83,18 @@ CREATE TABLE rounds (
     
     -- Round data
     kicked_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    initial_available DECIMAL(30,0) NOT NULL, -- Initial tokens for this round
+    initial_available NUMERIC(78,18) NOT NULL, -- Initial tokens for this round
     is_active BOOLEAN DEFAULT TRUE,
     
     -- Current state (updated as round progresses)
     current_price DECIMAL(30,0), -- Current calculated price
-    available_amount DECIMAL(30,0), -- Remaining tokens
+    available_amount NUMERIC(78,18), -- Remaining tokens
     time_remaining INTEGER, -- Seconds until round ends
     seconds_elapsed INTEGER DEFAULT 0, -- Seconds since round started
     
     -- Round statistics
     total_takes INTEGER DEFAULT 0,
-    total_volume_sold DECIMAL(30,0) DEFAULT 0,
+    total_volume_sold NUMERIC(78,18) DEFAULT 0,
     progress_percentage DECIMAL(5,2) DEFAULT 0, -- 0-100%
     
     -- Block data
@@ -129,9 +129,9 @@ CREATE TABLE takes (
     taker VARCHAR(100) NOT NULL,
     from_token VARCHAR(100) NOT NULL,
     to_token VARCHAR(100) NOT NULL, -- want_token
-    amount_taken DECIMAL(30,0) NOT NULL, -- Amount of from_token purchased
-    amount_paid DECIMAL(30,0) NOT NULL, -- Amount of to_token paid
-    price DECIMAL(30,0) NOT NULL, -- Price per from_token at time of sale
+    amount_taken NUMERIC(78,18) NOT NULL, -- Amount of from_token purchased (human-readable)
+    amount_paid NUMERIC(78,18) NOT NULL, -- Amount of to_token paid (human-readable)
+    price NUMERIC(78,18) NOT NULL, -- want-per-from price (human-readable, 18 decimals)
     
     -- Timing
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE price_history (
     -- Price data
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
     price DECIMAL(30,0) NOT NULL,
-    available_amount DECIMAL(30,0) NOT NULL,
+    available_amount NUMERIC(78,18) NOT NULL,
     seconds_from_round_start INTEGER NOT NULL,
     
     -- Block context

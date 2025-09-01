@@ -17,7 +17,8 @@ from models.auction import (
     PriceHistoryResponse,
     AuctionRoundHistoryResponse,
     TokenInfo,
-    AuctionFilters
+    AuctionFilters,
+    Take
 )
 
 router = APIRouter(prefix="/auctions", tags=["auctions"])

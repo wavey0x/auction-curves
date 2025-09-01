@@ -22,6 +22,11 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
   const isActive = auction.current_round?.is_active || false
   const currentRound = auction.current_round
   
+  // Calculate time remaining using round_end timestamp, ensuring it floors to 0
+  const timeRemaining = currentRound?.round_end 
+    ? Math.max(0, currentRound.round_end - Math.floor(Date.now() / 1000))
+    : currentRound?.time_remaining || 0
+  
   return (
     <Link to={`/auction/${auction.chain_id}/${auction.address}`}>
       <div className="card hover:bg-gray-800/50 transition-colors group">
@@ -105,23 +110,23 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
                 </div>
               )}
               
-              {currentRound.time_remaining && (
+              {timeRemaining > 0 && (
                 <div>
                   <span className="text-gray-500">Time Left</span>
                   <div className="font-medium text-primary-400">
-                    {Math.floor(currentRound.time_remaining / 60)}m
+                    {Math.floor(timeRemaining / 60)}m
                   </div>
                 </div>
               )}
             </div>
 
-            {currentRound.progress_percentage && currentRound.time_remaining && (
+            {currentRound.progress_percentage && timeRemaining > 0 && (
               <div className="mt-2">
                 <span className="text-xs text-gray-500 mb-2 block">Progress</span>
                 <StackedProgressMeter
-                  timeProgress={(currentRound.seconds_elapsed / (currentRound.seconds_elapsed + currentRound.time_remaining)) * 100}
+                  timeProgress={(currentRound.seconds_elapsed / (currentRound.seconds_elapsed + timeRemaining)) * 100}
                   amountProgress={currentRound.progress_percentage}
-                  timeRemaining={currentRound.time_remaining}
+                  timeRemaining={timeRemaining}
                   totalTakes={currentRound.total_takes}
                   size="sm"
                 />

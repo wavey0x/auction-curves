@@ -316,6 +316,11 @@ const Dashboard: React.FC = () => {
                     <tbody>
                       {activeRounds.map((round) => {
                         const wantSymbol = round.want_token.symbol;
+                        
+                        // Calculate time remaining using round_end timestamp, ensuring it floors to 0
+                        const timeRemaining = round.round_end 
+                          ? Math.max(0, round.round_end - Math.floor(Date.now() / 1000))
+                          : round.time_remaining || 0;
 
                         return (
                           <tr
@@ -403,17 +408,17 @@ const Dashboard: React.FC = () => {
 
                             <td>
                               {round.progress_percentage !== undefined &&
-                              round.time_remaining ? (
+                              timeRemaining > 0 ? (
                                 <div className="min-w-[120px]">
                                   <StackedProgressMeter
                                     timeProgress={
                                       (round.seconds_elapsed /
                                         (round.seconds_elapsed +
-                                          round.time_remaining)) *
+                                          timeRemaining)) *
                                       100
                                     }
                                     amountProgress={round.progress_percentage}
-                                    timeRemaining={round.time_remaining}
+                                    timeRemaining={timeRemaining}
                                     totalTakes={round.total_takes}
                                     size="sm"
                                   />
@@ -443,11 +448,11 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td>
-                              {round.time_remaining ? (
+                              {timeRemaining > 0 ? (
                                 <div className="text-sm">
                                   <div className="font-medium text-success-400">
-                                    {Math.floor(round.time_remaining / 60)}m{" "}
-                                    {round.time_remaining % 60}s
+                                    {Math.floor(timeRemaining / 60)}m{" "}
+                                    {timeRemaining % 60}s
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {Math.floor(round.seconds_elapsed / 60)}m elapsed
@@ -620,21 +625,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* No Data State */}
-      {(!auctions || auctions.length === 0) && (
-        <div className="card text-center py-12">
-          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-8 w-8 text-gray-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-400 mb-2">
-            No Auctions Found
-          </h3>
-          <p className="text-gray-600 max-w-md mx-auto">
-            Deploy some Auctions using the test deployment script to see them
-            appear here.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

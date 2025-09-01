@@ -91,6 +91,11 @@ const RoundDetails: React.FC = () => {
     seconds_elapsed: 3600,
     progress_percentage: 100
   }
+  
+  // Calculate time remaining using round_end timestamp, ensuring it floors to 0
+  const timeRemaining = roundInfo.round_end 
+    ? Math.max(0, roundInfo.round_end - Math.floor(Date.now() / 1000))
+    : roundInfo.time_remaining || 0
 
   const fromTokens = auctionDetails.from_tokens
   const wantToken = auctionDetails.want_token
@@ -142,10 +147,10 @@ const RoundDetails: React.FC = () => {
           </div>
         </div>
 
-        {roundInfo.is_active && roundInfo.time_remaining && (
+        {roundInfo.is_active && timeRemaining > 0 && (
           <div className="text-right">
             <div className="text-lg font-semibold text-success-400">
-              {Math.floor(roundInfo.time_remaining / 60)}m {roundInfo.time_remaining % 60}s
+              {Math.floor(timeRemaining / 60)}m {timeRemaining % 60}s
             </div>
             <div className="text-sm text-gray-500">Time Remaining</div>
           </div>
@@ -268,11 +273,11 @@ const RoundDetails: React.FC = () => {
             <div className="mt-6">
               <h4 className="text-sm font-medium text-gray-400 mb-3">Round Progress</h4>
               <StackedProgressMeter
-                timeProgress={roundInfo.is_active && roundInfo.time_remaining ? 
-                  (roundInfo.seconds_elapsed / (roundInfo.seconds_elapsed + roundInfo.time_remaining)) * 100 : 100
+                timeProgress={roundInfo.is_active && timeRemaining > 0 ? 
+                  (roundInfo.seconds_elapsed / (roundInfo.seconds_elapsed + timeRemaining)) * 100 : 100
                 }
                 amountProgress={roundInfo.progress_percentage}
-                timeRemaining={roundInfo.time_remaining}
+                timeRemaining={timeRemaining}
                 totalSales={roundInfo.total_takes}
                 size="lg"
               />

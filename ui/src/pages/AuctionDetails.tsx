@@ -111,6 +111,11 @@ const AuctionDetails: React.FC = () => {
   const chainInfo = getChainInfo(auction.chain_id);
   const currentRound = auction.current_round;
   const isActive = currentRound?.is_active || false;
+  
+  // Calculate time remaining using round_end timestamp, ensuring it floors to 0
+  const timeRemaining = currentRound?.round_end 
+    ? Math.max(0, currentRound.round_end - Math.floor(Date.now() / 1000))
+    : currentRound?.time_remaining || 0;
 
   return (
     <div className="space-y-10">
@@ -297,12 +302,12 @@ const AuctionDetails: React.FC = () => {
               </div>
             </div>
 
-            {currentRound.time_remaining && (
+            {timeRemaining > 0 && (
               <div className="text-center">
                 <div className="text-xs text-gray-500 mb-2">Time Remaining</div>
                 <div className="text-success-400 font-medium text-sm">
-                  {Math.floor(currentRound.time_remaining / 60)}m{" "}
-                  {currentRound.time_remaining % 60}s
+                  {Math.floor(timeRemaining / 60)}m{" "}
+                  {timeRemaining % 60}s
                 </div>
               </div>
             )}
@@ -380,11 +385,11 @@ const AuctionDetails: React.FC = () => {
         </div>
       </CollapsibleSection>
 
-      {/* Recent Sales */}
+      {/* Recent Takes */}
       {takes && takes.length > 0 && (
         <TakesTable
           takes={takes}
-          title="Recent Sales"
+          title="Recent Takes"
           tokens={tokens?.tokens}
           showRoundInfo={true}
           maxHeight="max-h-96"
