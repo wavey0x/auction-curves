@@ -43,15 +43,28 @@ const AuctionDetails: React.FC = () => {
 
   // Pagination state for takes
   const [currentPage, setCurrentPage] = useState(1);
-  const takesPerPage = 50;
+  const takesPerPage = 5;
 
-  // Pagination handlers
+  // Pagination state for rounds
+  const [currentRoundsPage, setCurrentRoundsPage] = useState(1);
+  const roundsPerPage = 5;
+
+  // Pagination handlers for takes
   const handleNextPage = () => {
     setCurrentPage(prev => prev + 1);
   };
 
   const handlePrevPage = () => {
     setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  // Pagination handlers for rounds
+  const handleNextRoundsPage = () => {
+    setCurrentRoundsPage(prev => prev + 1);
+  };
+
+  const handlePrevRoundsPage = () => {
+    setCurrentRoundsPage(prev => Math.max(1, prev - 1));
   };
 
   // Fetch auction details
@@ -75,7 +88,7 @@ const AuctionDetails: React.FC = () => {
     enabled: !!chainId && !!address,
   });
 
-  // Pagination state (calculated after takes is available)
+  // Pagination state for takes (calculated after takes is available)
   const canGoNext = takes && takes.length === takesPerPage;
   const canGoPrev = currentPage > 1;
 
@@ -105,6 +118,14 @@ const AuctionDetails: React.FC = () => {
     enabled: !!auction && !!chainId && !!address,
     staleTime: 10000,
   });
+
+  // Pagination state for rounds (calculated after allRounds is available)
+  const totalRounds = allRounds?.length || 0;
+  const startRoundIndex = (currentRoundsPage - 1) * roundsPerPage;
+  const endRoundIndex = startRoundIndex + roundsPerPage;
+  const paginatedRounds = allRounds?.slice(startRoundIndex, endRoundIndex) || [];
+  const canGoNextRounds = endRoundIndex < totalRounds;
+  const canGoPrevRounds = currentRoundsPage > 1;
 
   const handleCopy = async (text: string) => {
     const success = await copyToClipboard(text);
@@ -329,12 +350,17 @@ const AuctionDetails: React.FC = () => {
       {/* Rounds History */}
       {allRounds && allRounds.length > 0 && (
         <RoundsTable
-          rounds={allRounds as any}
+          rounds={paginatedRounds as any}
           auctionAddress={auction.address}
           chainId={parseInt(chainId!)}
           fromTokens={auction.from_tokens}
           wantToken={auction.want_token}
           title="Rounds History"
+          currentPage={currentRoundsPage}
+          canGoNext={canGoNextRounds}
+          canGoPrev={canGoPrevRounds}
+          onNextPage={handleNextRoundsPage}
+          onPrevPage={handlePrevRoundsPage}
         />
       )}
 

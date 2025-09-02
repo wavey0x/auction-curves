@@ -26,6 +26,7 @@ import StackedProgressMeter from "../components/StackedProgressMeter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import CollapsibleSection from "../components/CollapsibleSection";
 import TokensList from "../components/TokensList";
+import TokenPairDisplay from "../components/TokenPairDisplay";
 import {
   formatAddress,
   formatTokenAmount,
@@ -278,9 +279,9 @@ const Dashboard: React.FC = () => {
                     <thead className="bg-gray-800">
                       <tr>
                         <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0"><span className="sr-only">Chain</span></th>
-                        <th className="text-center">Round</th>
                         <th className="text-center">Auction</th>
-                        <th className="text-center">From → Want</th>
+                        <th className="text-center">Round</th>
+                        <th className="text-center">Tokens</th>
                         <th className="text-center">Current Price</th>
                         <th className="text-center">Available</th>
                         <th className="text-center">Progress</th>
@@ -313,16 +314,6 @@ const Dashboard: React.FC = () => {
 
                             <td>
                               <InternalLink
-                                to={`/round/${round.chain_id}/${round.auction}/${round.round_id}`}
-                                variant="round"
-                                className="font-mono text-base font-semibold"
-                              >
-                                R{round.round_id}
-                              </InternalLink>
-                            </td>
-
-                            <td>
-                              <InternalLink
                                 to={`/auction/${round.chain_id}/${round.auction}`}
                                 variant="address"
                                 className="font-mono text-sm"
@@ -334,17 +325,26 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td>
-                              <div className="flex items-center space-x-2">
-                                <TokensList 
-                                  tokens={round.from_tokens}
-                                  maxDisplay={2}
-                                  tokenClassName="font-medium text-gray-200 text-sm"
-                                />
-                                <span className="text-gray-500">→</span>
-                                <span className="font-medium text-gray-200 text-sm">
-                                  {wantSymbol}
-                                </span>
-                              </div>
+                              <InternalLink
+                                to={`/round/${round.chain_id}/${round.auction}/${round.round_id}`}
+                                variant="round"
+                                className="font-mono text-base font-semibold"
+                              >
+                                R{round.round_id}
+                              </InternalLink>
+                            </td>
+
+                            <td>
+                              <TokenPairDisplay
+                                fromToken={
+                                  <TokensList 
+                                    tokens={round.from_tokens}
+                                    maxDisplay={2}
+                                    tokenClassName="font-medium text-gray-300 text-sm"
+                                  />
+                                }
+                                toToken={wantSymbol}
+                              />
                             </td>
 
                             <td>
@@ -484,9 +484,8 @@ const Dashboard: React.FC = () => {
                       <thead className="bg-gray-800">
                         <tr>
                           <th className="border-b border-gray-700 px-0 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-[22px] min-w-[22px] max-w-[22px]"><span className="sr-only">Chain</span></th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Transaction</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Take</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Auction</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Take</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Tokens</th>
                           <th 
                             className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors"
@@ -503,6 +502,7 @@ const Dashboard: React.FC = () => {
                             Price {showUSD ? '($)' : '(T)'}
                           </th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Taker</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Transaction</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Time</th>
                         </tr>
                       </thead>
@@ -517,6 +517,85 @@ const Dashboard: React.FC = () => {
                                   showName={false}
                                 />
                               </div>
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <AddressLink
+                                address={take.auction}
+                                chainId={take.chain_id}
+                                type="auction"
+                                length={5}
+                                className="text-gray-300"
+                              />
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="flex items-center space-x-2">
+                                <TrendingDown className="h-4 w-4 text-primary-500" />
+                                <div className="text-sm">
+                                  <div className="font-mono text-xs text-gray-500">
+                                    R{take.round_id}T{take.take_seq}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <TokenPairDisplay
+                                fromToken={take.from_token_symbol || 'Token'}
+                                toToken={take.to_token_symbol || 'USDC'}
+                              />
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="text-sm">
+                                <div className="font-medium text-gray-200">
+                                  {showUSD ? (
+                                    take.amount_taken_usd ? (
+                                      formatUSD(parseFloat(take.amount_taken_usd))
+                                    ) : (
+                                      <span className="text-gray-500">—</span>
+                                    )
+                                  ) : (
+                                    formatReadableTokenAmount(take.amount_taken, 3)
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {take.from_token_symbol || 'token'}
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="text-sm">
+                                <div className="font-medium text-gray-200">
+                                  {showUSD ? (
+                                    take.amount_paid_usd && take.amount_taken ? (
+                                      formatUSD(parseFloat(take.amount_paid_usd) / parseFloat(take.amount_taken))
+                                    ) : (
+                                      <span className="text-gray-500">—</span>
+                                    )
+                                  ) : (
+                                    formatReadableTokenAmount(take.price, 4)
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {showUSD ? 
+                                    `per ${take.from_token_symbol || 'token'}` : 
+                                    `${take.to_token_symbol || 'token'} per ${take.from_token_symbol || 'token'}`
+                                  }
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <AddressLink
+                                address={take.taker}
+                                chainId={take.chain_id}
+                                type="address"
+                                length={5}
+                                className="text-gray-400"
+                              />
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
@@ -538,91 +617,6 @@ const Dashboard: React.FC = () => {
                                   </span>
                                 )}
                               </div>
-                            </td>
-
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="flex items-center space-x-2">
-                                <TrendingDown className="h-4 w-4 text-primary-500" />
-                                <div className="text-sm">
-                                  <div className="font-mono text-xs text-gray-500">
-                                    R{take.round_id}T{take.take_seq}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <AddressLink
-                                address={take.auction}
-                                chainId={take.chain_id}
-                                type="auction"
-                                length={5}
-                                className="text-gray-300"
-                              />
-                            </td>
-
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="space-y-1">
-                                <div className="flex items-center space-x-1 text-sm">
-                                  <span className="font-medium text-gray-300">
-                                    {take.from_token_symbol || 'Token'}
-                                  </span>
-                                  <span className="text-gray-500">→</span>
-                                  <span className="font-medium text-gray-300">
-                                    {take.to_token_symbol || 'USDC'}
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="text-sm">
-                                <div className="font-medium text-gray-200">
-                                  {showUSD ? (
-                                    take.amount_taken_usd ? (
-                                      formatUSD(parseFloat(take.amount_taken_usd))
-                                    ) : (
-                                      <span className="text-gray-500">—</span>
-                                    )
-                                  ) : (
-                                    `${formatReadableTokenAmount(take.amount_taken, 3)} ${take.from_token_symbol || ''}`
-                                  )}
-                                </div>
-                                {showUSD && (
-                                  <div className="text-xs text-gray-500">
-                                    ({take.from_token_symbol || 'token'})
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="text-sm">
-                                <div className="font-medium text-gray-200">
-                                  {showUSD ? (
-                                    take.amount_paid_usd && take.amount_taken ? (
-                                      formatUSD(parseFloat(take.amount_paid_usd) / parseFloat(take.amount_taken))
-                                    ) : (
-                                      <span className="text-gray-500">—</span>
-                                    )
-                                  ) : (
-                                    `${formatReadableTokenAmount(take.price, 4)} ${take.to_token_symbol || ''}`
-                                  )}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  / {take.from_token_symbol || 'token'}
-                                </div>
-                              </div>
-                            </td>
-
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <AddressLink
-                                address={take.taker}
-                                chainId={take.chain_id}
-                                type="address"
-                                length={5}
-                                className="text-gray-400"
-                              />
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">

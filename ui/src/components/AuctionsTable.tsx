@@ -23,6 +23,7 @@ import TokensList from './TokensList'
 import AddressDisplay from './AddressDisplay'
 import AddressLink from './AddressLink'
 import InternalLink from './InternalLink'
+import TokenPairDisplay from './TokenPairDisplay'
 
 interface AuctionsTableProps {
   auctions: AuctionListItem[]
@@ -405,7 +406,8 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     <SortIcon field="address" />
                   </div>
                 </th>
-                <th className="text-center">Trading</th>
+                <th className="text-center">Round</th>
+                <th className="text-center">Tokens</th>
                 <th 
                   className="cursor-pointer select-none hover:bg-gray-700/50 text-center"
                   onClick={() => handleSort('status')}
@@ -415,7 +417,6 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     <SortIcon field="status" />
                   </div>
                 </th>
-                <th className="text-center">Round</th>
                 <th 
                   className="cursor-pointer select-none hover:bg-gray-700/50 text-center"
                   onClick={() => handleSort('decay_rate')}
@@ -471,19 +472,30 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     </td>
                     
                     <td>
-                      <div className="flex items-center space-x-2 text-sm">
-                        <TokensList 
-                          tokens={auction.from_tokens || []}
-                          maxDisplay={2}
-                          tokenClassName="text-primary-400 font-medium"
-                        />
-                        <span className="text-gray-500">→</span>
-                        <span className="text-gray-200 font-medium">
-                          {auction.want_token?.symbol}
-                        </span>
-                      </div>
+                      {currentRound ? (
+                        <InternalLink
+                          to={`/round/${auction?.chain_id}/${auction?.address}/${currentRound?.round_id}`}
+                          variant="round"
+                        >
+                          R{currentRound.round_id}
+                        </InternalLink>
+                      ) : (
+                        <span className="text-gray-500 text-sm">—</span>
+                      )}
                     </td>
                     
+                    <td>
+                      <TokenPairDisplay
+                        fromToken={
+                          <TokensList 
+                            tokens={auction.from_tokens || []}
+                            maxDisplay={2}
+                            tokenClassName="text-gray-300 font-medium"
+                          />
+                        }
+                        toToken={auction.want_token?.symbol || '—'}
+                      />
+                    </td>
                     
                     <td>
                       <div className="flex items-center space-x-2">
@@ -496,19 +508,6 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                           {isActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
-                    </td>
-                    
-                    <td>
-                      {currentRound ? (
-                        <InternalLink
-                          to={`/round/${auction?.chain_id}/${auction?.address}/${currentRound?.round_id}`}
-                          variant="round"
-                        >
-                          R{currentRound.round_id}
-                        </InternalLink>
-                      ) : (
-                        <span className="text-gray-500 text-sm">—</span>
-                      )}
                     </td>
                     
                     <td>

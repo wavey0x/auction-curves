@@ -87,10 +87,9 @@ const TakesTable: React.FC<TakesTableProps> = ({
             <thead className="bg-gray-800 sticky top-0">
               <tr>
                 <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0 py-1"><span className="sr-only">Chain</span></th>
-                <th className="text-center w-16 px-0.5 py-1">Take ID</th>
-                <th className="text-center w-24 px-0.5 py-1">Transaction</th>
-                {showRoundInfo && <th className="text-center w-16 px-0.5 py-1">Round</th>}
                 {!hideAuctionColumn && <th className="text-center w-24 px-0.5 py-1">Auction</th>}
+                <th className="text-center w-16 px-0.5 py-1">Take ID</th>
+                {showRoundInfo && <th className="text-center w-16 px-0.5 py-1">Round</th>}
                 <th 
                   className="text-center w-32 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
                   onClick={() => setShowUSD(!showUSD)}
@@ -108,6 +107,7 @@ const TakesTable: React.FC<TakesTableProps> = ({
                 <th className="text-center w-24 px-0.5 py-1">Profit/Loss</th>
                 <th className="text-center w-24 px-0.5 py-1">Taker</th>
                 <th className="text-center w-20 px-0.5 py-1">Time</th>
+                <th className="text-center w-24 px-0.5 py-1">Transaction</th>
               </tr>
             </thead>
             <tbody>
@@ -123,6 +123,17 @@ const TakesTable: React.FC<TakesTableProps> = ({
                     </div>
                   </td>
 
+                  {!hideAuctionColumn && (
+                    <td className="px-0.5 py-1">
+                      <AddressLink
+                        address={take.auction}
+                        chainId={take.chain_id}
+                        type="auction"
+                        className="text-primary-400"
+                      />
+                    </td>
+                  )}
+
                   <td className="px-0.5 py-1">
                     <div className="text-sm text-center">
                       <div className="font-mono text-xs text-gray-500 leading-tight">
@@ -132,13 +143,6 @@ const TakesTable: React.FC<TakesTableProps> = ({
                         {take.take_id ? take.take_id.split("-").slice(-2).join("-") : 'N/A'}
                       </div>
                     </div>
-                  </td>
-
-                  <td className="px-0.5 py-1">
-                    <TxHashLink
-                      txHash={take.tx_hash}
-                      chainId={take.chain_id}
-                    />
                   </td>
 
                   {showRoundInfo && (
@@ -157,17 +161,6 @@ const TakesTable: React.FC<TakesTableProps> = ({
                           </span>
                         )}
                       </div>
-                    </td>
-                  )}
-
-                  {!hideAuctionColumn && (
-                    <td className="px-0.5 py-1">
-                      <AddressLink
-                        address={take.auction}
-                        chainId={take.chain_id}
-                        type="auction"
-                        className="text-primary-400"
-                      />
                     </td>
                   )}
 
@@ -262,6 +255,13 @@ const TakesTable: React.FC<TakesTableProps> = ({
                     >
                       {formatTimeAgo(new Date(take.timestamp).getTime() / 1000)}
                     </span>
+                  </td>
+
+                  <td className="px-0.5 py-1">
+                    <TxHashLink
+                      txHash={take.tx_hash}
+                      chainId={take.chain_id}
+                    />
                   </td>
                 </tr>
               ))}

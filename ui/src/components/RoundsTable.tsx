@@ -1,6 +1,8 @@
 import React from "react";
 import ChainIcon from "./ChainIcon";
 import InternalLink from "./InternalLink";
+import TokenPairDisplay from "./TokenPairDisplay";
+import Pagination from "./Pagination";
 import { cn, formatTimeAgo, formatTokenAmount } from "../lib/utils";
 
 interface RoundItem {
@@ -30,6 +32,11 @@ interface RoundsTableProps {
   title?: string;
   currentPage?: number;
   perPage?: number;
+  // Pagination props
+  canGoNext?: boolean;
+  canGoPrev?: boolean;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 const RoundsTable: React.FC<RoundsTableProps> = ({
@@ -39,6 +46,11 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
   fromTokens,
   wantToken,
   title = "Rounds",
+  currentPage,
+  canGoNext = false,
+  canGoPrev = false,
+  onNextPage,
+  onPrevPage,
 }) => {
   const tokenMap: Record<string, TokenMeta> = Object.fromEntries(
     fromTokens.map(t => [t.address.toLowerCase(), t])
@@ -91,9 +103,10 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
                       </InternalLink>
                     </td>
                     <td className="text-center">
-                      <span className="text-sm text-gray-300 font-medium">{fromSymbol}</span>
-                      <span className="text-gray-500 mx-1">→</span>
-                      <span className="text-sm text-yellow-400 font-medium">{wantSymbol}</span>
+                      <TokenPairDisplay
+                        fromToken={fromSymbol}
+                        toToken={wantSymbol}
+                      />
                     </td>
                     <td className="text-center">
                       <span className="text-sm text-gray-400" title={kickedAt.toLocaleString()}>
@@ -121,6 +134,17 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {(onNextPage || onPrevPage) && (
+        <Pagination
+          currentPage={currentPage || 1}
+          canGoPrev={!!canGoPrev}
+          canGoNext={!!canGoNext}
+          onPrev={() => onPrevPage && onPrevPage()}
+          onNext={() => onNextPage && onNextPage()}
+        />
+      )}
     </div>
   );
 };
