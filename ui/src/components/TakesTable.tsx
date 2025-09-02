@@ -31,6 +31,7 @@ interface TakesTableProps {
   canGoPrev?: boolean;
   onNextPage?: () => void;
   onPrevPage?: () => void;
+  totalPages?: number;
 }
 
 const TakesTable: React.FC<TakesTableProps> = ({
@@ -47,6 +48,7 @@ const TakesTable: React.FC<TakesTableProps> = ({
   canGoPrev = false,
   onNextPage,
   onPrevPage,
+  totalPages,
 }) => {
   const { defaultValueDisplay } = useUserSettings();
   const [showUSD, setShowUSD] = useState(defaultValueDisplay === 'usd');
@@ -73,41 +75,43 @@ const TakesTable: React.FC<TakesTableProps> = ({
   }
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold flex items-center space-x-2">
-          <span>{title}</span>
-          <span className="badge badge-neutral">{takes.length}</span>
-        </h3>
-      </div>
+    <>
+      {title && (
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold flex items-center space-x-2">
+            <span>{title}</span>
+            <span className="badge badge-neutral">{takes.length}</span>
+          </h3>
+        </div>
+      )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-800">
+      <div className="overflow-hidden">
         <div className={cn("overflow-y-auto", maxHeight)}>
           <table className="table w-full table-fixed">
-            <thead className="bg-gray-800 sticky top-0">
+            <thead className="bg-gray-800/50 sticky top-0">
               <tr>
-                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0 py-1"><span className="sr-only">Chain</span></th>
-                {!hideAuctionColumn && <th className="text-center w-24 px-0.5 py-1">Auction</th>}
-                <th className="text-center w-16 px-0.5 py-1">Take ID</th>
-                {showRoundInfo && <th className="text-center w-16 px-0.5 py-1">Round</th>}
+                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0 py-2"><span className="sr-only">Chain</span></th>
+                {!hideAuctionColumn && <th className="text-center w-24 px-0.5 py-2">Auction</th>}
+                <th className="text-center w-16 px-0.5 py-2">Take ID</th>
+                {showRoundInfo && <th className="text-center w-16 px-0.5 py-2">Round</th>}
                 <th 
-                  className="text-center w-32 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  className="text-center w-32 px-0.5 py-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
                   onClick={() => setShowUSD(!showUSD)}
                   title="Click to toggle between token and USD values"
                 >
                   Amount {showUSD ? '($)' : '(T)'}
                 </th>
                 <th 
-                  className="text-center w-28 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  className="text-center w-28 px-0.5 py-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
                   onClick={() => setShowUSD(!showUSD)}
                   title="Click to toggle between token and USD values"
                 >
                   Price {showUSD ? '($)' : '(T)'}
                 </th>
-                <th className="text-center w-24 px-0.5 py-1">Profit/Loss</th>
-                <th className="text-center w-24 px-0.5 py-1">Taker</th>
-                <th className="text-center w-20 px-0.5 py-1">Time</th>
-                <th className="text-center w-24 px-0.5 py-1">Transaction</th>
+                <th className="text-center w-24 px-0.5 py-2">Profit/Loss</th>
+                <th className="text-center w-24 px-0.5 py-2">Taker</th>
+                <th className="text-center w-20 px-0.5 py-2">Time</th>
+                <th className="text-center w-24 px-0.5 py-2">Transaction</th>
               </tr>
             </thead>
             <tbody>
@@ -278,9 +282,10 @@ const TakesTable: React.FC<TakesTableProps> = ({
           canGoNext={!!canGoNext}
           onPrev={() => onPrevPage && onPrevPage()}
           onNext={() => onNextPage && onNextPage()}
+          totalPages={totalPages}
         />
       )}
-    </div>
+    </>
   );
 };
 

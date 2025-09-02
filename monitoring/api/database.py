@@ -180,6 +180,24 @@ class DatabaseQueries:
             
         result = await db.execute(query, params)
         return result.fetchall()
+
+    @staticmethod
+    async def get_auction_activity_stats(db: AsyncSession, auction_address: str, chain_id: int):
+        """Get activity statistics for an auction"""
+        query = text("""
+            SELECT 
+                COUNT(DISTINCT t.taker) as total_participants,
+                COALESCE(SUM(CASE WHEN t.amount_paid_usd IS NOT NULL THEN t.amount_paid_usd::numeric ELSE 0 END), 0) as total_volume,
+                COUNT(DISTINCT t.round_id) as total_rounds,
+                COUNT(t.take_id) as total_takes
+            FROM vw_takes t
+            WHERE LOWER(t.auction_address) = LOWER(:auction_address)
+            AND t.chain_id = :chain_id
+        """)
+        
+        params = {"auction_address": auction_address, "chain_id": chain_id}
+        result = await db.execute(query, params)
+        return result.fetchone()
     
     @staticmethod
     async def get_auction_takes(db: AsyncSession, auction_address: str, round_id: int = None, chain_id: int = None, limit: int = 50, offset: int = 0):
@@ -187,7 +205,17 @@ class DatabaseQueries:
         chain_filter = "AND chain_id = :chain_id" if chain_id else ""
         round_filter = "AND round_id = :round_id" if round_id else ""
         
-        query = text(f"""
+        # Get total count
+        count_query = text(f"""
+            SELECT COUNT(*) as total
+            FROM vw_takes
+            WHERE LOWER(auction_address) = LOWER(:auction_address)
+            {chain_filter}
+            {round_filter}
+        """)
+        
+        # Get paginated data
+        data_query = text(f"""
             SELECT 
                 take_id,
                 auction_address,
@@ -235,9 +263,15 @@ class DatabaseQueries:
             params["chain_id"] = chain_id
         if round_id:
             params["round_id"] = round_id
-            
-        result = await db.execute(query, params)
-        return result.fetchall()
+        
+        # Execute both queries
+        count_result = await db.execute(count_query, {k: v for k, v in params.items() if k not in ['limit', 'offset']})
+        data_result = await db.execute(data_query, params)
+        
+        total = count_result.scalar() or 0
+        takes = data_result.fetchall()
+        
+        return {"takes": takes, "total": total}
     
     @staticmethod
     async def get_price_history(db: AsyncSession, auction_address: str, round_id: int = None, chain_id: int = None, hours: int = 24):
@@ -514,8 +548,8 @@ class DataProvider(ABC):
         limit: int = 50,
         chain_id: int = None,
         offset: int = 0
-    ) -> List['Take']:
-        """Get takes for an auction"""
+    ) -> Dict[str, Any]:
+        """Get takes for an auction with pagination info"""
         pass
     
     @abstractmethod
@@ -627,9 +661,15 @@ class MockDataProvider(DataProvider):
             last_kicked=datetime.now() - timedelta(minutes=30)
         )
 
-    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None, offset: int = 0) -> List[Take]:
+    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None, offset: int = 0) -> Dict[str, Any]:
         """Generate mock takes data"""
-        return []
+        return {
+            "takes": [],
+            "total": 0,
+            "page": max(1, (offset // limit) + 1),
+            "per_page": limit,
+            "total_pages": 0
+        }
 
     async def get_auction_rounds(self, auction_address: str, from_token: str, limit: int = 50, chain_id: int = None) -> Dict[str, Any]:
         """Generate mock rounds data"""
@@ -801,6 +841,13 @@ class DatabaseDataProvider(DataProvider):
                     )
                     for token in enabled_tokens_data
                 ]
+
+                # Get activity statistics for this auction
+                activity_stats = await DatabaseQueries.get_auction_activity_stats(session, auction_address, chain_id)
+                total_participants = activity_stats.total_participants if activity_stats else 0
+                total_volume = str(activity_stats.total_volume) if activity_stats else "0"
+                total_rounds = activity_stats.total_rounds if activity_stats else 0
+                total_takes = activity_stats.total_takes if activity_stats else 0
                 
                 return AuctionResponse(
                     address=auction_address,
@@ -811,11 +858,11 @@ class DatabaseDataProvider(DataProvider):
                     parameters=parameters,
                     current_round=current_round,
                     activity=AuctionActivity(
-                        total_participants=0,  # TODO: Calculate from takes table
-                        total_volume="0",      # TODO: Calculate from takes table
-                        total_rounds=0,        # TODO: Calculate from rounds table
-                        total_takes=0,         # TODO: Calculate from takes table
-                        recent_takes=[]        # TODO: Get from takes table
+                        total_participants=total_participants,
+                        total_volume=total_volume,
+                        total_rounds=total_rounds,
+                        total_takes=total_takes,
+                        recent_takes=[]  # Could be fetched if needed
                     ),
                     deployed_at=datetime.fromtimestamp(getattr(auction_data, 'deployed_timestamp', 0), tz=timezone.utc) if getattr(auction_data, 'deployed_timestamp', None) else datetime.now(tz=timezone.utc),
                     last_kicked=datetime.fromtimestamp(getattr(auction_data, 'last_kicked')) if getattr(auction_data, 'last_kicked', None) else None
@@ -824,14 +871,17 @@ class DatabaseDataProvider(DataProvider):
             logger.error(f"Database error in get_auction_details: {e}")
             raise Exception(f"Failed to fetch auction details from database: {e}")
 
-    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None, offset: int = 0) -> List[Take]:
-        """Get takes from database"""
+    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None, offset: int = 0) -> Dict[str, Any]:
+        """Get takes from database with pagination info"""
         try:
             async with AsyncSessionLocal() as session:
-                # Use the proper method name for takes
-                takes_data = await DatabaseQueries.get_auction_takes(
+                # Get data from updated query that returns both takes and total count
+                result = await DatabaseQueries.get_auction_takes(
                     session, auction_address, round_id, chain_id, limit, offset
                 )
+                
+                takes_data = result["takes"]
+                total_count = result["total"]
                 
                 takes = []
                 for take_row in takes_data:
@@ -867,8 +917,19 @@ class DatabaseDataProvider(DataProvider):
                     )
                     takes.append(take)
                 
-                logger.info(f"Loaded {len(takes)} takes from database for {auction_address}")
-                return takes
+                # Calculate pagination info
+                current_page = max(1, (offset // limit) + 1)
+                total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
+                
+                logger.info(f"Loaded {len(takes)} takes from database for {auction_address} (page {current_page}/{total_pages}, total: {total_count})")
+                
+                return {
+                    "takes": takes,
+                    "total": total_count,
+                    "page": current_page,
+                    "per_page": limit,
+                    "total_pages": total_pages
+                }
         except Exception as e:
             logger.error(f"Database error in get_auction_takes: {e}")
             raise Exception(f"Failed to fetch auction takes from database: {e}")
@@ -889,14 +950,19 @@ class DatabaseDataProvider(DataProvider):
                         ar.kicked_at,
                         ar.initial_available,
                         (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) as is_active,
-                        ar.total_takes
+                        COUNT(t.take_seq) as total_takes
                     FROM rounds ar
                     JOIN auctions ahp 
                         ON LOWER(ar.auction_address) = LOWER(ahp.auction_address) 
                         AND ar.chain_id = ahp.chain_id
+                    LEFT JOIN takes t 
+                        ON LOWER(ar.auction_address) = LOWER(t.auction_address)
+                        AND ar.chain_id = t.chain_id 
+                        AND ar.round_id = t.round_id
                     WHERE LOWER(ar.auction_address) = LOWER(:auction_address)
                         AND LOWER(ar.from_token) = LOWER(:from_token)
                         {chain_filter}
+                    GROUP BY ar.round_id, ar.kicked_at, ar.initial_available, ar.round_end, ar.available_amount
                     ORDER BY ar.round_id DESC
                     LIMIT :limit
                 """)

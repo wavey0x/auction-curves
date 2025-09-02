@@ -37,6 +37,7 @@ interface RoundsTableProps {
   canGoPrev?: boolean;
   onNextPage?: () => void;
   onPrevPage?: () => void;
+  totalPages?: number;
 }
 
 const RoundsTable: React.FC<RoundsTableProps> = ({
@@ -51,32 +52,35 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
   canGoPrev = false,
   onNextPage,
   onPrevPage,
+  totalPages,
 }) => {
   const tokenMap: Record<string, TokenMeta> = Object.fromEntries(
     fromTokens.map(t => [t.address.toLowerCase(), t])
   );
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center space-x-2">
-          <span>{title}</span>
-          <span className="badge badge-neutral">{rounds.length}</span>
-        </h3>
-      </div>
+    <>
+      {title && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center space-x-2">
+            <span>{title}</span>
+            <span className="badge badge-neutral">{rounds.length}</span>
+          </h3>
+        </div>
+      )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-800">
+      <div className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="table w-full">
-            <thead className="bg-gray-800">
+            <thead className="bg-gray-800/50">
               <tr>
-                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0"><span className="sr-only">Chain</span></th>
-                <th className="text-center">Round</th>
-                <th className="text-center">Tokens</th>
-                <th className="text-center">Kicked</th>
-                <th className="text-center">Status</th>
-                <th className="text-center">Starting Amount</th>
-                <th className="text-center">Takes</th>
+                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] pl-2 pr-1 py-2"><span className="sr-only">Chain</span></th>
+                <th className="text-center py-2">Round</th>
+                <th className="text-center py-2">Tokens</th>
+                <th className="text-center py-2">Kicked</th>
+                <th className="text-center py-2">Status</th>
+                <th className="text-center py-2">Starting Amount</th>
+                <th className="text-center py-2">Takes</th>
               </tr>
             </thead>
             <tbody>
@@ -89,7 +93,7 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
                 const isActive = r.is_active;
                 return (
                   <tr key={`${r.round_id}-${r.from_token}-${idx}`} className="group">
-                    <td className="w-[22px] min-w-[22px] max-w-[22px] px-0 text-center">
+                    <td className="w-[22px] min-w-[22px] max-w-[22px] pl-2 pr-1 text-center">
                       <div className="flex justify-center">
                         <ChainIcon chainId={chainId} size="xs" showName={false} />
                       </div>
@@ -143,9 +147,10 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
           canGoNext={!!canGoNext}
           onPrev={() => onPrevPage && onPrevPage()}
           onNext={() => onNextPage && onNextPage()}
+          totalPages={totalPages}
         />
       )}
-    </div>
+    </>
   );
 };
 

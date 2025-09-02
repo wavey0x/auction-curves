@@ -37,11 +37,14 @@ const RoundDetails: React.FC = () => {
   })
 
   // Fetch takes for this specific round
-  const { data: takes, isLoading: takesLoading } = useQuery({
+  const { data: takesResponse, isLoading: takesLoading } = useQuery({
     queryKey: ['auctionTakes', chainId, auctionAddress, roundId],
     queryFn: () => apiClient.getAuctionTakes(auctionAddress!, parseInt(chainId!), parseInt(roundId!)),
     enabled: !!chainId && !!auctionAddress && !!roundId
   })
+
+  // Extract takes array from paginated response
+  const takes = takesResponse?.takes || []
 
   // Fetch rounds data to get specific round info (use the from_token from takes)
   const { data: roundsData, isLoading: roundsLoading } = useQuery({
@@ -73,7 +76,7 @@ const RoundDetails: React.FC = () => {
     )
   }
 
-  if (!auctionDetails || !takes) {
+  if (!auctionDetails || !takesResponse) {
     return (
       <div className="card text-center py-12">
         <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -262,7 +265,7 @@ const RoundDetails: React.FC = () => {
                       }
                     </span>
                     <span className="text-gray-500 mx-2">→</span>
-                    <span className="text-yellow-400 font-medium">
+                    <span className="text-white font-medium">
                       {wantToken.symbol}
                     </span>
                   </div>

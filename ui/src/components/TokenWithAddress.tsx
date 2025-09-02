@@ -43,12 +43,12 @@ const TokenWithAddress: React.FC<TokenWithAddressProps> = ({
   return (
     <div
       className={cn(
-        'inline-flex items-center space-x-1 text-xs group',
+        'inline-flex items-center space-x-1 text-base group',
         className
       )}
     >
       {/* Token symbol */}
-      <span className="text-primary-400 font-medium">
+      <span className="text-white font-medium">
         {token.symbol}
       </span>
 

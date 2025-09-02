@@ -633,7 +633,7 @@ class AuctionIndexer:
             with self.db_conn.cursor() as cursor:
                 # Find the round where round_start <= take_timestamp < round_end
                 cursor.execute("""
-                    SELECT round_id, from_token, kicked_at, total_takes
+                    SELECT round_id, from_token, kicked_at
                     FROM rounds
                     WHERE LOWER(auction_address) = LOWER(%s) 
                       AND chain_id = %s 
@@ -648,7 +648,7 @@ class AuctionIndexer:
                 if not round_data:
                     # Fallback: find any active round for this auction at take time (any from_token)
                     cursor.execute("""
-                        SELECT round_id, from_token, kicked_at, total_takes
+                        SELECT round_id, from_token, kicked_at
                         FROM rounds
                         WHERE LOWER(auction_address) = LOWER(%s) 
                           AND chain_id = %s 
@@ -662,9 +662,20 @@ class AuctionIndexer:
                 if round_data:
                     round_id = round_data['round_id']
                     kicked_at = round_data['kicked_at']
-                    total_takes = round_data['total_takes'] or 0
-                    logger.debug(f"✅ Found active round {round_id} for take at {auction_address[:5]}..{auction_address[-4:]} (take_time={timestamp_unix}, total_takes={total_takes})")
-                    take_seq = total_takes + 1
+                    
+                    # Compute take_seq by counting existing takes for this round
+                    cursor.execute("""
+                        SELECT COUNT(*) as current_takes 
+                        FROM takes 
+                        WHERE LOWER(auction_address) = LOWER(%s) 
+                        AND chain_id = %s 
+                        AND round_id = %s
+                    """, (auction_address, chain_id, round_id))
+                    current_takes_result = cursor.fetchone()
+                    current_takes = current_takes_result['current_takes'] if current_takes_result else 0
+                    take_seq = current_takes + 1
+                    
+                    logger.debug(f"✅ Found active round {round_id} for take at {auction_address[:5]}..{auction_address[-4:]} (take_time={timestamp_unix}, current_takes={current_takes})")
                     # Handle both datetime and Unix timestamp formats for kicked_at
                     if isinstance(kicked_at, (int, float)):
                         seconds_from_start = int(timestamp_unix - kicked_at)
@@ -755,7 +766,6 @@ class AuctionIndexer:
                             # Set available_amount to on-chain value; recompute volume as initial - available
                             cursor.execute("""
                                 UPDATE rounds SET
-                                    total_takes = total_takes + 1,
                                     total_volume_sold = GREATEST(0, initial_available - %s),
                                     available_amount = GREATEST(0, %s)
                                 WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND round_id = %s
@@ -765,7 +775,6 @@ class AuctionIndexer:
                             # Fallback: subtract, clamped at 0
                             cursor.execute("""
                                 UPDATE rounds SET
-                                    total_takes = total_takes + 1,
                                     total_volume_sold = COALESCE(total_volume_sold, 0) + %s,
                                     available_amount = GREATEST(0, available_amount - %s)
                                 WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s AND round_id = %s

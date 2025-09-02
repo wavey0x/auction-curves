@@ -297,6 +297,30 @@ const Dashboard: React.FC = () => {
                           ? Math.max(0, round.round_end - Math.floor(Date.now() / 1000))
                           : round.time_remaining || 0;
 
+                        // Calculate time progress with fallbacks
+                        const calculateTimeProgress = () => {
+                          // If we have proper start and end times, use them
+                          if (round.round_start && round.round_end) {
+                            const totalDuration = round.round_end - round.round_start
+                            const elapsed = Math.floor(Date.now() / 1000) - round.round_start
+                            
+                            if (totalDuration <= 0) return 100
+                            
+                            return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
+                          }
+                          
+                          // Fallback: use seconds_elapsed and time_remaining if available
+                          if (round.seconds_elapsed && timeRemaining > 0) {
+                            const totalTime = round.seconds_elapsed + timeRemaining
+                            return Math.min(100, Math.max(0, (round.seconds_elapsed / totalTime) * 100))
+                          }
+                          
+                          // Final fallback: assume some progress if active, complete if not
+                          return round.is_active ? 25 : 100
+                        };
+                        
+                        const timeProgress = calculateTimeProgress();
+
                         return (
                           <tr
                             key={`${round.auction}-${round.round_id}`}
@@ -383,44 +407,16 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td>
-                              {round.progress_percentage !== undefined &&
-                              timeRemaining > 0 ? (
-                                <div className="min-w-[120px]">
-                                  <StackedProgressMeter
-                                    timeProgress={
-                                      (round.seconds_elapsed /
-                                        (round.seconds_elapsed +
-                                          timeRemaining)) *
-                                      100
-                                    }
-                                    amountProgress={round.progress_percentage}
-                                    timeRemaining={timeRemaining}
-                                    totalTakes={round.total_takes}
-                                    size="sm"
-                                  />
-                                </div>
-                              ) : round.progress_percentage !== undefined ? (
-                                <div className="text-sm">
-                                  <div className="flex items-center space-x-2 mb-1">
-                                    <span className="text-gray-300">
-                                      {round.progress_percentage.toFixed(0)}%
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      ({round.total_takes} takes)
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-gray-700 rounded-full h-1">
-                                    <div
-                                      className="bg-primary-500 h-1 rounded-full"
-                                      style={{
-                                        width: `${round.progress_percentage}%`,
-                                      }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-gray-500 text-sm">—</span>
-                              )}
+                              {/* Always show progress bar for active rounds */}
+                              <div className="min-w-[120px]">
+                                <StackedProgressMeter
+                                  timeProgress={timeProgress}
+                                  amountProgress={round.progress_percentage || 0}
+                                  timeRemaining={timeRemaining}
+                                  totalTakes={round.total_takes || 0}
+                                  size="sm"
+                                />
+                              </div>
                             </td>
 
                             <td>
@@ -486,9 +482,9 @@ const Dashboard: React.FC = () => {
                           <th className="border-b border-gray-700 px-0 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-[22px] min-w-[22px] max-w-[22px]"><span className="sr-only">Chain</span></th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Auction</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Take</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Tokens</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-28 md:w-36">Tokens</th>
                           <th 
-                            className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors"
+                            className="border-b border-gray-700 px-2 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors w-24 md:w-28"
                             onClick={() => setShowUSD(!showUSD)}
                             title="Click to toggle between token and USD values"
                           >
@@ -503,7 +499,7 @@ const Dashboard: React.FC = () => {
                           </th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Taker</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Transaction</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Time</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-24 md:w-28 whitespace-nowrap">Time</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -540,14 +536,19 @@ const Dashboard: React.FC = () => {
                               </div>
                             </td>
 
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <TokenPairDisplay
-                                fromToken={take.from_token_symbol || 'Token'}
-                                toToken={take.to_token_symbol || 'USDC'}
-                              />
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300 w-28 md:w-36 max-w-[9rem] md:max-w-[14rem]">
+                              <div className="flex flex-col items-start">
+                                <div className="font-medium text-sm text-gray-300 flex items-center space-x-1">
+                                  <span>{take.from_token_symbol || 'Token'}</span>
+                                  <span className="text-xs text-gray-500">→</span>
+                                </div>
+                                <div className="font-bold text-sm text-white">
+                                  {take.to_token_symbol || 'USDC'}
+                                </div>
+                              </div>
                             </td>
 
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                            <td className="border-b border-gray-800 px-2 py-1.5 text-sm text-gray-300 whitespace-nowrap w-24 md:w-28">
                               <div className="text-sm">
                                 <div className="font-medium text-gray-200">
                                   {showUSD ? (
@@ -560,9 +561,7 @@ const Dashboard: React.FC = () => {
                                     formatReadableTokenAmount(take.amount_taken, 3)
                                   )}
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  {take.from_token_symbol || 'token'}
-                                </div>
+                                <div className="text-xs text-gray-500 truncate">{take.from_token_symbol || 'token'}</div>
                               </div>
                             </td>
 
@@ -619,7 +618,7 @@ const Dashboard: React.FC = () => {
                               </div>
                             </td>
 
-                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300 w-24 md:w-28 whitespace-nowrap text-center">
                               <span 
                                 className="text-sm text-gray-400 cursor-help"
                                 title={new Date(take.timestamp).toLocaleString()}
@@ -642,6 +641,7 @@ const Dashboard: React.FC = () => {
                       onPrev={() => setTakesPage(Math.max(1, takesPage - 1))}
                       onNext={() => setTakesPage(Math.min(totalPages, takesPage + 1))}
                       summaryText={`Showing ${startIndex + 1}-${Math.min(endIndex, totalTakes)} of ${totalTakes} takes`}
+                      totalPages={totalPages}
                     />
                   )}
                 </>
@@ -669,6 +669,7 @@ const Dashboard: React.FC = () => {
                       onPrev={() => setAuctionsPage(Math.max(1, (auctionsResponse?.page || auctionsPage) - 1))}
                       onNext={() => setAuctionsPage((auctionsResponse?.page || auctionsPage) + 1)}
                       summaryText={`Showing ${(auctionsResponse!.page - 1) * auctionsResponse!.per_page + 1}-${Math.min(auctionsResponse!.page * auctionsResponse!.per_page, auctionsResponse!.total)} of ${auctionsResponse!.total} auctions`}
+                      totalPages={Math.ceil((auctionsResponse?.total || 0) / (auctionsResponse?.per_page || auctionsPerPage))}
                     />
                   )}
                 </>

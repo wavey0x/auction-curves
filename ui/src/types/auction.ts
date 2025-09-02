@@ -126,3 +126,11 @@ export interface SystemStats {
   total_participants: number;
   total_volume_usd?: number;
 }
+
+export interface PaginatedTakesResponse {
+  takes: AuctionTake[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}

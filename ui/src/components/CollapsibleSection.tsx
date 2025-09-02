@@ -9,6 +9,7 @@ interface CollapsibleSectionProps {
   children: React.ReactNode
   defaultOpen?: boolean
   className?: string
+  seamless?: boolean
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -18,7 +19,8 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   badge,
   children,
   defaultOpen = true,
-  className = ""
+  className = "",
+  seamless = false
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
@@ -45,8 +47,8 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
             </button>
           </div>
           
-          {/* Content without additional margin */}
-          <div>
+          {/* Content with conditional padding */}
+          <div className={seamless ? "" : "px-4 py-3"}>
             {children}
           </div>
         </div>

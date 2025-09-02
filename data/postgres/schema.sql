@@ -93,7 +93,6 @@ CREATE TABLE rounds (
     seconds_elapsed INTEGER DEFAULT 0, -- Seconds since round started
     
     -- Round statistics
-    total_takes INTEGER DEFAULT 0,
     total_volume_sold NUMERIC(78,18) DEFAULT 0,
     progress_percentage DECIMAL(5,2) DEFAULT 0, -- 0-100%
     
@@ -197,7 +196,6 @@ BEGIN
     -- Update the round statistics
     UPDATE rounds 
     SET 
-        total_takes = total_takes + 1,
         total_volume_sold = total_volume_sold + NEW.amount_taken,
         progress_percentage = LEAST(100.0, 
             ((total_volume_sold + NEW.amount_taken) * 100.0) / GREATEST(initial_available, 1)

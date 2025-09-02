@@ -6,6 +6,7 @@ import type {
   AuctionTake,
   Token,
   SystemStats,
+  PaginatedTakesResponse,
 } from '../types/auction'
 
 const BASE_URL = '/api'
@@ -86,7 +87,7 @@ class APIClient {
     roundId?: number,
     limit: number = 50,
     offset: number = 0
-  ): Promise<AuctionTake[]> {
+  ): Promise<PaginatedTakesResponse> {
     let url = `/auctions/${chainId}/${auctionAddress}/takes?limit=${limit}&offset=${offset}`
     if (roundId) url += `&round_id=${roundId}`
     

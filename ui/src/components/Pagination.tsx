@@ -9,6 +9,7 @@ interface PaginationProps {
   onNext: () => void;
   summaryText?: string;
   className?: string;
+  totalPages?: number;
 }
 
 const Pagination: React.FC<PaginationProps> = ({
@@ -19,38 +20,41 @@ const Pagination: React.FC<PaginationProps> = ({
   onNext,
   summaryText,
   className = "",
+  totalPages,
 }) => {
   return (
-    <div className={cn("flex items-center justify-between px-4 py-3 bg-gray-800/30 border-t border-gray-700/50", className)}>
-      <div className="text-sm text-gray-500">
+    <div className={cn("flex items-center justify-between px-2 py-1", className)}>
+      <div className="text-xs text-gray-600">
         {summaryText || null}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
         <button
           onClick={onPrev}
           disabled={!canGoPrev}
           className={cn(
-            "w-8 h-8 flex items-center justify-center rounded text-lg font-medium transition-all duration-200",
+            "w-6 h-6 flex items-center justify-center rounded text-sm font-medium transition-colors",
             canGoPrev
-              ? "text-gray-300 hover:text-white hover:bg-gray-700"
-              : "text-gray-600 cursor-not-allowed"
+              ? "text-gray-400 hover:text-gray-200"
+              : "text-gray-700 cursor-not-allowed"
           )}
           title="Previous page"
         >
           &lt;
         </button>
 
-        <span className="text-sm text-gray-400 px-2">Page {currentPage}</span>
+        <span className="text-sm text-gray-500 px-1">
+          {totalPages ? `${currentPage}/${totalPages}` : currentPage}
+        </span>
 
         <button
           onClick={onNext}
           disabled={!canGoNext}
           className={cn(
-            "w-8 h-8 flex items-center justify-center rounded text-lg font-medium transition-all duration-200",
+            "w-6 h-6 flex items-center justify-center rounded text-sm font-medium transition-colors",
             canGoNext
-              ? "text-gray-300 hover:text-white hover:bg-gray-700"
-              : "text-gray-600 cursor-not-allowed"
+              ? "text-gray-400 hover:text-gray-200"
+              : "text-gray-700 cursor-not-allowed"
           )}
           title="Next page"
         >

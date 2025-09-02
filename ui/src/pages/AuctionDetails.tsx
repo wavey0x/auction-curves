@@ -22,6 +22,12 @@ import ChainIcon from "../components/ChainIcon";
 import CollapsibleSection from "../components/CollapsibleSection";
 import TokensList from "../components/TokensList";
 import RoundsTable from "../components/RoundsTable";
+import IdentityRow from "../components/IdentityRow";
+import KeyValueGrid from "../components/KeyValueGrid";
+import MetaBadges from "../components/MetaBadges";
+import CompactTokensDisplay from "../components/CompactTokensDisplay";
+import ExpandedTokensList from "../components/ExpandedTokensList";
+import TokenWithAddress from "../components/TokenWithAddress";
 import BackButton from "../components/BackButton";
 import {
   formatAddress,
@@ -48,6 +54,9 @@ const AuctionDetails: React.FC = () => {
   // Pagination state for rounds
   const [currentRoundsPage, setCurrentRoundsPage] = useState(1);
   const roundsPerPage = 5;
+
+  // Token expansion state
+  const [tokensExpanded, setTokensExpanded] = useState(false);
 
   // Pagination handlers for takes
   const handleNextPage = () => {
@@ -79,7 +88,7 @@ const AuctionDetails: React.FC = () => {
   });
 
   // Fetch takes with pagination
-  const { data: takes } = useQuery({
+  const { data: takesResponse } = useQuery({
     queryKey: ["auctionTakes", chainId, address, currentPage],
     queryFn: () => {
       const offset = (currentPage - 1) * takesPerPage;
@@ -88,8 +97,13 @@ const AuctionDetails: React.FC = () => {
     enabled: !!chainId && !!address,
   });
 
-  // Pagination state for takes (calculated after takes is available)
-  const canGoNext = takes && takes.length === takesPerPage;
+  // Extract takes data and pagination info
+  const takes = takesResponse?.takes || [];
+  const totalTakes = takesResponse?.total || 0;
+  const totalTakesPages = takesResponse?.total_pages || 1;
+  
+  // Pagination state for takes (calculated from API response)
+  const canGoNext = takesResponse ? currentPage < totalTakesPages : false;
   const canGoPrev = currentPage > 1;
 
   // Fetch tokens for symbol resolution
@@ -121,6 +135,7 @@ const AuctionDetails: React.FC = () => {
 
   // Pagination state for rounds (calculated after allRounds is available)
   const totalRounds = allRounds?.length || 0;
+  const totalRoundsPages = Math.ceil(totalRounds / roundsPerPage);
   const startRoundIndex = (currentRoundsPage - 1) * roundsPerPage;
   const endRoundIndex = startRoundIndex + roundsPerPage;
   const paginatedRounds = allRounds?.slice(startRoundIndex, endRoundIndex) || [];
@@ -202,7 +217,7 @@ const AuctionDetails: React.FC = () => {
         />
 
         <StatsCard
-          title="Total Sales"
+          title="Total Takes"
           value={auction.activity.total_takes}
           icon={TrendingDown}
           iconColor="text-primary-500"
@@ -217,130 +232,78 @@ const AuctionDetails: React.FC = () => {
       </div>
 
       {/* Auction Details */}
-      <CollapsibleSection
-        title="Auction Details"
-        icon={Gavel}
-        iconColor="text-purple-500"
-      >
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 justify-items-center">
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Chain</div>
-            <div className="flex justify-center">
-              <div title={`Chain ID: ${auction.chain_id}`}>
-                <ChainIcon chainId={auction.chain_id} size="sm" showName={false} />
-              </div>
-            </div>
+      <CollapsibleSection title="Auction Details" icon={Gavel} iconColor="text-purple-500">
+        <div className="space-y-6">
+          {/* Identity Section */}
+          <div>
+            <IdentityRow address={auction.address} chainId={auction.chain_id} />
           </div>
 
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Address</div>
-            <InternalLink
-              to={`/auction/${auction.chain_id}/${auction.address}`}
-              variant="address"
-              className="font-mono text-sm"
-              address={auction.address}
-              chainId={auction.chain_id}
-            >
-              {formatAddress(auction.address, 4)}
-            </InternalLink>
+          {/* Configuration Grid */}
+          <div>
+            <KeyValueGrid
+              columns={3}
+              items={[
+                {
+                  label: 'Want Token',
+                  value: auction.want_token ? (
+                    <TokenWithAddress
+                      token={auction.want_token}
+                      chainId={auction.chain_id}
+                      className="text-white font-medium hover:text-primary-300"
+                      showSymbolOnly={true}
+                    />
+                  ) : (
+                    <span className="text-gray-500">—</span>
+                  ),
+                },
+                { 
+                  label: 'Interval / Decay', 
+                  value: `${auction.parameters?.price_update_interval ? `${auction.parameters.price_update_interval}s` : '—'} / ${
+                    auction.parameters?.decay_rate !== undefined
+                      ? `${(auction.parameters.decay_rate * 100).toFixed(2)}%`
+                      : auction.parameters?.step_decay_rate
+                      ? `${((1 - parseFloat(auction.parameters.step_decay_rate) / 1e27) * 100).toFixed(2)}%`
+                      : '—'
+                  }` 
+                },
+                { label: 'Auction Length', value: auction.parameters?.auction_length ? `${(auction.parameters.auction_length / 3600).toFixed(1)} h` : '—' },
+                { label: 'Starting Price', value: auction.parameters?.starting_price ? <span className="font-mono">{formatReadableTokenAmount(auction.parameters.starting_price, 6)}</span> : '—' },
+                ...(auction.last_kicked ? [{ label: 'Last Kicked', value: <span title={new Date(auction.last_kicked).toLocaleString()}>{formatTimeAgo(new Date(auction.last_kicked).getTime()/1000)}</span> }] : [] as any),
+                {
+                  label: 'Enabled Tokens',
+                  value: (
+                    <CompactTokensDisplay
+                      tokens={auction.from_tokens || []}
+                      maxDisplay={2}
+                      isExpanded={tokensExpanded}
+                      onToggle={() => setTokensExpanded(!tokensExpanded)}
+                      chainId={auction.chain_id}
+                    />
+                  ),
+                  expandable: true,
+                  isExpanded: tokensExpanded,
+                  expandedContent: tokensExpanded && auction.from_tokens && auction.from_tokens.length > 0 ? (
+                    <ExpandedTokensList
+                      tokens={auction.from_tokens}
+                      chainId={auction.chain_id}
+                    />
+                  ) : null,
+                },
+              ]}
+            />
           </div>
 
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Enabled Tokens</div>
-            {auction.from_tokens && auction.from_tokens.length > 0 ? (
-              <TokensList
-                tokens={auction.from_tokens}
-                displayMode="grid"
-                maxDisplay={6}
-                expandable={true}
-                showSearch={auction.from_tokens.length > 20}
-                gridColumns={3}
-                className="max-w-xs"
-                tokenClassName="text-primary-400 font-medium"
-                showAddressFeatures={true}
-                chainId={auction.chain_id}
-              />
-            ) : (
-              <span className="text-gray-500 text-sm">—</span>
-            )}
+          {/* Activity Summary */}
+          <div>
+            <MetaBadges
+              items={[
+                { label: 'Deployed', value: formatTimeAgo(new Date(auction.deployed_at).getTime()/1000), icon: Clock },
+                { label: 'Participants', value: auction.activity.total_participants || 0, icon: Users },
+                { label: 'Volume', value: formatUSD(auction.activity.total_volume) },
+              ]}
+            />
           </div>
-
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Want Token</div>
-            <div className="text-gray-200 font-medium text-sm">
-              {auction.want_token?.symbol || "—"}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Decay Rate</div>
-            <div className="flex items-center justify-center space-x-1">
-              <TrendingDown className="h-3 w-3 text-gray-400" />
-              {auction.parameters?.decay_rate !== undefined ? (
-                <span className="font-medium text-sm">
-                  {(auction.parameters.decay_rate * 100).toFixed(2)}%
-                </span>
-              ) : auction.parameters?.step_decay_rate ? (
-                <span className="font-medium text-sm">
-                  {(
-                    (1 - parseFloat(auction.parameters.step_decay_rate) / 1e27) *
-                    100
-                  ).toFixed(2)}
-                  %
-                </span>
-              ) : (
-                <span className="text-gray-500">—</span>
-              )}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Update Interval</div>
-            <div className="flex items-center justify-center space-x-1">
-              <Clock className="h-3 w-3 text-gray-400" />
-              {auction.parameters?.price_update_interval ? (
-                <span className="font-medium text-sm">
-                  {auction.parameters.price_update_interval}s
-                </span>
-              ) : (
-                <span className="text-gray-500">—</span>
-              )}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Auction Length</div>
-            <div className="font-medium text-sm">
-              {auction.parameters?.auction_length
-                ? `${(auction.parameters.auction_length / 3600).toFixed(1)} hours`
-                : "—"}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Starting Price</div>
-            <div className="font-mono text-sm">
-              {auction.parameters?.starting_price
-                ? formatReadableTokenAmount(auction.parameters.starting_price, 6)
-                : "—"}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-2">Deployed</div>
-            <div className="text-gray-300 text-sm">
-              {formatTimeAgo(new Date(auction.deployed_at).getTime() / 1000)}
-            </div>
-          </div>
-
-          {auction.last_kicked && (
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Last Kicked</div>
-              <div className="text-gray-300 text-sm">
-                {formatTimeAgo(new Date(auction.last_kicked).getTime() / 1000)}
-              </div>
-            </div>
-          )}
         </div>
       </CollapsibleSection>
 
@@ -349,52 +312,61 @@ const AuctionDetails: React.FC = () => {
 
       {/* Rounds History */}
       {allRounds && allRounds.length > 0 && (
-        <RoundsTable
-          rounds={paginatedRounds as any}
-          auctionAddress={auction.address}
-          chainId={parseInt(chainId!)}
-          fromTokens={auction.from_tokens}
-          wantToken={auction.want_token}
-          title="Rounds History"
-          currentPage={currentRoundsPage}
-          canGoNext={canGoNextRounds}
-          canGoPrev={canGoPrevRounds}
-          onNextPage={handleNextRoundsPage}
-          onPrevPage={handlePrevRoundsPage}
-        />
+        <CollapsibleSection title="Rounds History" icon={TrendingUp} iconColor="text-primary-500" seamless={true}>
+          <RoundsTable
+            rounds={paginatedRounds as any}
+            auctionAddress={auction.address}
+            chainId={parseInt(chainId!)}
+            fromTokens={auction.from_tokens}
+            wantToken={auction.want_token}
+            title=""
+            currentPage={currentRoundsPage}
+            canGoNext={canGoNextRounds}
+            canGoPrev={canGoPrevRounds}
+            onNextPage={handleNextRoundsPage}
+            onPrevPage={handlePrevRoundsPage}
+            totalPages={totalRoundsPages}
+          />
+        </CollapsibleSection>
       )}
 
       {/* All Takes */}
       {takes && takes.length > 0 && (
-        <TakesTable
-          takes={takes}
-          title="All Takes"
-          tokens={tokens?.tokens}
-          showRoundInfo={true}
-          maxHeight="max-h-[600px]"
-          auctionAddress={auction.address}
-          // Pagination props
-          currentPage={currentPage}
-          canGoNext={canGoNext}
-          canGoPrev={canGoPrev}
-          onNextPage={handleNextPage}
-          onPrevPage={handlePrevPage}
-        />
+        <CollapsibleSection title="All Takes" icon={Activity} iconColor="text-green-500" seamless={true}>
+          <TakesTable
+            takes={takes}
+            title=""
+            tokens={tokens?.tokens}
+            showRoundInfo={true}
+            maxHeight="max-h-[600px]"
+            auctionAddress={auction.address}
+            hideAuctionColumn={true}
+            // Pagination props
+            currentPage={currentPage}
+            canGoNext={canGoNext}
+            canGoPrev={canGoPrev}
+            onNextPage={handleNextPage}
+            onPrevPage={handlePrevPage}
+            totalPages={totalTakesPages}
+          />
+        </CollapsibleSection>
       )}
 
-      {/* No Sales State */}
+      {/* No Takes State */}
       {(!takes || takes.length === 0) && (
-        <div className="card text-center py-8">
-          <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-            <TrendingDown className="h-6 w-6 text-gray-600" />
+        <CollapsibleSection title="All Takes" icon={Activity} iconColor="text-green-500" seamless={true}>
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+              <TrendingDown className="h-6 w-6 text-gray-600" />
+            </div>
+            <h4 className="text-lg font-medium text-gray-400 mb-1">
+              No Takes Yet
+            </h4>
+            <p className="text-sm text-gray-600">
+              This auction hasn't had any takes yet.
+            </p>
           </div>
-          <h4 className="text-lg font-medium text-gray-400 mb-1">
-            No Takes Yet
-          </h4>
-          <p className="text-sm text-gray-600">
-            This auction hasn't had any takes yet.
-          </p>
-        </div>
+        </CollapsibleSection>
       )}
     </div>
   );
