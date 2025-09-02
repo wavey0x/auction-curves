@@ -124,4 +124,5 @@ export interface SystemStats {
   total_rounds: number;
   total_takes: number;
   total_participants: number;
+  total_volume_usd?: number;
 }

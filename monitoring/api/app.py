@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from typing import List, Dict, Any, Optional
 import logging
 import json
+import argparse
 from datetime import datetime, timezone
 
 from config import get_settings, get_cors_origins, is_mock_mode, requires_database, get_all_network_configs, get_enabled_networks
@@ -16,6 +17,14 @@ from models.auction import SystemStats
 from database import get_db, check_database_connection, get_data_provider, DataProvider
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description="Auction API Server")
+parser.add_argument('--mock', action='store_true', help='Use mock data provider instead of database')
+args = parser.parse_args()
+
+# Store provider mode globally  
+PROVIDER_MODE = "mock" if args.mock else None
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -29,17 +38,20 @@ logger.info("=" * 60)
 logger.info(f"🚀 Starting Auction API in {settings.app_mode.upper()} mode")
 logger.info("=" * 60)
 logger.info(f"App Mode: {settings.app_mode}")
+logger.info(f"Data Mode: {'mock (--mock flag)' if args.mock else 'database (default)'}")
 logger.info(f"API Host: {settings.api_host}:{settings.api_port}")
 logger.info(f"CORS Origins: {settings.cors_origins}")
 
 # Database information
 database_url = settings.get_effective_database_url()
-if database_url:
+if PROVIDER_MODE == "mock":
+    logger.info("Data Provider: MockDataProvider (forced by --mock flag)")
+elif database_url:
     logger.info(f"Database: {database_url}")
     logger.info("Data Provider: DatabaseDataProvider")
 else:
     logger.info("Database: No connection string URL configured!")
-    logger.info("Data Provider: MockDataProvider (fallback mode)")
+    logger.info("Data Provider: Will FAIL - database required")
 
 logger.info("=" * 60)
 
@@ -65,7 +77,33 @@ app.add_middleware(
 # Dependency to get data provider
 def get_data_service() -> DataProvider:
     """Get data provider instance"""
-    return get_data_provider()
+    return get_data_provider(force_mode=PROVIDER_MODE)
+
+
+# Startup validation
+@app.on_event("startup")
+async def startup_event():
+    """Validate that the data provider can be initialized properly"""
+    logger.info(f"Validating data provider for mode: {PROVIDER_MODE}")
+    
+    try:
+        provider = get_data_provider(force_mode=PROVIDER_MODE)
+        
+        if PROVIDER_MODE == "real":
+            # Additional validation for real mode
+            from database import MockDataProvider
+            if isinstance(provider, MockDataProvider):
+                error_msg = "CRITICAL: Real mode requested but MockDataProvider returned. Database connection failed!"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+            
+            logger.info("✅ Database provider validated successfully")
+        else:
+            logger.info("✅ Mock provider initialized successfully")
+            
+    except Exception as e:
+        logger.error(f"❌ Startup validation failed: {e}")
+        raise
 
 
 @app.get("/")
@@ -406,13 +444,18 @@ async def legacy_get_kicks(limit: int = Query(50, ge=1, le=100)):
 
 
 @app.get("/activity/takes") 
-async def legacy_get_takes(limit: int = Query(50, ge=1, le=100)):
-    """Legacy takes endpoint - placeholder for backwards compatibility"""
-    return {
-        "events": [],
-        "count": 0,
-        "has_more": False
-    }
+async def get_recent_takes(
+    limit: int = Query(50, ge=1, le=500),
+    chain_id: Optional[int] = Query(None, description="Filter by chain ID"),
+    data_service: DataProvider = Depends(get_data_service)
+):
+    """Recent takes across all auctions (most recent first)"""
+    try:
+        takes = await data_service.get_recent_takes(limit, chain_id)
+        return takes
+    except Exception as e:
+        logger.error(f"Error fetching recent takes: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch recent takes")
 
 
 @app.get("/analytics/overview")

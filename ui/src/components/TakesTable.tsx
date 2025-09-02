@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { TrendingDown } from "lucide-react";
 import type { AuctionTake, Token } from "../types/auction";
 import ChainIcon from "./ChainIcon";
@@ -7,6 +6,7 @@ import AddressDisplay from "./AddressDisplay";
 import TxHashDisplay from "./TxHashDisplay";
 import TxHashLink from "./TxHashLink";
 import AddressLink from "./AddressLink";
+import InternalLink from "./InternalLink";
 import {
   formatTokenAmount,
   formatReadableTokenAmount,
@@ -14,6 +14,8 @@ import {
   formatTimeAgo,
   cn,
 } from "../lib/utils";
+import Pagination from "./Pagination";
+import { useUserSettings } from "../context/UserSettingsContext";
 
 interface TakesTableProps {
   takes: AuctionTake[];
@@ -22,6 +24,7 @@ interface TakesTableProps {
   tokens?: Token[];
   showRoundInfo?: boolean;
   auctionAddress?: string;
+  hideAuctionColumn?: boolean;
   // Pagination props
   currentPage?: number;
   canGoNext?: boolean;
@@ -37,6 +40,7 @@ const TakesTable: React.FC<TakesTableProps> = ({
   tokens = [],
   showRoundInfo = false,
   auctionAddress,
+  hideAuctionColumn = false,
   // Pagination props
   currentPage,
   canGoNext = false,
@@ -44,7 +48,12 @@ const TakesTable: React.FC<TakesTableProps> = ({
   onNextPage,
   onPrevPage,
 }) => {
-  const [showUSD, setShowUSD] = useState(false);
+  const { defaultValueDisplay } = useUserSettings();
+  const [showUSD, setShowUSD] = useState(defaultValueDisplay === 'usd');
+  useEffect(() => {
+    // Reflect updated default; user can still toggle per-table
+    setShowUSD(defaultValueDisplay === 'usd');
+  }, [defaultValueDisplay]);
 
   if (takes.length === 0) {
     return (
@@ -81,20 +90,20 @@ const TakesTable: React.FC<TakesTableProps> = ({
                 <th className="text-center w-16 px-0.5 py-1">Take ID</th>
                 <th className="text-center w-24 px-0.5 py-1">Transaction</th>
                 {showRoundInfo && <th className="text-center w-16 px-0.5 py-1">Round</th>}
-                <th className="text-center w-24 px-0.5 py-1">Auction</th>
+                {!hideAuctionColumn && <th className="text-center w-24 px-0.5 py-1">Auction</th>}
                 <th 
                   className="text-center w-32 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
                   onClick={() => setShowUSD(!showUSD)}
                   title="Click to toggle between token and USD values"
                 >
-                  Amount {showUSD ? '($)' : '(🪙)'}
+                  Amount {showUSD ? '($)' : '(T)'}
                 </th>
                 <th 
                   className="text-center w-28 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
                   onClick={() => setShowUSD(!showUSD)}
                   title="Click to toggle between token and USD values"
                 >
-                  Price {showUSD ? '($)' : '(🪙)'}
+                  Price {showUSD ? '($)' : '(T)'}
                 </th>
                 <th className="text-center w-24 px-0.5 py-1">Profit/Loss</th>
                 <th className="text-center w-24 px-0.5 py-1">Taker</th>
@@ -136,14 +145,12 @@ const TakesTable: React.FC<TakesTableProps> = ({
                     <td className="px-0.5 py-1">
                       <div className="flex justify-center">
                         {auctionAddress ? (
-                          <Link
+                          <InternalLink
                             to={`/round/${take.chain_id}/${auctionAddress}/${take.round_id}`}
-                            className="inline-flex items-center px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
+                            variant="round"
                           >
-                            <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
-                              R{take.round_id}
-                            </span>
-                          </Link>
+                            R{take.round_id}
+                          </InternalLink>
                         ) : (
                           <span className="font-mono text-sm text-gray-300">
                             R{take.round_id}
@@ -153,14 +160,16 @@ const TakesTable: React.FC<TakesTableProps> = ({
                     </td>
                   )}
 
-                  <td className="px-0.5 py-1">
-                    <AddressLink
-                      address={take.auction}
-                      chainId={take.chain_id}
-                      type="auction"
-                      className="text-primary-400"
-                    />
-                  </td>
+                  {!hideAuctionColumn && (
+                    <td className="px-0.5 py-1">
+                      <AddressLink
+                        address={take.auction}
+                        chainId={take.chain_id}
+                        type="auction"
+                        className="text-primary-400"
+                      />
+                    </td>
+                  )}
 
                   <td className="px-0.5 py-1">
                     <div className="text-sm">
@@ -203,11 +212,7 @@ const TakesTable: React.FC<TakesTableProps> = ({
                         )}
                       </div>
                       <div className="text-xs text-gray-500 leading-tight">
-                        {showUSD ? (
-                          `per ${take.from_token_symbol || '?'}`
-                        ) : (
-                          `per ${take.from_token_symbol || '?'}`
-                        )}
+                        / {take.from_token_symbol || '?'}
                       </div>
                     </div>
                   </td>
@@ -265,45 +270,15 @@ const TakesTable: React.FC<TakesTableProps> = ({
         </div>
       </div>
 
-      {/* Compact Pagination */}
+      {/* Unified Pagination */}
       {(onNextPage || onPrevPage) && (
-        <div className="flex items-center justify-center pt-4 border-t border-gray-800">
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={onPrevPage}
-              disabled={!canGoPrev}
-              className={cn(
-                "w-8 h-8 flex items-center justify-center rounded text-lg font-medium transition-all duration-200",
-                canGoPrev 
-                  ? "text-gray-300 hover:text-white hover:bg-gray-700" 
-                  : "text-gray-600 cursor-not-allowed"
-              )}
-              title="Previous page"
-            >
-              &lt;
-            </button>
-
-            {currentPage && (
-              <span className="text-sm text-gray-400 px-2">
-                Page {currentPage}
-              </span>
-            )}
-
-            <button
-              onClick={onNextPage}
-              disabled={!canGoNext}
-              className={cn(
-                "w-8 h-8 flex items-center justify-center rounded text-lg font-medium transition-all duration-200",
-                canGoNext 
-                  ? "text-gray-300 hover:text-white hover:bg-gray-700" 
-                  : "text-gray-600 cursor-not-allowed"
-              )}
-              title="Next page"
-            >
-              &gt;
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage || 1}
+          canGoPrev={!!canGoPrev}
+          canGoNext={!!canGoNext}
+          onPrev={() => onPrevPage && onPrevPage()}
+          onNext={() => onNextPage && onNextPage()}
+        />
       )}
     </div>
   );

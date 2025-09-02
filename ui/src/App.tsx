@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import AuctionDetails from "./pages/AuctionDetails";
 import RoundDetails from "./pages/RoundDetails";
+import { NavigationProvider } from "./contexts/NavigationProvider";
 
 // Global refresh interval - change this to adjust all auto-refresh timing
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -21,20 +22,25 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/auction/:chainId/:address" element={<AuctionDetails />} />
-            <Route
-              path="/round/:chainId/:auctionAddress/:roundId"
-              element={<RoundDetails />}
-            />
-          </Routes>
-        </Layout>
-      </Router>
+      <UserSettingsProvider>
+        <Router>
+          <NavigationProvider>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/auction/:chainId/:address" element={<AuctionDetails />} />
+                <Route
+                  path="/round/:chainId/:auctionAddress/:roundId"
+                  element={<RoundDetails />}
+                />
+              </Routes>
+            </Layout>
+          </NavigationProvider>
+        </Router>
+      </UserSettingsProvider>
     </QueryClientProvider>
   );
 }
+import { UserSettingsProvider } from "./context/UserSettingsContext";
 
 export default App;

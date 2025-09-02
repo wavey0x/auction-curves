@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { formatAddress, copyToClipboard, getChainInfo, cn } from "../lib/utils";
+import InternalLink from "./InternalLink";
 
 interface AddressLinkProps {
   address: string;
@@ -61,50 +61,51 @@ const AddressLink: React.FC<AddressLinkProps> = ({
   return (
     <div
       className={cn(
-        "inline-flex flex-col items-center space-y-1 font-mono text-xs",
+        "inline-flex flex-col items-center font-mono text-xs",
         className
       )}
       title={showFullOnHover ? address : undefined}
     >
-      {/* Main address row with internal link (if applicable) and clipboard */}
-      <div className="flex items-center space-x-1">
-        {internalLink ? (
-          <Link
-            to={internalLink}
-            className="text-primary-400 hover:text-primary-300 transition-colors select-all underline-offset-2 hover:underline"
-            title={`View ${type} details`}
-          >
-            {formattedAddress}
-          </Link>
-        ) : (
+      {internalLink ? (
+        <InternalLink
+          to={internalLink}
+          variant="address"
+          className="select-all"
+          address={address}
+          chainId={chainId}
+        >
+          {formattedAddress}
+        </InternalLink>
+      ) : (
+        <div className="inline-flex items-center space-x-1">
           <span className="text-gray-300 select-all">
             {formattedAddress}
           </span>
-        )}
-        
-        {/* Animated clipboard icon */}
-        <button
-          onClick={handleCopy}
-          className="p-0.5 text-gray-500 hover:text-gray-300 transition-all duration-200 hover:scale-110"
-          title="Copy address"
-        >
-          {copied ? (
-            <Check className="h-3 w-3 text-green-400 animate-pulse" />
-          ) : (
-            <Copy className="h-3 w-3 hover:animate-pulse" />
-          )}
-        </button>
-      </div>
+          
+          {/* Fallback copy button for non-internal links */}
+          <button
+            onClick={handleCopy}
+            className="p-0.5 text-gray-500 hover:text-gray-300 transition-all duration-200 hover:scale-110"
+            title="Copy address"
+          >
+            {copied ? (
+              <Check className="h-3 w-3 text-green-400 animate-pulse" />
+            ) : (
+              <Copy className="h-3 w-3 hover:animate-pulse" />
+            )}
+          </button>
 
-      {/* Block explorer link centered below */}
-      {hasExplorer && (
-        <button
-          onClick={handleExplorerClick}
-          className="flex items-center justify-center p-1 text-gray-500 hover:text-primary-400 transition-all duration-200 hover:scale-110 group"
-          title={`View on ${chainInfo.name} explorer`}
-        >
-          <ExternalLink className="h-3 w-3 group-hover:animate-pulse" />
-        </button>
+          {/* Fallback external link for non-internal links */}
+          {hasExplorer && (
+            <button
+              onClick={handleExplorerClick}
+              className="p-0.5 text-gray-500 hover:text-primary-400 transition-all duration-200 hover:scale-110"
+              title={`View on ${chainInfo.name} explorer`}
+            >
+              <ExternalLink className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -10,3 +10,10 @@ DETAIL:  Key (chain_id, block_number, token_address, source)=(1, 23267077, 0xf93
 DETAIL:  Key (chain_id, block_number, token_address, source)=(1, 23267077, 0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7, odos) already exists.
 
 2025-09-01 20:43:02,382 - __main__ - INFO - [ODOS] ✅ Processed take 0x3B41F0...: stored 2 prices
+2025-09-01 22:19:09,942 - __main__ - INFO - [ODOS] Found 2 recent unprocessed takes (< 40 blocks old)
+2025-09-01 22:19:10,133 - __main__ - INFO - [ODOS] 💰 Stored price: 0xD533..cd52 = $0.7464
+2025-09-01 22:19:10,307 - __main__ - INFO - [ODOS] 💰 Stored price: 0x8b83..f710 = $1.0178
+2025-09-01 22:19:10,308 - __main__ - INFO - [ODOS] ✅ Processed take 0xD00b3D...: stored 2 prices
+2025-09-01 22:19:10,728 - __main__ - INFO - [ODOS] 💰 Stored price: 0xD533..cd52 = $0.7464
+2025-09-01 22:19:11,014 - __main__ - INFO - [ODOS] 💰 Stored price: 0xff17..8B3c = $1.0200
+2025-09-01 22:19:11,014 - __main__ - INFO - [ODOS] ✅ Processed take 0xFa22Ed...: stored 2 prices

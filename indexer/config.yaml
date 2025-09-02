@@ -32,8 +32,8 @@ networks:
   ethereum:
     chain_id: 1
     factories:
-      - address: 1185442114663109339474012828157636123306352897088
-        start_block: 21835027
+      - address: ${ETHEREUM_FACTORY_ADDRESS}
+        start_block: ${ETHEREUM_START_BLOCK}
         type: legacy
     rpc_url: ${ETHEREUM_RPC_URL}
   local:

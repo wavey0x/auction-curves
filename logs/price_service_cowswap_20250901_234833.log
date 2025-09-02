@@ -1,0 +1,30 @@
+2025-09-01 23:48:33,591 - __main__ - INFO - ✅ Database connection established
+2025-09-01 23:48:33,591 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 23:48:33,591 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=40
+2025-09-01 23:48:33,591 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 23:48:33,614 - __main__ - INFO - [COWSWAP] Found 2 recent unprocessed mainnet takes (< 40 blocks old)
+2025-09-01 23:48:33,614 - __main__ - INFO - [COWSWAP] Processing 2 takes with 3 unique tokens
+2025-09-01 23:48:33,614 - __main__ - INFO - [COWSWAP] 🔍 Fetching prices for 3 tokens via quotes
+2025-09-01 23:48:33,614 - __main__ - INFO - [COWSWAP] ⏰ Using 30-second delays between requests to avoid rate limiting
+2025-09-01 23:48:33,614 - __main__ - INFO - [COWSWAP] 🚀 Processing token 1/3: 0xff17..8B3c
+2025-09-01 23:48:33,614 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xff17..8B3c (amount: 100000000000000000)
+2025-09-01 23:48:33,788 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 23:48:33,788 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xff17..8B3c (amount: 1000000000000000000)
+2025-09-01 23:48:33,980 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 23:48:33,980 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xff17..8B3c (amount: 1000000)
+2025-09-01 23:48:34,340 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 23:48:34,340 - __main__ - INFO - [COWSWAP] ❌ No price for 0xff17..8B3c
+2025-09-01 23:48:34,340 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (2/3)...
+2025-09-01 23:49:04,342 - __main__ - INFO - [COWSWAP] 🚀 Processing token 2/3: 0xD533..cd52
+2025-09-01 23:49:04,342 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xD533..cd52 (amount: 100000000000000000)
+2025-09-01 23:49:04,390 - __main__ - INFO - [COWSWAP] 📥 Response: 403
+2025-09-01 23:49:04,390 - __main__ - ERROR - [COWSWAP] ❌ 403 FORBIDDEN for 0xD533..cd52
+2025-09-01 23:49:04,391 - __main__ - INFO - [COWSWAP] ❌ No price for 0xD533..cd52
+2025-09-01 23:49:04,391 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (3/3)...
+2025-09-01 23:49:34,395 - __main__ - INFO - [COWSWAP] 🚀 Processing token 3/3: 0x8b83..f710
+2025-09-01 23:49:34,395 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x8b83..f710 (amount: 100000000000000000)
+2025-09-01 23:49:34,436 - __main__ - INFO - [COWSWAP] 📥 Response: 403
+2025-09-01 23:49:34,437 - __main__ - ERROR - [COWSWAP] ❌ 403 FORBIDDEN for 0x8b83..f710
+2025-09-01 23:49:34,437 - __main__ - INFO - [COWSWAP] ❌ No price for 0x8b83..f710
+2025-09-01 23:49:34,437 - __main__ - INFO - [COWSWAP] 📊 Successfully got 0/3 prices
+2025-09-01 23:49:34,437 - __main__ - INFO - [COWSWAP] ✅ Processed 2 takes: stored 0 prices

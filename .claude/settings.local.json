@@ -92,7 +92,12 @@
       "Bash(npm run lint)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:*)",
-      "Bash(tmux list-panes:*)"
+      "Bash(tmux list-panes:*)",
+      "Bash(for:*)",
+      "WebFetch(domain:etherscan.io)",
+      "Bash(/dev/null)",
+      "Bash(tmux list-sessions:*)",
+      "Bash(tmux send-keys:*)"
     ],
     "deny": [],
     "ask": []

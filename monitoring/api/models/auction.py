@@ -3,7 +3,13 @@
 Pydantic models for Auction data structure.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
+try:
+    # Pydantic v2
+    from pydantic import field_validator as validator
+except ImportError:
+    # Fallback for pydantic v1
+    from pydantic import validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
@@ -169,12 +175,12 @@ class TokenResponse(BaseModel):
 
 class AuctionFilters(BaseModel):
     """Filters for Auction queries"""
-    status: Optional[str] = Field("all", pattern="^(active|completed|all)$")
+    status: Optional[str] = Field("all")
     chain_id: Optional[int] = Field(None, description="Filter by chain ID")
     from_token: Optional[str] = Field(None, description="Filter by from token address")
     want_token: Optional[str] = Field(None, description="Filter by want token address")
-    sort: str = Field("kicked_at", pattern="^(kicked_at|volume|participants|address)$")
-    order: str = Field("desc", pattern="^(asc|desc)$")
+    sort: str = Field("kicked_at")
+    order: str = Field("desc")
     page: int = Field(1, ge=1)
     limit: int = Field(20, ge=1, le=100)
 
@@ -186,6 +192,7 @@ class SystemStats(BaseModel):
     total_rounds: int = Field(..., description="Total number of rounds")
     total_takes: int = Field(..., description="Total number of takes")
     total_participants: int = Field(..., description="Total number of participants")
+    total_volume_usd: Optional[float] = Field(None, description="Total USD volume of all takes")
 
 class WebSocketMessage(BaseModel):
     """WebSocket message format"""

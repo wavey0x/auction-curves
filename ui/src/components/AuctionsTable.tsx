@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { 
   Activity, 
@@ -23,6 +22,7 @@ import ChainIcon from './ChainIcon'
 import TokensList from './TokensList'
 import AddressDisplay from './AddressDisplay'
 import AddressLink from './AddressLink'
+import InternalLink from './InternalLink'
 
 interface AuctionsTableProps {
   auctions: AuctionListItem[]
@@ -251,11 +251,6 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
 
   return (
     <div className="space-y-4">
-      {/* Results indicator centered above filters */}
-      <div className="flex justify-center">
-        <span className="badge badge-neutral text-xs">Results: {filteredAndSorted.length}</span>
-      </div>
-      
       {/* Centered filter group */}
       <div className="flex justify-center">
         <div className="flex flex-wrap gap-2 items-center justify-center max-w-4xl">
@@ -420,7 +415,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     <SortIcon field="status" />
                   </div>
                 </th>
-                <th className="text-center">Current Round</th>
+                <th className="text-center">Round</th>
                 <th 
                   className="cursor-pointer select-none hover:bg-gray-700/50 text-center"
                   onClick={() => handleSort('decay_rate')}
@@ -483,7 +478,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                           tokenClassName="text-primary-400 font-medium"
                         />
                         <span className="text-gray-500">→</span>
-                        <span className="text-yellow-400 font-medium">
+                        <span className="text-gray-200 font-medium">
                           {auction.want_token?.symbol}
                         </span>
                       </div>
@@ -505,14 +500,12 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     
                     <td>
                       {currentRound ? (
-                        <Link
+                        <InternalLink
                           to={`/round/${auction?.chain_id}/${auction?.address}/${currentRound?.round_id}`}
-                          className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
+                          variant="round"
                         >
-                          <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
-                            R{currentRound.round_id}
-                          </span>
-                        </Link>
+                          R{currentRound.round_id}
+                        </InternalLink>
                       ) : (
                         <span className="text-gray-500 text-sm">—</span>
                       )}
@@ -530,8 +523,8 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                       </div>
                     </td>
                     
-                    <td>
-                      <div className="flex items-center text-sm">
+                    <td className="text-center">
+                      <div className="flex items-center justify-center text-sm">
                         <span className="font-medium">
                           {auction.update_interval || 0}s
                         </span>

@@ -1,8 +1,7 @@
 import React from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { 
-  ArrowLeft,
   Clock,
   TrendingDown, 
   TrendingUp, 
@@ -19,6 +18,8 @@ import StatsCard from '../components/StatsCard'
 import StackedProgressMeter from '../components/StackedProgressMeter'
 import LoadingSpinner from '../components/LoadingSpinner'
 import AddressDisplay from '../components/AddressDisplay'
+import BackButton from '../components/BackButton'
+import InternalLink from '../components/InternalLink'
 import { formatAddress, formatTokenAmount, formatReadableTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 
 const RoundDetails: React.FC = () => {
@@ -82,13 +83,9 @@ const RoundDetails: React.FC = () => {
         <p className="text-gray-600 max-w-md mx-auto">
           The requested auction round could not be found.
         </p>
-        <Link 
-          to="/" 
-          className="inline-flex items-center space-x-2 mt-4 text-primary-400 hover:text-primary-300"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Dashboard</span>
-        </Link>
+        <div className="mt-4">
+          <BackButton />
+        </div>
       </div>
     )
   }
@@ -158,48 +155,10 @@ const RoundDetails: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link 
-            to="/" 
-            className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          
-          <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-2xl font-bold text-gray-200">
-                Round R{roundId}
-              </h1>
-              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                roundInfo.is_active 
-                  ? 'bg-success-500/20 text-success-400' 
-                  : 'bg-gray-700 text-gray-400'
-              }`}>
-                {roundInfo.is_active ? 'Active' : 'Completed'}
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
-              <div className="flex items-center space-x-2">
-                <span>Auction</span>
-                <AddressDisplay
-                  address={auctionAddress!}
-                  chainId={parseInt(chainId!)}
-                  showExternalLink={false}
-                  className="text-primary-400 hover:text-primary-300"
-                />
-              </div>
-              <span>•</span>
-              <span>
-                {takes.length > 0 && takes[0].from_token_symbol ? 
-                  `${takes[0].from_token_symbol} → ${wantToken.symbol}` : 
-                  `${fromTokens[0]?.symbol || '?'} → ${wantToken.symbol}`
-                }
-              </span>
-            </div>
-          </div>
-        </div>
+          <BackButton />
 
+          <h1 className="text-2xl font-bold text-gray-100">Round R{roundId}</h1>
+        </div>
       </div>
 
       {/* Round Stats */}
@@ -236,19 +195,23 @@ const RoundDetails: React.FC = () => {
       {/* Round Details Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card">
-          <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
-            {roundInfo.is_active ? (
-              <div className="h-2 w-2 rounded-full bg-success-500 animate-pulse"></div>
-            ) : (
-              <div className="h-2 w-2 rounded-full bg-gray-600"></div>
-            )}
-            <span>Round Information</span>
-            {roundInfo.is_active && (
-              <div className="px-2 py-0.5 rounded-full text-xs font-medium bg-success-500/20 text-success-400">
-                ACTIVE
-              </div>
-            )}
+          <h3 className="text-lg font-semibold mb-4 flex items-center justify-center space-x-3">
+            <div className={`h-2 w-2 rounded-full ${
+              roundInfo.is_active 
+                ? "bg-success-500 animate-pulse" 
+                : "bg-gray-600"
+            }`}></div>
+            <span>Round Info</span>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+              roundInfo.is_active 
+                ? "bg-success-500/20 text-success-400" 
+                : "bg-gray-700 text-gray-400"
+            }`}>
+              {roundInfo.is_active ? "ACTIVE" : "COMPLETED"}
+            </div>
           </h3>
+          
+          <div className="border-b border-gray-800 mb-6"></div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -257,6 +220,21 @@ const RoundDetails: React.FC = () => {
                   <span className="text-sm text-gray-500">Round ID</span>
                   <div className="font-mono text-lg font-medium text-primary-400">
                     R{roundInfo.round_id}
+                  </div>
+                </div>
+                
+                <div>
+                  <span className="text-sm text-gray-500">Auction</span>
+                  <div>
+                    <InternalLink
+                      to={`/auction/${chainId}/${auctionAddress}`}
+                      variant="address"
+                      className="font-mono text-sm"
+                      address={auctionAddress!}
+                      chainId={parseInt(chainId!)}
+                    >
+                      {formatAddress(auctionAddress!)}
+                    </InternalLink>
                   </div>
                 </div>
                 
@@ -274,6 +252,22 @@ const RoundDetails: React.FC = () => {
 
             <div>
               <div className="space-y-4">
+                <div>
+                  <span className="text-sm text-gray-500">Token Pair</span>
+                  <div className="text-sm text-gray-200">
+                    <span className="text-gray-300 font-medium">
+                      {takes.length > 0 && takes[0].from_token_symbol ? 
+                        takes[0].from_token_symbol : 
+                        fromTokens[0]?.symbol || '?'
+                      }
+                    </span>
+                    <span className="text-gray-500 mx-2">→</span>
+                    <span className="text-yellow-400 font-medium">
+                      {wantToken.symbol}
+                    </span>
+                  </div>
+                </div>
+
                 <div>
                   <span className="text-sm text-gray-500">Initial Available</span>
                   <div className="font-mono text-gray-200">
@@ -329,7 +323,7 @@ const RoundDetails: React.FC = () => {
                 timeProgress={timeProgress}
                 amountProgress={roundInfo.progress_percentage}
                 timeRemaining={timeRemaining}
-                totalTakes={roundInfo.total_takes}
+                totalTakes={takes.length}
                 size="lg"
               />
             </div>
@@ -344,13 +338,15 @@ const RoundDetails: React.FC = () => {
           </h3>
           
           <div className="space-y-3">
-            <Link
+            <InternalLink
               to={`/auction/${chainId}/${auctionAddress}`}
+              variant="default"
               className="block w-full p-3 text-center bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+              showArrow={false}
             >
               <div className="text-sm font-medium text-gray-200">View Auction</div>
               <div className="text-xs text-gray-500">See all rounds</div>
-            </Link>
+            </InternalLink>
             
             {roundInfo.is_active && (
               <button className="block w-full p-3 text-center bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-colors">
@@ -411,6 +407,7 @@ const RoundDetails: React.FC = () => {
           title={`Takes in Round R${roundId}`}
           tokens={tokens?.tokens || []}
           maxHeight="max-h-[600px]"
+          hideAuctionColumn={true}
         />
       ) : (
         <div className="card text-center py-12">

@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   Clock,
   DollarSign,
   TrendingDown,
@@ -22,6 +21,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import ChainIcon from "../components/ChainIcon";
 import CollapsibleSection from "../components/CollapsibleSection";
 import TokensList from "../components/TokensList";
+import RoundsTable from "../components/RoundsTable";
+import BackButton from "../components/BackButton";
 import {
   formatAddress,
   formatTokenAmount,
@@ -31,8 +32,8 @@ import {
   formatDuration,
   copyToClipboard,
   getChainInfo,
-  cn,
 } from "../lib/utils";
+import InternalLink from "../components/InternalLink";
 
 const AuctionDetails: React.FC = () => {
   const { chainId, address } = useParams<{ chainId: string; address: string }>();
@@ -84,6 +85,27 @@ const AuctionDetails: React.FC = () => {
     queryFn: apiClient.getTokens,
   });
 
+  // Fetch all rounds across all from_tokens, merge and sort
+  const { data: allRounds } = useQuery({
+    queryKey: ["auctionRoundsAll", chainId, address, auction?.from_tokens?.map(t => t.address).join(",")],
+    queryFn: async () => {
+      if (!auction?.from_tokens?.length) return [] as any[];
+      const chain = parseInt(chainId!);
+      const results = await Promise.all(
+        auction.from_tokens.map(ft => 
+          apiClient.getAuctionRounds(address!, chain, ft.address)
+            .then(r => ({ rounds: r.rounds || [], from: ft.address }))
+        )
+      );
+      const merged = results.flatMap(({ rounds, from }) => 
+        rounds.map(r => ({ ...r, from_token: from }))
+      );
+      return merged.sort((a, b) => new Date(b.kicked_at).getTime() - new Date(a.kicked_at).getTime());
+    },
+    enabled: !!auction && !!chainId && !!address,
+    staleTime: 10000,
+  });
+
   const handleCopy = async (text: string) => {
     const success = await copyToClipboard(text);
     if (success) {
@@ -112,10 +134,7 @@ const AuctionDetails: React.FC = () => {
     return (
       <div className="space-y-8">
         <div className="flex items-center space-x-4">
-          <Link to="/" className="btn btn-secondary btn-sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Link>
+          <BackButton />
         </div>
 
         <div className="card text-center py-12">
@@ -132,23 +151,13 @@ const AuctionDetails: React.FC = () => {
   }
 
   const chainInfo = getChainInfo(auction.chain_id);
-  const currentRound = auction.current_round;
-  const isActive = currentRound?.is_active || false;
-  
-  // Calculate time remaining using round_end timestamp, ensuring it floors to 0
-  const timeRemaining = currentRound?.round_end 
-    ? Math.max(0, currentRound.round_end - Math.floor(Date.now() / 1000))
-    : currentRound?.time_remaining || 0;
 
   return (
     <div className="space-y-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link to="/" className="btn btn-secondary btn-sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Link>
+          <BackButton />
 
           <h1 className="text-2xl font-bold text-gray-100">Auction</h1>
         </div>
@@ -204,27 +213,15 @@ const AuctionDetails: React.FC = () => {
 
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-2">Address</div>
-            <button
-              onClick={() => handleCopy(auction.address)}
-              className="font-mono text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-1 transition-colors"
+            <InternalLink
+              to={`/auction/${auction.chain_id}/${auction.address}`}
+              variant="address"
+              className="font-mono text-sm"
+              address={auction.address}
+              chainId={auction.chain_id}
             >
-              <span>{formatAddress(auction.address, 4)}</span>
-              {copiedAddresses.has(auction.address) ? (
-                <Check className="h-3 w-3 text-primary-500 animate-pulse" />
-              ) : (
-                <Copy className="h-3 w-3" />
-              )}
-            </button>
-            {chainInfo.explorer !== "#" && (
-              <a
-                href={`${chainInfo.explorer}/address/${auction.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1 text-gray-400 hover:text-gray-200 transition-colors inline-block mt-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
+              {formatAddress(auction.address, 4)}
+            </InternalLink>
           </div>
 
           <div className="text-center">
@@ -249,7 +246,7 @@ const AuctionDetails: React.FC = () => {
 
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-2">Want Token</div>
-            <div className="text-yellow-400 font-medium text-sm">
+            <div className="text-gray-200 font-medium text-sm">
               {auction.want_token?.symbol || "—"}
             </div>
           </div>
@@ -326,88 +323,20 @@ const AuctionDetails: React.FC = () => {
         </div>
       </CollapsibleSection>
 
-      {/* Current Round Info */}
-      {currentRound && (
-        <CollapsibleSection
-          title="Current Round"
-          icon={() => (
-            <div
-              className={cn(
-                "h-4 w-4 rounded-full",
-                isActive ? "bg-success-500 animate-pulse" : "bg-gray-600"
-              )}
-            />
-          )}
-          iconColor=""
-        >
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Round ID</div>
-              <Link
-                to={`/round/${chainId}/${auction.address}/${currentRound.round_id}`}
-                className="inline-flex items-center space-x-1 text-primary-400 hover:text-primary-300 transition-colors"
-              >
-                <span className="font-mono font-semibold">
-                  R{currentRound.round_id}
-                </span>
-              </Link>
-            </div>
+      {/* Current Round section removed per request */}
 
-            {currentRound.current_price && (
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">Current Price</div>
-                <div className="font-mono text-gray-200 text-sm">
-                  {formatReadableTokenAmount(currentRound.current_price, 4)}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {formatUSD(parseFloat(currentRound.current_price) * 1.5)}
-                </div>
-              </div>
-            )}
 
-            {currentRound.initial_available && (
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">Starting Amount</div>
-                <div className="font-mono text-gray-200 text-sm">
-                  {formatTokenAmount(currentRound.initial_available, 18, 2)}
-                </div>
-              </div>
-            )}
-
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Kicked At</div>
-              <div className="text-gray-300 text-sm">
-                {formatTimeAgo(
-                  new Date(currentRound.kicked_at).getTime() / 1000
-                )}
-              </div>
-            </div>
-
-            {timeRemaining > 0 && (
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">Time Remaining</div>
-                <div className="text-success-400 font-medium text-sm">
-                  {timeRemaining >= 3600 ? (
-                    // >= 1 hour: show hours + minutes
-                    `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m`
-                  ) : (
-                    // < 1 hour: show minutes + seconds
-                    `${Math.floor(timeRemaining / 60)}m ${timeRemaining % 60}s`
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Sales This Round</div>
-              <div className="text-gray-200 font-medium text-sm">
-                {currentRound.total_takes}
-              </div>
-            </div>
-          </div>
-        </CollapsibleSection>
+      {/* Rounds History */}
+      {allRounds && allRounds.length > 0 && (
+        <RoundsTable
+          rounds={allRounds as any}
+          auctionAddress={auction.address}
+          chainId={parseInt(chainId!)}
+          fromTokens={auction.from_tokens}
+          wantToken={auction.want_token}
+          title="Rounds History"
+        />
       )}
-
 
       {/* All Takes */}
       {takes && takes.length > 0 && (

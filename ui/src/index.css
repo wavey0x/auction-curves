@@ -41,6 +41,30 @@
     @apply px-6 py-3 text-base;
   }
   
+  /* Internal Link Styles */
+  .internal-link {
+    @apply inline-flex items-center gap-1 px-2 py-1 
+           bg-gray-800/30 border border-gray-700/50 
+           rounded-md text-sm 
+           hover:bg-gray-800/50 hover:border-gray-600
+           transition-all duration-200
+           active:scale-95;
+  }
+  
+  .internal-link-icon {
+    @apply text-gray-500 group-hover:text-primary-400 
+           transition-colors duration-200;
+  }
+
+  /* Custom InternalLink Hover Effects */
+  .internal-link-group:hover .internal-link-hover-container {
+    height: 1rem; /* h-4 equivalent */
+  }
+
+  .internal-link-group:hover .internal-link-hover-actions {
+    opacity: 1;
+  }
+  
   .card {
     @apply bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-xl;
   }

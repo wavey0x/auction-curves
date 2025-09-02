@@ -1,0 +1,23 @@
+2025-09-01 23:44:46,551 - __main__ - INFO - Database connection established
+2025-09-01 23:44:46,552 - __main__ - INFO - 🚀 Starting ypricemagic Price Service
+2025-09-01 23:44:47,585 - __main__ - INFO - 🌐 Initializing Brownie network connection...
+2025-09-01 23:44:47,585 - __main__ - INFO - Connecting to 'electro' network...
+2025-09-01 23:44:49,810 - __main__ - INFO - ✅ Connected to Brownie network: electro
+2025-09-01 23:44:50,081 - __main__ - INFO - 📊 Chain info: height=23272835, id=1
+2025-09-01 23:44:50,225 - __main__ - INFO - 🌐 Web3 connection test: latest block = 23272835
+2025-09-01 23:44:50,225 - __main__ - INFO - 📦 Importing ypricemagic...
+2025-09-01 23:44:50,793 - dank_mids.envs - INFO - For your information, you can tweak your configuration for optimal performance using any of the envs below:
+2025-09-01 23:44:50,793 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_MULTICALL_SIZE`, default_value=10000, using_default=True)
+2025-09-01 23:44:50,793 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_JSONRPC_BATCH_SIZE`, default_value=500, using_default=True)
+2025-09-01 23:44:50,793 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_REQUESTS_PER_SECOND`, default_value=50, using_default=True)
+2025-09-01 23:44:50,793 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MIN_REQUESTS_PER_SECOND`, default_value=10, using_default=True)
+2025-09-01 23:44:50,793 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_GANACHE_FORK`, default_value=False, using_default=True)
+2025-09-01 23:44:50,793 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_AIOHTTP_TIMEOUT`, default_value=1200, using_default=True)
+2025-09-01 23:44:50,807 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_COLLECT_STATS`, default_value=False, using_default=True)
+2025-09-01 23:44:50,807 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_STUCK_CALL_TIMEOUT`, default_value=120, using_default=True)
+2025-09-01 23:44:50,807 - dank_mids.envs - INFO - More details can be found in dank_mids/ENVIRONMENT_VARIABLES.py
+2025-09-01 23:44:50,807 - dank_mids.envs - INFO - NOTE: You can disable these logs by setting the `TYPEDENVS_SHUTUP` env var to any value.
+2025-09-01 23:44:51,302 - typed_envs - INFO - EnvironmentVariable[int](name=`YPRICEMAGIC_GETLOGS_BATCH_SIZE`, default_value=0, using_default=True)
+2025-09-01 23:44:52,019 - __main__ - INFO - ✅ ypricemagic imported successfully
+2025-09-01 23:44:52,019 - __main__ - INFO - 🧪 Testing ypricemagic functionality...
+2025-09-01 23:44:52,019 - __main__ - INFO - 🔄 Checking for stale 'processing' requests from previous service instances...

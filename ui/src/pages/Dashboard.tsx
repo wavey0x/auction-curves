@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import InternalLink from "../components/InternalLink";
 import { useQuery } from "@tanstack/react-query";
 import {
   Home,
@@ -16,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { apiClient } from "../lib/api";
+import Pagination from "../components/Pagination";
 import StatsCard from "../components/StatsCard";
 import TakesTable from "../components/TakesTable";
 import AddressLink from "../components/AddressLink";
@@ -50,6 +52,9 @@ const Dashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewType>('active-rounds');
   const [takesPage, setTakesPage] = useState(1);
   const [takesPerPage] = useState(15);
+  const [auctionsPage, setAuctionsPage] = useState(1);
+  const [auctionsPerPage] = useState(25);
+  const [showUSD, setShowUSD] = useState(false);
 
   // Fetch data with React Query using new API
   const { data: systemStats, isLoading: statsLoading } = useQuery({
@@ -59,8 +64,8 @@ const Dashboard: React.FC = () => {
   });
 
   const { data: auctionsResponse, isLoading: auctionsLoading } = useQuery({
-    queryKey: ["auctions"],
-    queryFn: () => apiClient.getAuctions({ limit: 50 }),
+    queryKey: ["auctions", auctionsPage, auctionsPerPage],
+    queryFn: () => apiClient.getAuctions({ limit: auctionsPerPage, page: auctionsPage }),
     staleTime: 10000, // Cache for 10 seconds
   });
 
@@ -76,68 +81,22 @@ const Dashboard: React.FC = () => {
     staleTime: 300000, // Cache for 5 minutes - tokens rarely change
   });
 
-  // Get takes count for badge (always load for badge display)
+  // Get takes count for badge (from unified recent takes endpoint)
   const { data: takesCount } = useQuery({
     queryKey: ["recentTakesCount"],
     queryFn: async () => {
-      const activeAuctions = activeAuctionsResponse?.auctions || [];
-      let totalCount = 0;
-
-      // Get count from first few active auctions (already filtered server-side)
-      const limitedActiveAuctions = activeAuctions.slice(0, 5);
-
-      for (const auction of limitedActiveAuctions) {
-        try {
-          const takes = await apiClient.getAuctionTakes(
-            auction.address,
-            auction.chain_id,
-            undefined,
-            5
-          );
-          totalCount += takes.length;
-        } catch (error) {
-          console.warn(`Failed to fetch takes count for ${auction.address}:`, error);
-        }
-      }
-
-      return Math.min(totalCount, 25); // Cap at 25 to match full query
+      const takes = await apiClient.getRecentTakes(25);
+      return takes.length;
     },
-    enabled: !!activeAuctionsResponse?.auctions?.length,
-    staleTime: 10000, // Cache for 10 seconds
+    staleTime: 10000,
   });
 
-  // Get recent takes activity from auctions (only load when takes view is selected)
+  // Get recent takes (global, most recent first)
   const { data: allTakes, isLoading: takesLoading } = useQuery({
     queryKey: ["recentTakes"],
-    queryFn: async () => {
-      const activeAuctions = activeAuctionsResponse?.auctions || [];
-      const allTakes: AuctionTake[] = [];
-
-      // Get takes from more auctions for better pagination
-      const limitedActiveAuctions = activeAuctions.slice(0, 10);
-
-      for (const auction of limitedActiveAuctions) {
-        try {
-          const takes = await apiClient.getAuctionTakes(
-            auction.address,
-            auction.chain_id,
-            undefined,
-            15 // Get more takes per auction for pagination
-          );
-          allTakes.push(...takes);
-        } catch (error) {
-          console.warn(`Failed to fetch takes for ${auction.address}:`, error);
-        }
-      }
-
-      // Sort by timestamp and return all takes for pagination
-      return allTakes.sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-    },
-    enabled: !!activeAuctionsResponse?.auctions?.length && activeView === 'takes',
-    staleTime: 10000, // Cache for 10 seconds to prevent redundant fetches
+    queryFn: async () => apiClient.getRecentTakes(200),
+    enabled: activeView === 'takes',
+    staleTime: 10000,
   });
 
   // Paginate the takes
@@ -186,6 +145,7 @@ const Dashboard: React.FC = () => {
 
   const auctions = auctionsResponse?.auctions || [];
   const activeAuctions = activeAuctionsResponse?.auctions || [];
+  const auctionsTotal = auctionsResponse?.total || 0;
 
   // Get active rounds from server-filtered active auctions
   const activeRounds = activeAuctions
@@ -198,12 +158,8 @@ const Dashboard: React.FC = () => {
       want_token: ah.want_token,
     }));
 
-  const totalVolume = auctions.reduce((sum, ah) => {
-    return (
-      sum +
-      (parseFloat(ah.current_round?.available_amount || "0") / 10 ** 18) * 1000
-    ); // Mock volume calc
-  }, 0);
+  // Get real USD volume from API
+  const totalVolumeUSD = systemStats?.total_volume_usd || 0;
 
   const chainInfo = getChainInfo(31337); // Using Anvil chain
 
@@ -225,7 +181,7 @@ const Dashboard: React.FC = () => {
 
         <StatsCard
           title="Total Volume"
-          value={`$${Math.round(totalVolume).toLocaleString()}`}
+          value={formatUSD(totalVolumeUSD)}
           icon={DollarSign}
         />
 
@@ -298,13 +254,13 @@ const Dashboard: React.FC = () => {
             >
               <Gavel className="h-4 w-4" />
               <span>Auctions</span>
-              {auctions && auctions.length > 0 && (
+              {auctionsTotal > 0 && (
                 <span className={`${
                   activeView === 'all-auctions'
                     ? 'bg-white/20 text-white'
                     : 'bg-primary-500/20 text-primary-400'
                 } text-xs px-1.5 py-0.5 rounded-full`}>
-                  {auctions.length}
+                  {auctionsTotal}
                 </span>
               )}
             </button>
@@ -356,23 +312,25 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td>
-                              <Link
+                              <InternalLink
                                 to={`/round/${round.chain_id}/${round.auction}/${round.round_id}`}
-                                className="inline-flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-800/30 rounded-lg transition-all duration-200 group"
+                                variant="round"
+                                className="font-mono text-base font-semibold"
                               >
-                                <span className="font-mono text-base font-semibold text-gray-300 group-hover:text-primary-300">
-                                  R{round.round_id}
-                                </span>
-                              </Link>
+                                R{round.round_id}
+                              </InternalLink>
                             </td>
 
                             <td>
-                              <Link
+                              <InternalLink
                                 to={`/auction/${round.chain_id}/${round.auction}`}
-                                className="font-mono text-sm text-gray-300 hover:text-primary-300 transition-colors"
+                                variant="address"
+                                className="font-mono text-sm"
+                                address={round.auction}
+                                chainId={round.chain_id}
                               >
                                 {formatAddress(round.auction)}
-                              </Link>
+                              </InternalLink>
                             </td>
 
                             <td>
@@ -383,7 +341,7 @@ const Dashboard: React.FC = () => {
                                   tokenClassName="font-medium text-gray-200 text-sm"
                                 />
                                 <span className="text-gray-500">→</span>
-                                <span className="font-medium text-yellow-400 text-sm">
+                                <span className="font-medium text-gray-200 text-sm">
                                   {wantSymbol}
                                 </span>
                               </div>
@@ -469,7 +427,7 @@ const Dashboard: React.FC = () => {
                               {timeRemaining > 0 ? (
                                 <div className="text-sm">
                                   <div className="font-medium text-success-400">
-                                    {timeRemaining >= 3600 ? (
+                                    {timeRemaining > 3600 ? (
                                       `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m`
                                     ) : (
                                       `${Math.floor(timeRemaining / 60)}m ${timeRemaining % 60}s`
@@ -477,11 +435,22 @@ const Dashboard: React.FC = () => {
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {round.seconds_elapsed !== undefined && round.seconds_elapsed !== null ? (
-                                      `${Math.floor(round.seconds_elapsed / 60)}m elapsed`
+                                      round.seconds_elapsed > 3600 ? (
+                                        `${Math.floor(round.seconds_elapsed / 3600)}h ${Math.floor((round.seconds_elapsed % 3600) / 60)}m elapsed`
+                                      ) : (
+                                        `${Math.floor(round.seconds_elapsed / 60)}m ${round.seconds_elapsed % 60}s elapsed`
+                                      )
                                     ) : round.round_start ? (
-                                      `${Math.floor((Math.floor(Date.now() / 1000) - round.round_start) / 60)}m elapsed`
+                                      (() => {
+                                        const elapsed = Math.floor(Date.now() / 1000) - round.round_start;
+                                        return elapsed > 3600 ? (
+                                          `${Math.floor(elapsed / 3600)}h ${Math.floor((elapsed % 3600) / 60)}m elapsed`
+                                        ) : (
+                                          `${Math.floor(elapsed / 60)}m ${elapsed % 60}s elapsed`
+                                        );
+                                      })()
                                     ) : (
-                                      '0m elapsed'
+                                      '0s elapsed'
                                     )}
                                   </div>
                                 </div>
@@ -516,11 +485,23 @@ const Dashboard: React.FC = () => {
                         <tr>
                           <th className="border-b border-gray-700 px-0 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-[22px] min-w-[22px] max-w-[22px]"><span className="sr-only">Chain</span></th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Transaction</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Sale</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Take</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Auction</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Tokens</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
+                          <th 
+                            className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors"
+                            onClick={() => setShowUSD(!showUSD)}
+                            title="Click to toggle between token and USD values"
+                          >
+                            Amount {showUSD ? '($)' : '(T)'}
+                          </th>
+                          <th 
+                            className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors"
+                            onClick={() => setShowUSD(!showUSD)}
+                            title="Click to toggle between token and USD values"
+                          >
+                            Price {showUSD ? '($)' : '(T)'}
+                          </th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Taker</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Time</th>
                         </tr>
@@ -587,7 +568,7 @@ const Dashboard: React.FC = () => {
                                     {take.from_token_symbol || 'Token'}
                                   </span>
                                   <span className="text-gray-500">→</span>
-                                  <span className="font-medium text-yellow-400">
+                                  <span className="font-medium text-gray-300">
                                     {take.to_token_symbol || 'USDC'}
                                   </span>
                                 </div>
@@ -595,18 +576,41 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="text-sm font-medium text-gray-200">
-                                {formatReadableTokenAmount(take.amount_taken, 3)}
+                              <div className="text-sm">
+                                <div className="font-medium text-gray-200">
+                                  {showUSD ? (
+                                    take.amount_taken_usd ? (
+                                      formatUSD(parseFloat(take.amount_taken_usd))
+                                    ) : (
+                                      <span className="text-gray-500">—</span>
+                                    )
+                                  ) : (
+                                    `${formatReadableTokenAmount(take.amount_taken, 3)} ${take.from_token_symbol || ''}`
+                                  )}
+                                </div>
+                                {showUSD && (
+                                  <div className="text-xs text-gray-500">
+                                    ({take.from_token_symbol || 'token'})
+                                  </div>
+                                )}
                               </div>
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
                               <div className="text-sm">
                                 <div className="font-medium text-gray-200">
-                                  {formatReadableTokenAmount(take.price, 4)}
+                                  {showUSD ? (
+                                    take.amount_paid_usd && take.amount_taken ? (
+                                      formatUSD(parseFloat(take.amount_paid_usd) / parseFloat(take.amount_taken))
+                                    ) : (
+                                      <span className="text-gray-500">—</span>
+                                    )
+                                  ) : (
+                                    `${formatReadableTokenAmount(take.price, 4)} ${take.to_token_symbol || ''}`
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {formatUSD(parseFloat(take.price) * 1.5)}
+                                  / {take.from_token_symbol || 'token'}
                                 </div>
                               </div>
                             </td>
@@ -635,68 +639,16 @@ const Dashboard: React.FC = () => {
                     </table>
                   </div>
 
-                  {/* Compact Pagination */}
+                  {/* Unified Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-gray-800/30 border-t border-gray-700/50">
-                      <div className="text-sm text-gray-500">
-                        Showing {startIndex + 1}-{Math.min(endIndex, totalTakes)} of {totalTakes} takes
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setTakesPage(Math.max(1, takesPage - 1))}
-                          disabled={takesPage === 1}
-                          className={`p-1.5 rounded ${
-                            takesPage === 1
-                              ? 'text-gray-600 cursor-not-allowed'
-                              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
-                          } transition-colors`}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        
-                        <div className="flex items-center space-x-1">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            let pageNum;
-                            if (totalPages <= 5) {
-                              pageNum = i + 1;
-                            } else if (takesPage <= 3) {
-                              pageNum = i + 1;
-                            } else if (takesPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i;
-                            } else {
-                              pageNum = takesPage - 2 + i;
-                            }
-                            
-                            return (
-                              <button
-                                key={pageNum}
-                                onClick={() => setTakesPage(pageNum)}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  pageNum === takesPage
-                                    ? 'bg-primary-500 text-white'
-                                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
-                                } transition-colors min-w-[24px]`}
-                              >
-                                {pageNum}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        
-                        <button
-                          onClick={() => setTakesPage(Math.min(totalPages, takesPage + 1))}
-                          disabled={takesPage === totalPages}
-                          className={`p-1.5 rounded ${
-                            takesPage === totalPages
-                              ? 'text-gray-600 cursor-not-allowed'
-                              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
-                          } transition-colors`}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
+                    <Pagination
+                      currentPage={takesPage}
+                      canGoPrev={takesPage > 1}
+                      canGoNext={takesPage < totalPages}
+                      onPrev={() => setTakesPage(Math.max(1, takesPage - 1))}
+                      onNext={() => setTakesPage(Math.min(totalPages, takesPage + 1))}
+                      summaryText={`Showing ${startIndex + 1}-${Math.min(endIndex, totalTakes)} of ${totalTakes} takes`}
+                    />
                   )}
                 </>
               ) : (
@@ -713,7 +665,19 @@ const Dashboard: React.FC = () => {
           {activeView === 'all-auctions' && (
             <>
               {auctions && auctions.length > 0 ? (
-                <AuctionsTable auctions={auctions} />
+                <>
+                  <AuctionsTable auctions={auctions} />
+                  {(auctionsResponse?.total || 0) > (auctionsResponse?.per_page || auctionsPerPage) && (
+                    <Pagination
+                      currentPage={auctionsResponse?.page || auctionsPage}
+                      canGoPrev={(auctionsResponse?.page || auctionsPage) > 1}
+                      canGoNext={!!auctionsResponse?.has_next}
+                      onPrev={() => setAuctionsPage(Math.max(1, (auctionsResponse?.page || auctionsPage) - 1))}
+                      onNext={() => setAuctionsPage((auctionsResponse?.page || auctionsPage) + 1)}
+                      summaryText={`Showing ${(auctionsResponse!.page - 1) * auctionsResponse!.per_page + 1}-${Math.min(auctionsResponse!.page * auctionsResponse!.per_page, auctionsResponse!.total)} of ${auctionsResponse!.total} auctions`}
+                    />
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <Home className="h-16 w-16 text-gray-600 mx-auto mb-4" />

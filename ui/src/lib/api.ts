@@ -131,6 +131,22 @@ class APIClient {
     return response.json()
   }
 
+  // Recent takes across all auctions
+  async getRecentTakes(limit: number = 50, chainId?: number): Promise<AuctionTake[]> {
+    const searchParams = new URLSearchParams()
+    searchParams.append('limit', String(limit))
+    if (chainId !== undefined) searchParams.append('chain_id', String(chainId))
+    const url = `/activity/takes?${searchParams.toString()}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch recent takes: ${response.statusText}`)
+    }
+    return response.json()
+  }
+
   // Chain endpoints
   async getChains(): Promise<{ chains: Record<number, any>, count: number }> {
     const response = await fetch(`${BASE_URL}/chains`)

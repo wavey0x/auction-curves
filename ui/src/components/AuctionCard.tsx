@@ -81,7 +81,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
             
             <div className="flex items-center space-x-1">
               <Coins className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs font-medium text-yellow-400">
+              <span className="text-xs font-medium text-gray-200">
                 {auction.want_token.symbol}
               </span>
             </div>

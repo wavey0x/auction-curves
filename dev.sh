@@ -23,6 +23,7 @@ SERVICES=("postgres" "api" "indexer" "ui" "prices")
 ATTACH_SESSION=false
 SKIP_UI=false
 USE_TMUX=true
+USE_MOCK_DATA=false
 
 # Create logs directory
 mkdir -p "$LOG_DIR"
@@ -34,6 +35,7 @@ show_help() {
 Usage: ./dev.sh [OPTIONS]
 
 OPTIONS:
+  --mock          Use mock data provider (no database required)
   --no-ui         Skip starting the React UI
   --attach        Attach to tmux session after starting services
   --no-tmux       Use background processes instead of tmux
@@ -48,6 +50,7 @@ SERVICES MANAGED:
 
 EXAMPLES:
   ./dev.sh                    # Start all services with tmux
+  ./dev.sh --mock             # Start with mock data (no database)
   ./dev.sh --no-ui            # Start without React UI
   ./dev.sh --attach           # Start and attach to session
   ./dev.sh --no-tmux          # Use background processes
@@ -62,6 +65,10 @@ EOF
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --mock)
+            USE_MOCK_DATA=true
+            shift
+            ;;
         --no-ui)
             SKIP_UI=true
             shift
@@ -86,8 +93,33 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Progress tracking
+TOTAL_STEPS=0
+CURRENT_STEP=0
+
+# Calculate total steps based on configuration
+calculate_steps() {
+    TOTAL_STEPS=7  # Base steps: env, prereq, db, cleanup, tmux, api, indexer, pricing
+    if [ "$SKIP_UI" = false ]; then
+        TOTAL_STEPS=$((TOTAL_STEPS + 1))  # UI service
+    fi
+    if [ "$USE_MOCK_DATA" = true ]; then
+        TOTAL_STEPS=$((TOTAL_STEPS - 2))  # No indexer/pricing in mock mode
+    fi
+}
+
 log() {
     echo -e "${BLUE}[$(date +'%H:%M:%S')]${NC} $1"
+}
+
+step() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    local progress="[$CURRENT_STEP/$TOTAL_STEPS]"
+    local bar_length=20
+    local filled=$((CURRENT_STEP * bar_length / TOTAL_STEPS))
+    local empty=$((bar_length - filled))
+    local bar="$(printf '%*s' $filled '' | tr ' ' '█')$(printf '%*s' $empty '' | tr ' ' '░')"
+    echo -e "${BLUE}[$(date +'%H:%M:%S')] $progress [$bar] $1${NC}"
 }
 
 error() {
@@ -119,16 +151,9 @@ wait_for_service() {
     local max_attempts=${3:-30}
     local attempt=1
     
-    log "Waiting for $name to start..."
-    
     while [ $attempt -le $max_attempts ]; do
         if curl -s "$url" >/dev/null 2>&1; then
-            success "$name is ready"
             return 0
-        fi
-        
-        if [ $attempt -eq 1 ]; then
-            log "Attempting to connect to $name..."
         fi
         
         sleep 2
@@ -156,11 +181,16 @@ load_environment() {
     export APP_MODE="dev"
     
     # Use dev-specific variables
-    export DATABASE_URL="${DEV_DATABASE_URL:-postgresql://wavey@localhost:5432/auction_dev}"
+    export DATABASE_URL="${DEV_DATABASE_URL:-postgresql://wavey@localhost:5433/auction_dev}"
     export NETWORKS_ENABLED="${DEV_NETWORKS_ENABLED:-local}"
     export CORS_ORIGINS="${DEV_CORS_ORIGINS:-http://localhost:3000}"
     
-    success "Environment loaded (mode: $APP_MODE)"
+    # Map production Ethereum variables for development indexing
+    export ETHEREUM_RPC_URL="${PROD_ETHEREUM_RPC_URL:-https://guest:guest@eth.wavey.info}"
+    export ETHEREUM_FACTORY_ADDRESS="${PROD_ETHEREUM_FACTORY_ADDRESS:-0xCfA510188884F199fcC6e750764FAAbE6e56ec40}"
+    export ETHEREUM_START_BLOCK="${PROD_ETHEREUM_START_BLOCK:-21835027}"
+    
+    log "Environment loaded (mode: $APP_MODE)"
     log "Database: $DATABASE_URL"
     log "Networks: $NETWORKS_ENABLED"
 }
@@ -192,7 +222,6 @@ check_prerequisites() {
         exit 1
     fi
     
-    success "Prerequisites check passed"
 }
 
 # Check database connectivity
@@ -247,7 +276,6 @@ cleanup_existing() {
     pkill -f "vite" 2>/dev/null || true
     
     sleep 2
-    success "Cleanup completed"
 }
 
 # Setup tmux session
@@ -280,14 +308,17 @@ setup_tmux() {
     # Select first pane
     tmux select-pane -t "$SESSION_NAME:main" -t 0
     
-    success "Tmux session created with multiple panes"
 }
 
 # Start API service
 start_api() {
-    log "Starting API service..."
-    
-    local cmd="cd '$SCRIPT_DIR/monitoring/api' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 app.py"
+    if [ "$USE_MOCK_DATA" = true ]; then
+        step "Starting API service (mock mode)..."
+        local cmd="cd '$SCRIPT_DIR/monitoring/api' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 app.py --mock"
+    else
+        step "Starting API service (database mode)..."
+        local cmd="cd '$SCRIPT_DIR/monitoring/api' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 app.py"
+    fi
     local log_file="$LOG_DIR/api_$(date +%Y%m%d_%H%M%S).log"
     
     if [ "$USE_TMUX" = true ]; then
@@ -300,7 +331,7 @@ start_api() {
     # Wait for API to be ready
     sleep 5
     if wait_for_service "http://localhost:8000/health" "API"; then
-        success "API service started on port 8000"
+        success "API service ready on port 8000"
     else
         error "Failed to start API service"
         exit 1
@@ -309,7 +340,11 @@ start_api() {
 
 # Start indexer service
 start_indexer() {
-    log "Starting indexer service..."
+    if [ "$USE_MOCK_DATA" = true ]; then
+        return 0
+    fi
+    
+    step "Starting indexer service..."
     
     local cmd="cd '$SCRIPT_DIR/indexer' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 indexer.py --network \${DEV_INDEXER_NETWORKS:-ethereum,local}"
     local log_file="$LOG_DIR/indexer_$(date +%Y%m%d_%H%M%S).log"
@@ -322,12 +357,16 @@ start_indexer() {
     fi
     
     sleep 3
-    success "Indexer service started"
+    success "Indexer service ready"
 }
 
 # Start pricing services
 start_pricing() {
-    log "Starting pricing services..."
+    if [ "$USE_MOCK_DATA" = true ]; then
+        return 0
+    fi
+    
+    step "Starting pricing services..."
     
     local cmd="cd '$SCRIPT_DIR' && ./scripts/run_price_service.sh --pricer all --parallel"
     local log_file="$LOG_DIR/pricing_$(date +%Y%m%d_%H%M%S).log"
@@ -340,17 +379,16 @@ start_pricing() {
     fi
     
     sleep 2
-    success "Pricing services started"
+    success "Pricing services ready"
 }
 
 # Start UI service
 start_ui() {
     if [ "$SKIP_UI" = true ]; then
-        log "Skipping UI service (--no-ui flag)"
         return 0
     fi
     
-    log "Starting React UI..."
+    step "Starting React UI..."
     
     local cmd="cd '$SCRIPT_DIR/ui' && npm install && npm run dev"
     local log_file="$LOG_DIR/ui_$(date +%Y%m%d_%H%M%S).log"
@@ -365,7 +403,7 @@ start_ui() {
     # Wait for UI to be ready
     sleep 10
     if wait_for_service "http://localhost:3000" "React UI"; then
-        success "React UI started on port 3000"
+        success "React UI ready on port 3000"
     else
         warn "React UI may still be starting, check logs if needed"
     fi
@@ -373,8 +411,6 @@ start_ui() {
 
 # Show service summary
 show_summary() {
-    echo
-    success "🎉 All services started successfully!"
     echo
     log "📍 Access Points:"
     if [ "$SKIP_UI" = false ]; then
@@ -442,12 +478,24 @@ main() {
     echo "🏛️ Auction System Development Orchestrator"
     echo "=============================================="
     
+    calculate_steps
+    
+    step "Loading environment (mode: ${APP_MODE:-dev})"
     load_environment
+    
+    step "Checking prerequisites..."
     check_prerequisites
-    check_database
+    
+    if [ "$USE_MOCK_DATA" = false ]; then
+        step "Verifying database connection..."
+        check_database
+    fi
+    
+    step "Cleaning up existing processes..."
     cleanup_existing
     
     if [ "$USE_TMUX" = true ]; then
+        step "Setting up tmux session: $SESSION_NAME"
         setup_tmux
     fi
     
@@ -457,6 +505,7 @@ main() {
     start_pricing
     start_ui
     
+    echo
     show_summary
     
     # Handle session attachment

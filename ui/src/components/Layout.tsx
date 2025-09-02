@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Gavel, Activity, TrendingUp, Settings } from 'lucide-react'
+import SettingsModal from './SettingsModal'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -12,6 +13,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     // Add more nav items as needed
   ]
+
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col">
@@ -62,7 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="text-gray-400">Live</span>
               </div>
               
-              <button className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 rounded-lg transition-colors">
+              <button onClick={() => setSettingsOpen(true)} className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 rounded-lg transition-colors" aria-label="Open settings">
                 <Settings className="h-5 w-5" />
               </button>
             </div>
@@ -88,6 +91,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
       </footer>
+
+      {/* Settings Modal */}
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

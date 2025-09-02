@@ -55,7 +55,7 @@ const StackedProgressMeter: React.FC<StackedProgressMeterProps> = ({
       {/* Amount Sold Progress Bar */}
       <div>
         <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-green-400 font-medium">Taken ({totalTakes})</span>
+          <span className="text-xs text-green-400 font-medium">Takes ({totalTakes})</span>
           <span className="text-xs text-green-400 font-medium">{amountProgress.toFixed(0)}%</span>
         </div>
         <div className={`w-full bg-gray-700 rounded-full ${height}`}>

@@ -290,23 +290,68 @@ class DatabaseQueries:
     
     @staticmethod
     async def get_system_stats(db: AsyncSession, chain_id: int = None):
-        """Get overall system statistics using optimized subqueries"""
-        chain_filter = "WHERE chain_id = :chain_id" if chain_id else ""
-        auction_filter = "WHERE auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else ")")
-        
-        query = text(f"""
-            SELECT 
-                (SELECT COUNT(*) FROM auctions {chain_filter}) as total_auctions,
-                (SELECT COUNT(DISTINCT auction_address) FROM rounds {auction_filter} AND round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND available_amount > 0) as active_auctions,
-                (SELECT COUNT(DISTINCT address) FROM tokens {chain_filter}) as unique_tokens,
-                (SELECT COUNT(*) FROM rounds {auction_filter}) as total_rounds,
-                (SELECT COUNT(*) FROM takes {auction_filter}) as total_takes,
-                (SELECT COUNT(DISTINCT taker) FROM takes {auction_filter}) as total_participants
-        """)
-        
-        params = {"chain_id": chain_id} if chain_id else {}
-        result = await db.execute(query, params)
-        return result.fetchone()
+        """Get overall system statistics using safe queries that handle missing tables"""
+        try:
+            # First check which tables exist
+            table_check_query = text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name IN ('auctions', 'rounds', 'takes', 'tokens', 'vw_takes')
+            """)
+            result = await db.execute(table_check_query)
+            existing_tables = {row[0] for row in result.fetchall()}
+            
+            chain_filter = "WHERE chain_id = :chain_id" if chain_id else ""
+            
+            # Build safe subqueries based on existing tables
+            auctions_count = f"(SELECT COUNT(*) FROM auctions {chain_filter})" if 'auctions' in existing_tables else "0"
+            tokens_count = f"(SELECT COUNT(DISTINCT address) FROM tokens {chain_filter})" if 'tokens' in existing_tables else "0"
+            
+            # Active auctions query - more complex logic needed
+            if 'rounds' in existing_tables and 'auctions' in existing_tables:
+                auction_filter = "auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else ")")
+                active_auctions_count = f"(SELECT COUNT(DISTINCT auction_address) FROM rounds WHERE {auction_filter} AND available_amount > 0)"
+                rounds_count = f"(SELECT COUNT(*) FROM rounds WHERE {auction_filter})"
+            else:
+                active_auctions_count = "0"
+                rounds_count = "0"
+            
+            if 'takes' in existing_tables and 'auctions' in existing_tables:
+                auction_filter = "auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else ")")
+                takes_count = f"(SELECT COUNT(*) FROM takes WHERE {auction_filter})"
+                participants_count = f"(SELECT COUNT(DISTINCT taker) FROM takes WHERE {auction_filter})"
+            else:
+                takes_count = "0"
+                participants_count = "0"
+            
+            if 'vw_takes' in existing_tables and 'auctions' in existing_tables:
+                auction_filter = "auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else "") + ")"
+                volume_usd = f"(SELECT COALESCE(SUM(amount_paid_usd), 0) FROM vw_takes WHERE {auction_filter})"
+            else:
+                volume_usd = "0"
+            
+            query = text(f"""
+                SELECT 
+                    {auctions_count} as total_auctions,
+                    {active_auctions_count} as active_auctions,
+                    {tokens_count} as unique_tokens,
+                    {rounds_count} as total_rounds,
+                    {takes_count} as total_takes,
+                    {participants_count} as total_participants,
+                    {volume_usd} as total_volume_usd
+            """)
+            
+            params = {"chain_id": chain_id} if chain_id else {}
+            result = await db.execute(query, params)
+            return result.fetchone()
+            
+        except Exception as e:
+            logger.warning(f"Error querying system stats, returning zeros: {e}")
+            # Return a mock result with all zeros if queries fail
+            from collections import namedtuple
+            StatsResult = namedtuple('StatsResult', ['total_auctions', 'active_auctions', 'unique_tokens', 'total_rounds', 'total_takes', 'total_participants', 'total_volume_usd'])
+            return StatsResult(0, 0, 0, 0, 0, 0, 0.0)
     
     @staticmethod
     async def get_recent_takes_activity(db: AsyncSession, limit: int = 25, chain_id: int = None):
@@ -342,6 +387,52 @@ class DatabaseQueries:
         result = await db.execute(query, params)
         return result.fetchall()
 
+    @staticmethod
+    async def get_recent_takes(db: AsyncSession, limit: int = 100, chain_id: int = None):
+        """Get recent takes across all auctions from vw_takes for consistent shape"""
+        chain_filter = "WHERE chain_id = :chain_id" if chain_id else ""
+        query = text(f"""
+            SELECT 
+                take_id,
+                auction_address,
+                chain_id,
+                round_id,
+                take_seq,
+                taker,
+                from_token,
+                to_token,
+                amount_taken,
+                amount_paid,
+                price,
+                timestamp,
+                seconds_from_round_start,
+                block_number,
+                transaction_hash,
+                log_index,
+                round_kicked_at,
+                from_symbol,
+                from_name,
+                from_decimals,
+                to_symbol,
+                to_name,
+                to_decimals,
+                from_token_price_usd,
+                want_token_price_usd,
+                amount_taken_usd,
+                amount_paid_usd,
+                price_differential_usd,
+                price_differential_percent
+            FROM vw_takes
+            {chain_filter}
+            ORDER BY timestamp DESC
+            LIMIT :limit
+        """)
+        params = {"limit": limit}
+        if chain_id:
+            params["chain_id"] = chain_id
+        result = await db.execute(query, params)
+        return result.fetchall()
+
 # Initialize database connection check
 async def init_database():
     """Initialize database connection and verify setup"""
@@ -364,18 +455,32 @@ async def init_database():
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any
 
-# Import models - we'll need these for the consolidated version
 try:
-    from models.auction import (
-        AuctionListItem,
+    from monitoring.api.models.auction import (
         AuctionResponse,
-        Take,
         AuctionRoundInfo,
+        AuctionActivity,
+        AuctionParameters,
         TokenInfo,
         SystemStats,
-        AuctionParameters,
-        AuctionActivity
+        Take,
+        TakeMessage
     )
+except ImportError:
+    # When running from within the api directory
+    from models.auction import (
+        AuctionResponse,
+        AuctionRoundInfo,
+        AuctionActivity,
+        AuctionParameters,
+        TokenInfo,
+        SystemStats,
+        Take,
+        TakeMessage
+    )
+
+# Import config functions
+try:
     from config import get_settings, is_mock_mode, is_development_mode
 except ImportError:
     # Handle imports for when running standalone
@@ -432,6 +537,15 @@ class DataProvider(ABC):
     @abstractmethod
     async def get_system_stats(self, chain_id: Optional[int] = None) -> 'SystemStats':
         """Get system statistics"""
+        pass
+
+    @abstractmethod
+    async def get_recent_takes(
+        self,
+        limit: int = 100,
+        chain_id: Optional[int] = None
+    ) -> List['Take']:
+        """Get recent takes across all auctions"""
         pass
 
 
@@ -539,9 +653,15 @@ class MockDataProvider(DataProvider):
             total_auctions=5,
             active_auctions=2,
             total_participants=50,
-            total_volume="1000000000",
-            total_takes=100
+            total_takes=100,
+            unique_tokens=10,
+            total_rounds=15,
+            total_volume_usd=1250000.50
         )
+
+    async def get_recent_takes(self, limit: int = 100, chain_id: Optional[int] = None) -> List['Take']:
+        # Return empty list in mock mode for now
+        return []
 
 
 class DatabaseDataProvider(DataProvider):
@@ -775,7 +895,7 @@ class DatabaseDataProvider(DataProvider):
                         ON LOWER(ar.auction_address) = LOWER(ahp.auction_address) 
                         AND ar.chain_id = ahp.chain_id
                     WHERE LOWER(ar.auction_address) = LOWER(:auction_address)
-                        AND ar.from_token = :from_token
+                        AND LOWER(ar.from_token) = LOWER(:from_token)
                         {chain_filter}
                     ORDER BY ar.round_id DESC
                     LIMIT :limit
@@ -833,7 +953,8 @@ class DatabaseDataProvider(DataProvider):
                         unique_tokens=0,
                         total_rounds=0,
                         total_takes=0,
-                        total_participants=0
+                        total_participants=0,
+                        total_volume_usd=0.0
                     )
                 
                 return SystemStats(
@@ -842,31 +963,81 @@ class DatabaseDataProvider(DataProvider):
                     unique_tokens=stats_data.unique_tokens or 0,
                     total_rounds=stats_data.total_rounds or 0,
                     total_takes=stats_data.total_takes or 0,
-                    total_participants=stats_data.total_participants or 0
+                    total_participants=stats_data.total_participants or 0,
+                    total_volume_usd=float(stats_data.total_volume_usd) if stats_data.total_volume_usd else 0.0
                 )
         except Exception as e:
             logger.error(f"Database error in get_system_stats: {e}")
             raise Exception(f"Failed to fetch system stats from database: {e}")
 
+    async def get_recent_takes(self, limit: int = 100, chain_id: Optional[int] = None) -> List[Take]:
+        """Get recent takes across all auctions using vw_takes"""
+        try:
+            async with AsyncSessionLocal() as session:
+                rows = await DatabaseQueries.get_recent_takes(session, limit, chain_id)
+                takes: List[Take] = []
+                for r in rows:
+                    takes.append(
+                        Take(
+                            take_id=str(r.take_id) if r.take_id else f"take_{r.take_seq}",
+                            auction=r.auction_address,
+                            chain_id=r.chain_id,
+                            round_id=r.round_id,
+                            take_seq=r.take_seq,
+                            taker=r.taker,
+                            amount_taken=str(r.amount_taken),
+                            amount_paid=str(r.amount_paid),
+                            price=str(r.price),
+                            timestamp=r.timestamp.isoformat() if hasattr(r.timestamp, 'isoformat') else str(r.timestamp),
+                            tx_hash=r.transaction_hash,
+                            block_number=r.block_number,
+                            from_token=r.from_token,
+                            to_token=r.to_token,
+                            from_token_symbol=getattr(r, 'from_symbol', None),
+                            from_token_name=getattr(r, 'from_name', None),
+                            from_token_decimals=getattr(r, 'from_decimals', None),
+                            to_token_symbol=getattr(r, 'to_symbol', None),
+                            to_token_name=getattr(r, 'to_name', None),
+                            to_token_decimals=getattr(r, 'to_decimals', None),
+                            from_token_price_usd=str(r.from_token_price_usd) if getattr(r, 'from_token_price_usd', None) is not None else None,
+                            want_token_price_usd=str(r.want_token_price_usd) if getattr(r, 'want_token_price_usd', None) is not None else None,
+                            amount_taken_usd=str(r.amount_taken_usd) if getattr(r, 'amount_taken_usd', None) is not None else None,
+                            amount_paid_usd=str(r.amount_paid_usd) if getattr(r, 'amount_paid_usd', None) is not None else None,
+                            price_differential_usd=str(r.price_differential_usd) if getattr(r, 'price_differential_usd', None) is not None else None,
+                            price_differential_percent=float(r.price_differential_percent) if getattr(r, 'price_differential_percent', None) is not None else None
+                        )
+                    )
+                return takes
+        except Exception as e:
+            logger.error(f"Database error in get_recent_takes: {e}")
+            raise Exception(f"Failed to fetch recent takes from database: {e}")
+
 # Data service factory
-def get_data_provider() -> DataProvider:
-    """Get the appropriate data provider based on configuration"""
+def get_data_provider(force_mode: Optional[str] = None) -> DataProvider:
+    """Get the appropriate data provider based on configuration and force_mode
+    
+    Args:
+        force_mode: "mock" to force MockDataProvider, None for default database mode
+    """
+    if force_mode == "mock":
+        logger.info("Using MockDataProvider (forced by --mock flag)")
+        return MockDataProvider()
+    
+    # Default: use database
     try:
         from config import get_settings
         settings = get_settings()
-        
-        # Check if we have a valid database URL  
         database_url = settings.get_effective_database_url()
-        if database_url:
-            logger.info(f"Using DatabaseDataProvider with database: {database_url}")
-            return DatabaseDataProvider()
-        else:
-            logger.info("No database URL configured, using MockDataProvider")
-            return MockDataProvider()
-    except ImportError:
-        # Fallback to mock if config is not available
-        logger.warning("Config not available, using MockDataProvider")
-        return MockDataProvider()
+        
+        if not database_url:
+            raise RuntimeError("Database URL required but not configured")
+        
+        logger.info(f"Using DatabaseDataProvider with database: {database_url}")
+        return DatabaseDataProvider()
+            
+    except Exception as e:
+        logger.error(f"Database provider initialization failed: {e}")
+        raise RuntimeError(f"Cannot initialize database provider: {e}")
 
 
 if __name__ == "__main__":
