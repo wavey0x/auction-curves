@@ -105,6 +105,7 @@ class AuctionResponse(BaseModel):
     chain_id: int = Field(..., description="Chain ID where this Auction is deployed")
     factory_address: Optional[str] = Field(None, description="Factory that deployed this Auction")
     deployer: str = Field(..., description="Address that deployed the Auction")
+    governance: Optional[str] = Field(None, description="Governance address that owns this Auction")
     
     # Token information
     from_tokens: List[TokenInfo] = Field(default_factory=list, description="Enabled tokens for sale")

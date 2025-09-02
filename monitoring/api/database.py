@@ -109,7 +109,7 @@ class DatabaseQueries:
         chain_filter = "AND vw.chain_id = :chain_id" if chain_id else ""
         
         query = text(f"""
-            SELECT vw.*, a.timestamp as deployed_timestamp, a.decay_rate
+            SELECT vw.*, a.timestamp as deployed_timestamp, a.decay_rate, a.governance
             FROM vw_auctions vw
             JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
             WHERE LOWER(vw.auction_address) = LOWER(:auction_address)
@@ -641,6 +641,7 @@ class MockDataProvider(DataProvider):
             address=auction_address,
             chain_id=chain_id,
             deployer="0x1234567890123456789012345678901234567890",
+            governance="0x9876543210987654321098765432109876543210",
             from_tokens=self.mock_tokens[:2],
             want_token=self.mock_tokens[2],
             parameters=AuctionParameters(
@@ -853,6 +854,7 @@ class DatabaseDataProvider(DataProvider):
                     address=auction_address,
                     chain_id=chain_id,
                     deployer=auction_data.deployer or "0x0000000000000000000000000000000000000000",
+                    governance=getattr(auction_data, 'governance', None),
                     from_tokens=from_tokens,
                     want_token=want_token,
                     parameters=parameters,

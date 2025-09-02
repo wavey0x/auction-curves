@@ -20,6 +20,7 @@ import { apiClient } from "../lib/api";
 import Pagination from "../components/Pagination";
 import StatsCard from "../components/StatsCard";
 import TakesTable from "../components/TakesTable";
+import StandardTxHashLink from "../components/StandardTxHashLink";
 import AddressLink from "../components/AddressLink";
 import AuctionsTable from "../components/AuctionsTable";
 import StackedProgressMeter from "../components/StackedProgressMeter";
@@ -435,8 +436,8 @@ const Dashboard: React.FC = () => {
 
                             <td>
                               {timeRemaining > 0 ? (
-                                <div className="text-sm">
-                                  <div className="font-medium text-success-400">
+                                <div>
+                                  <div className="font-medium text-white text-base">
                                     {timeRemaining > 3600 ? (
                                       `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m`
                                     ) : (
@@ -612,23 +613,11 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="flex items-center space-x-2">
-                                {getChainInfo(take.chain_id).explorer !== "#" ? (
-                                  <a
-                                    href={getTxLink(take.tx_hash, take.chain_id)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
-                                    title="View transaction"
-                                  >
-                                    <span>{formatAddress(take.tx_hash)}</span>
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                ) : (
-                                  <span className="font-mono text-sm text-gray-400">
-                                    {formatAddress(take.tx_hash)}
-                                  </span>
-                                )}
+                              <div className="flex justify-center">
+                                <StandardTxHashLink
+                                  txHash={take.tx_hash}
+                                  chainId={take.chain_id}
+                                />
                               </div>
                             </td>
 

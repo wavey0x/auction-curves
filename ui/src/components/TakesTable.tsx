@@ -241,7 +241,6 @@ const TakesTable: React.FC<TakesTableProps> = ({
                       address={take.taker}
                       chainId={take.chain_id}
                       type="address"
-                      className="text-gray-400"
                     />
                   </td>
 

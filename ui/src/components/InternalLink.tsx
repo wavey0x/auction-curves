@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ExternalLink, Copy, Check } from 'lucide-react';
 import { cn, copyToClipboard, getChainInfo } from '../lib/utils';
+import { useHoverTooltip } from '../hooks/useHoverTooltip';
 
 interface InternalLinkProps {
   to: string;
@@ -29,10 +30,6 @@ const InternalLink: React.FC<InternalLinkProps> = ({
   showCopy = false,
 }) => {
   const [copied, setCopied] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const linkRef = useRef<HTMLDivElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const baseClasses = "internal-link group relative";
   
@@ -59,6 +56,16 @@ const InternalLink: React.FC<InternalLinkProps> = ({
     }
   })();
 
+  const {
+    isHovered,
+    tooltipPosition,
+    containerRef,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleTooltipMouseEnter,
+    handleTooltipMouseLeave,
+  } = useHoverTooltip({ enabled: showContextActions });
+
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -82,72 +89,11 @@ const InternalLink: React.FC<InternalLinkProps> = ({
     }
   };
 
-  const updateTooltipPosition = () => {
-    if (linkRef.current) {
-      const rect = linkRef.current.getBoundingClientRect();
-      setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.bottom + 4
-      });
-    }
-  };
-
-  const handleMouseEnter = () => {
-    if (showContextActions) {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-        hoverTimeoutRef.current = null;
-      }
-      setIsHovered(true);
-      updateTooltipPosition();
-    }
-  };
-
-  const handleMouseLeave = () => {
-    // Add a small delay before hiding to allow cursor movement to tooltip
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 100);
-  };
-
-  const handleTooltipMouseEnter = () => {
-    // Cancel the hide timeout if cursor enters tooltip
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-  };
-
-  const handleTooltipMouseLeave = () => {
-    // Hide immediately when leaving tooltip
-    setIsHovered(false);
-  };
-
-  useEffect(() => {
-    if (isHovered) {
-      const handleScroll = () => updateTooltipPosition();
-      window.addEventListener('scroll', handleScroll, true);
-      window.addEventListener('resize', handleScroll);
-      return () => {
-        window.removeEventListener('scroll', handleScroll, true);
-        window.removeEventListener('resize', handleScroll);
-      };
-    }
-  }, [isHovered]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return (
     <>
       <div 
-        ref={linkRef}
+        ref={containerRef}
         className="relative inline-block internal-link-group"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -169,7 +115,7 @@ const InternalLink: React.FC<InternalLinkProps> = ({
       </div>
 
       {/* Portal-based tooltip that renders at document level */}
-      {showContextActions && isHovered && createPortal(
+      {isHovered && createPortal(
         <div 
           className="fixed pointer-events-none z-50 transition-opacity duration-200"
           style={{
@@ -191,7 +137,7 @@ const InternalLink: React.FC<InternalLinkProps> = ({
                 title="Copy address"
               >
                 {copied ? (
-                  <Check className="h-3 w-3 text-green-400" />
+                  <Check className="h-3 w-3 text-primary-400" />
                 ) : (
                   <Copy className="h-3 w-3" />
                 )}

@@ -59,7 +59,7 @@ const TokenWithAddress: React.FC<TokenWithAddressProps> = ({
         title="Copy token address"
       >
         {copied ? (
-          <Check className="h-3 w-3 text-green-400" />
+          <Check className="h-3 w-3 text-primary-400" />
         ) : (
           <Copy className="h-3 w-3" />
         )}

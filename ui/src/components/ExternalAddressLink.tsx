@@ -1,33 +1,37 @@
 import React, { useState } from "react";
 import { createPortal } from 'react-dom';
 import { ExternalLink, Copy, Check } from "lucide-react";
-import { formatAddress, getTxLink, getChainInfo, cn, copyToClipboard } from "../lib/utils";
+import { formatAddress, getChainInfo, cn, copyToClipboard } from "../lib/utils";
 import { useHoverTooltip } from "../hooks/useHoverTooltip";
 
-interface StandardTxHashLinkProps {
-  txHash: string;
+interface ExternalAddressLinkProps {
+  address: string;
   chainId: number;
+  type?: "token" | "address";
   length?: number;
   className?: string;
+  showFullOnHover?: boolean;
 }
 
 /**
- * Standardized transaction hash display component
+ * External address display component for non-internal addresses
  * - White text color by default
  * - Hover tooltip with copy and external link actions
  * - Space-efficient design (no inline icons)
- * - Consistent styling across all tables
+ * - Used for addresses like TAKER that don't have internal navigation
  */
-const StandardTxHashLink: React.FC<StandardTxHashLinkProps> = ({
-  txHash,
+const ExternalAddressLink: React.FC<ExternalAddressLinkProps> = ({
+  address,
   chainId,
+  type = "address",
   length = 5,
   className = "",
+  showFullOnHover = true,
 }) => {
   const [copied, setCopied] = useState(false);
   const chainInfo = getChainInfo(chainId);
   const hasExplorer = chainInfo?.explorer && chainInfo.explorer !== "#";
-  const formattedTxHash = formatAddress(txHash, length);
+  const formattedAddress = formatAddress(address, length);
 
   const {
     isHovered,
@@ -42,7 +46,7 @@ const StandardTxHashLink: React.FC<StandardTxHashLinkProps> = ({
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const success = await copyToClipboard(txHash);
+    const success = await copyToClipboard(address);
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 600);
@@ -53,7 +57,9 @@ const StandardTxHashLink: React.FC<StandardTxHashLinkProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (hasExplorer) {
-      const url = getTxLink(txHash, chainId);
+      const url = type === "token" 
+        ? `${chainInfo.explorer}/token/${address}`
+        : `${chainInfo.explorer}/address/${address}`;
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
@@ -69,9 +75,9 @@ const StandardTxHashLink: React.FC<StandardTxHashLinkProps> = ({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Transaction hash with white color */}
+        {/* Address with white color */}
         <span className="text-white select-all">
-          {formattedTxHash}
+          {formattedAddress}
         </span>
       </div>
 
@@ -94,7 +100,7 @@ const StandardTxHashLink: React.FC<StandardTxHashLinkProps> = ({
             <button
               onClick={handleCopy}
               className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors hover:scale-110"
-              title="Copy transaction hash"
+              title="Copy address"
             >
               {copied ? (
                 <Check className="h-3 w-3 text-primary-400" />
@@ -121,4 +127,4 @@ const StandardTxHashLink: React.FC<StandardTxHashLinkProps> = ({
   );
 };
 
-export default StandardTxHashLink;
+export default ExternalAddressLink;

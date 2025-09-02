@@ -86,6 +86,7 @@ export interface AuctionDetails {
   chain_id: number;
   factory_address?: string;
   deployer: string;
+  governance?: string;
   from_tokens: Token[];
   want_token: Token;
   parameters: AuctionParameters;

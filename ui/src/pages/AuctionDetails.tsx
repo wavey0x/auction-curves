@@ -13,6 +13,7 @@ import {
   Activity,
   Home,
   Gavel,
+  Shield,
 } from "lucide-react";
 import { apiClient } from "../lib/api";
 import StatsCard from "../components/StatsCard";
@@ -38,6 +39,7 @@ import {
   formatDuration,
   copyToClipboard,
   getChainInfo,
+  getAddressLink,
 } from "../lib/utils";
 import InternalLink from "../components/InternalLink";
 
@@ -203,17 +205,17 @@ const AuctionDetails: React.FC = () => {
       {/* Key Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
-          title="Total Participants"
-          value={auction.activity.total_participants}
-          icon={Users}
-          iconColor="text-blue-500"
-        />
-
-        <StatsCard
           title="Total Rounds"
           value={auction.activity.total_rounds}
           icon={TrendingUp}
           iconColor="text-primary-500"
+        />
+
+        <StatsCard
+          title="Total Volume"
+          value={formatUSD(auction.activity.total_volume)}
+          icon={DollarSign}
+          iconColor="text-yellow-500"
         />
 
         <StatsCard
@@ -224,10 +226,10 @@ const AuctionDetails: React.FC = () => {
         />
 
         <StatsCard
-          title="Total Volume"
-          value={formatUSD(auction.activity.total_volume)}
-          icon={DollarSign}
-          iconColor="text-yellow-500"
+          title="Total Participants"
+          value={auction.activity.total_participants}
+          icon={Users}
+          iconColor="text-blue-500"
         />
       </div>
 
@@ -299,8 +301,20 @@ const AuctionDetails: React.FC = () => {
             <MetaBadges
               items={[
                 { label: 'Deployed', value: formatTimeAgo(new Date(auction.deployed_at).getTime()/1000), icon: Clock },
-                { label: 'Participants', value: auction.activity.total_participants || 0, icon: Users },
-                { label: 'Volume', value: formatUSD(auction.activity.total_volume) },
+                ...(auction.governance ? [{
+                  label: 'Governance',
+                  value: (
+                    <a
+                      href={getAddressLink(auction.governance, auction.chain_id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white hover:text-primary-300 transition-colors"
+                    >
+                      {formatAddress(auction.governance, 4)}
+                    </a>
+                  ),
+                  icon: Shield
+                }] : []),
               ]}
             />
           </div>

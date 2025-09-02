@@ -66,7 +66,7 @@ const TxHashDisplay: React.FC<TxHashDisplayProps> = ({
           title="Copy transaction hash"
         >
           {copied ? (
-            <Check className="h-3 w-3 text-green-400 animate-pulse" />
+            <Check className="h-3 w-3 text-primary-400 animate-pulse" />
           ) : (
             <Copy className="h-3 w-3 hover:animate-pulse" />
           )}
