@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,10 +12,13 @@ import {
   Activity,
   Zap,
   Gavel,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { apiClient } from "../lib/api";
 import StatsCard from "../components/StatsCard";
 import TakesTable from "../components/TakesTable";
+import AddressLink from "../components/AddressLink";
 import AuctionsTable from "../components/AuctionsTable";
 import StackedProgressMeter from "../components/StackedProgressMeter";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -24,12 +27,14 @@ import TokensList from "../components/TokensList";
 import {
   formatAddress,
   formatTokenAmount,
+  formatReadableTokenAmount,
   formatUSD,
   formatTimeAgo,
   getTxLink,
   getChainInfo,
 } from "../lib/utils";
 import ChainIcon from "../components/ChainIcon";
+import type { AuctionTake } from "../types/auction";
 
 type ViewType = 'active-rounds' | 'takes' | 'all-auctions';
 
@@ -43,13 +48,14 @@ const PulsingDot: React.FC = () => (
 
 const Dashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewType>('active-rounds');
+  const [takesPage, setTakesPage] = useState(1);
+  const [takesPerPage] = useState(15);
 
   // Fetch data with React Query using new API
   const { data: systemStats, isLoading: statsLoading } = useQuery({
     queryKey: ["systemStats"],
     queryFn: apiClient.getSystemStats,
-    staleTime: 30000, // Cache for 30 seconds - stats don't change frequently
-    refetchInterval: 30000, // Refetch every 30 seconds
+    // Uses global default: 5 minutes refresh interval
   });
 
   const { data: auctionsResponse, isLoading: auctionsLoading } = useQuery({
@@ -101,14 +107,14 @@ const Dashboard: React.FC = () => {
   });
 
   // Get recent takes activity from auctions (only load when takes view is selected)
-  const { data: recentTakes, isLoading: takesLoading } = useQuery({
+  const { data: allTakes, isLoading: takesLoading } = useQuery({
     queryKey: ["recentTakes"],
     queryFn: async () => {
       const activeAuctions = activeAuctionsResponse?.auctions || [];
-      const allTakes: AuctionSale[] = [];
+      const allTakes: AuctionTake[] = [];
 
-      // Get takes from first few active auctions (already filtered server-side)
-      const limitedActiveAuctions = activeAuctions.slice(0, 5);
+      // Get takes from more auctions for better pagination
+      const limitedActiveAuctions = activeAuctions.slice(0, 10);
 
       for (const auction of limitedActiveAuctions) {
         try {
@@ -116,7 +122,7 @@ const Dashboard: React.FC = () => {
             auction.address,
             auction.chain_id,
             undefined,
-            5
+            15 // Get more takes per auction for pagination
           );
           allTakes.push(...takes);
         } catch (error) {
@@ -124,17 +130,29 @@ const Dashboard: React.FC = () => {
         }
       }
 
-      // Sort by timestamp and take most recent
-      return allTakes
-        .sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        )
-        .slice(0, 25);
+      // Sort by timestamp and return all takes for pagination
+      return allTakes.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
     },
     enabled: !!activeAuctionsResponse?.auctions?.length && activeView === 'takes',
     staleTime: 10000, // Cache for 10 seconds to prevent redundant fetches
   });
+
+  // Paginate the takes
+  const totalTakes = allTakes?.length || 0;
+  const totalPages = Math.ceil(totalTakes / takesPerPage);
+  const startIndex = (takesPage - 1) * takesPerPage;
+  const endIndex = startIndex + takesPerPage;
+  const recentTakes = allTakes?.slice(startIndex, endIndex) || [];
+
+  // Reset page when switching to takes view
+  useEffect(() => {
+    if (activeView === 'takes') {
+      setTakesPage(1);
+    }
+  }, [activeView]);
 
   // Only consider takes loading if we're actually on the takes view
   const isLoading = statsLoading || auctionsLoading || activeAuctionsLoading || 
@@ -301,10 +319,10 @@ const Dashboard: React.FC = () => {
               {activeRounds.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="table">
-                    <thead className="bg-gray-800/50">
+                    <thead className="bg-gray-800">
                       <tr>
+                        <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0"><span className="sr-only">Chain</span></th>
                         <th className="text-center">Round</th>
-                        <th className="text-center w-16">Chain</th>
                         <th className="text-center">Auction</th>
                         <th className="text-center">From → Want</th>
                         <th className="text-center">Current Price</th>
@@ -327,6 +345,16 @@ const Dashboard: React.FC = () => {
                             key={`${round.auction}-${round.round_id}`}
                             className="group"
                           >
+                            <td className="w-[22px] min-w-[22px] max-w-[22px] px-0 text-center">
+                              <div className="flex justify-center">
+                                <ChainIcon
+                                  chainId={round.chain_id}
+                                  size="xs"
+                                  showName={false}
+                                />
+                              </div>
+                            </td>
+
                             <td>
                               <Link
                                 to={`/round/${round.chain_id}/${round.auction}/${round.round_id}`}
@@ -336,16 +364,6 @@ const Dashboard: React.FC = () => {
                                   R{round.round_id}
                                 </span>
                               </Link>
-                            </td>
-
-                            <td className="w-16 text-center">
-                              <div className="flex justify-center">
-                                <ChainIcon
-                                  chainId={round.chain_id}
-                                  size="sm"
-                                  showName={false}
-                                />
-                              </div>
                             </td>
 
                             <td>
@@ -375,7 +393,7 @@ const Dashboard: React.FC = () => {
                               {round.current_price ? (
                                 <div className="text-sm">
                                   <div className="font-mono text-gray-200">
-                                    {formatTokenAmount(round.current_price, 6, 3)}
+                                    {formatReadableTokenAmount(round.current_price, 3)}
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {formatUSD(parseFloat(round.current_price) * 1.5)}
@@ -451,11 +469,20 @@ const Dashboard: React.FC = () => {
                               {timeRemaining > 0 ? (
                                 <div className="text-sm">
                                   <div className="font-medium text-success-400">
-                                    {Math.floor(timeRemaining / 60)}m{" "}
-                                    {timeRemaining % 60}s
+                                    {timeRemaining >= 3600 ? (
+                                      `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m`
+                                    ) : (
+                                      `${Math.floor(timeRemaining / 60)}m ${timeRemaining % 60}s`
+                                    )}
                                   </div>
                                   <div className="text-xs text-gray-500">
-                                    {Math.floor(round.seconds_elapsed / 60)}m elapsed
+                                    {round.seconds_elapsed !== undefined && round.seconds_elapsed !== null ? (
+                                      `${Math.floor(round.seconds_elapsed / 60)}m elapsed`
+                                    ) : round.round_start ? (
+                                      `${Math.floor((Math.floor(Date.now() / 1000) - round.round_start) / 60)}m elapsed`
+                                    ) : (
+                                      '0m elapsed'
+                                    )}
                                   </div>
                                 </div>
                               ) : (
@@ -482,122 +509,196 @@ const Dashboard: React.FC = () => {
           {activeView === 'takes' && (
             <>
               {recentTakes && recentTakes.length > 0 ? (
-                <div className="overflow-y-auto max-h-[600px]">
-                  <table className="table">
-                    <thead className="bg-gray-800/50 sticky top-0">
-                      <tr>
-                        <th className="text-center">Transaction</th>
-                        <th className="text-center">Sale</th>
-                        <th className="text-center w-16">Chain</th>
-                        <th className="text-center">Auction</th>
-                        <th className="text-center">Tokens</th>
-                        <th className="text-center">Amount</th>
-                        <th className="text-center">Price</th>
-                        <th className="text-center">Taker</th>
-                        <th className="text-center">Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentTakes.map((sale, index) => (
-                        <tr key={sale.take_id || `take-${index}`} className="group">
-                          <td>
-                            <div className="flex items-center space-x-2">
-                              {getChainInfo(sale.chain_id).explorer !== "#" ? (
-                                <a
-                                  href={getTxLink(sale.tx_hash, sale.chain_id)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
-                                  title="View transaction"
-                                >
-                                  <span>{formatAddress(sale.tx_hash)}</span>
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              ) : (
-                                <span className="font-mono text-sm text-gray-400">
-                                  {formatAddress(sale.tx_hash)}
-                                </span>
-                              )}
-                            </div>
-                          </td>
+                <>
+                  <div className="card overflow-visible">
+                    <table className="w-full border-collapse">
+                      <thead className="bg-gray-800">
+                        <tr>
+                          <th className="border-b border-gray-700 px-0 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-[22px] min-w-[22px] max-w-[22px]"><span className="sr-only">Chain</span></th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Transaction</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Sale</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Auction</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Tokens</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Taker</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentTakes.map((take, index) => (
+                          <tr key={take.take_id || `take-${index}`} className="group hover:bg-gray-800/50">
+                            <td className="border-b border-gray-800 px-0 py-1.5 text-sm text-gray-300 w-[22px] min-w-[22px] max-w-[22px] text-center">
+                              <div className="flex justify-center">
+                                <ChainIcon
+                                  chainId={take.chain_id}
+                                  size="xs"
+                                  showName={false}
+                                />
+                              </div>
+                            </td>
 
-                          <td>
-                            <div className="flex items-center space-x-2">
-                              <TrendingDown className="h-4 w-4 text-primary-500" />
-                              <div className="text-sm">
-                                <div className="font-mono text-xs text-gray-500">
-                                  R{sale.round_id}T{sale.take_seq}
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="flex items-center space-x-2">
+                                {getChainInfo(take.chain_id).explorer !== "#" ? (
+                                  <a
+                                    href={getTxLink(take.tx_hash, take.chain_id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
+                                    title="View transaction"
+                                  >
+                                    <span>{formatAddress(take.tx_hash)}</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                ) : (
+                                  <span className="font-mono text-sm text-gray-400">
+                                    {formatAddress(take.tx_hash)}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="flex items-center space-x-2">
+                                <TrendingDown className="h-4 w-4 text-primary-500" />
+                                <div className="text-sm">
+                                  <div className="font-mono text-xs text-gray-500">
+                                    R{take.round_id}T{take.take_seq}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          <td className="w-16 text-center">
-                            <div className="flex justify-center">
-                              <ChainIcon
-                                chainId={sale.chain_id}
-                                size="sm"
-                                showName={false}
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <AddressLink
+                                address={take.auction}
+                                chainId={take.chain_id}
+                                type="auction"
+                                length={5}
+                                className="text-gray-300"
                               />
-                            </div>
-                          </td>
+                            </td>
 
-                          <td>
-                            <Link
-                              to={`/auction/${sale.chain_id}/${sale.auction}`}
-                              className="font-mono text-sm text-gray-300 hover:text-primary-300 transition-colors"
-                            >
-                              {formatAddress(sale.auction)}
-                            </Link>
-                          </td>
-
-                          <td>
-                            <div className="space-y-1">
-                              <div className="flex items-center space-x-1 text-sm">
-                                <span className="font-medium text-gray-300">
-                                  Token
-                                </span>
-                                <span className="text-gray-500">→</span>
-                                <span className="font-medium text-yellow-400">
-                                  USDC
-                                </span>
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="space-y-1">
+                                <div className="flex items-center space-x-1 text-sm">
+                                  <span className="font-medium text-gray-300">
+                                    {take.from_token_symbol || 'Token'}
+                                  </span>
+                                  <span className="text-gray-500">→</span>
+                                  <span className="font-medium text-yellow-400">
+                                    {take.to_token_symbol || 'USDC'}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          <td>
-                            <div className="text-sm font-medium text-gray-200">
-                              {formatTokenAmount(sale.amount_taken, 18, 3)}
-                            </div>
-                          </td>
-
-                          <td>
-                            <div className="text-sm">
-                              <div className="font-medium text-gray-200">
-                                {formatTokenAmount(sale.price, 6, 4)}
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="text-sm font-medium text-gray-200">
+                                {formatReadableTokenAmount(take.amount_taken, 3)}
                               </div>
-                              <div className="text-xs text-gray-500">
-                                {formatUSD(parseFloat(sale.price) * 1.5)}
+                            </td>
+
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <div className="text-sm">
+                                <div className="font-medium text-gray-200">
+                                  {formatReadableTokenAmount(take.price, 4)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {formatUSD(parseFloat(take.price) * 1.5)}
+                                </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          <td>
-                            <span className="font-mono text-sm text-gray-400">
-                              {formatAddress(sale.taker)}
-                            </span>
-                          </td>
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <AddressLink
+                                address={take.taker}
+                                chainId={take.chain_id}
+                                type="address"
+                                length={5}
+                                className="text-gray-400"
+                              />
+                            </td>
 
-                          <td>
-                            <span className="text-sm text-gray-400">
-                              {formatTimeAgo(sale.timestamp)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                              <span 
+                                className="text-sm text-gray-400 cursor-help"
+                                title={new Date(take.timestamp).toLocaleString()}
+                              >
+                                {formatTimeAgo(take.timestamp)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Compact Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 bg-gray-800/30 border-t border-gray-700/50">
+                      <div className="text-sm text-gray-500">
+                        Showing {startIndex + 1}-{Math.min(endIndex, totalTakes)} of {totalTakes} takes
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setTakesPage(Math.max(1, takesPage - 1))}
+                          disabled={takesPage === 1}
+                          className={`p-1.5 rounded ${
+                            takesPage === 1
+                              ? 'text-gray-600 cursor-not-allowed'
+                              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                          } transition-colors`}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (takesPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (takesPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = takesPage - 2 + i;
+                            }
+                            
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => setTakesPage(pageNum)}
+                                className={`px-2 py-1 text-xs rounded ${
+                                  pageNum === takesPage
+                                    ? 'bg-primary-500 text-white'
+                                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                                } transition-colors min-w-[24px]`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        
+                        <button
+                          onClick={() => setTakesPage(Math.min(totalPages, takesPage + 1))}
+                          disabled={takesPage === totalPages}
+                          className={`p-1.5 rounded ${
+                            takesPage === totalPages
+                              ? 'text-gray-600 cursor-not-allowed'
+                              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                          } transition-colors`}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <Activity className="h-16 w-16 text-gray-600 mx-auto mb-4" />

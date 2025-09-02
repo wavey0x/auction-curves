@@ -1,8 +1,10 @@
 # Auction System Database Specification
 
-**Version**: 1.0  
-**Last Updated**: 2025-08-31  
+**Version**: 2.0  
+**Last Updated**: 2025-09-01  
 **Status**: AUTHORITATIVE MASTER SPECIFICATION
+
+**IMPORTANT**: This document represents the CURRENT database schema only. No historical changes or deprecated columns are documented here. For migration history, see the migrations folder.
 
 This document serves as the **authoritative specification** for all database tables, columns, views, and naming conventions in the Auction System. All code changes must reference and conform to this specification.
 
@@ -21,11 +23,13 @@ This document serves as the **authoritative specification** for all database tab
 
 Always use **CONCISE NAMES** for consistency across all tables, views, and code:
 
-| Concept | STANDARD NAME | Deprecated Names |
-|---------|---------------|------------------|
-| Version | `version` | `auction_version` |
-| Decay Rate | `decay_rate` | `decay_rate_percent` |  
-| Update Interval | `update_interval` | `price_update_interval`, `update_interval_minutes` |
+| Concept | STANDARD NAME |
+|---------|---------------|
+| Version | `version` |
+| Decay Rate | `decay_rate` |  
+| Update Interval | `update_interval` |
+| Take ID | `take_id` |
+| Take Sequence | `take_seq` |
 
 **General Rules:**
 - Use clear, concise names without unnecessary prefixes
@@ -72,16 +76,11 @@ Always use **CONCISE NAMES** for consistency across all tables, views, and code:
 | `deployer` | VARCHAR(100) | NULL | Address that deployed the contract |
 | `receiver` | VARCHAR(100) | NULL | Receiver address |
 | `governance` | VARCHAR(100) | NULL | Governance address |
-| `discovered_at` | TIMESTAMPTZ | DEFAULT NOW() | When indexer first found this auction |
-| `timestamp` | BIGINT | NULL | Unix timestamp when auction was deployed (blockchain time) |
 | `factory_address` | VARCHAR(100) | NULL | Factory that deployed this auction |
-| `version` | VARCHAR(20) | DEFAULT '0.1.0' | Contract version (0.0.1=legacy, 0.1.0=modern) |
+| `version` | VARCHAR(20) | DEFAULT '0.1.0' | Contract version |
+| `timestamp` | BIGINT | NOT NULL, DEFAULT EXTRACT(epoch FROM now()) | Unix timestamp when deployed |
 
 **Primary Key**: `(auction_address, chain_id)`
-
-**Version Detection Logic**:
-- Legacy factory → `version = '0.0.1'`
-- Modern factory → `version = '0.1.0'`
 
 ### `rounds`
 
@@ -93,21 +92,21 @@ Always use **CONCISE NAMES** for consistency across all tables, views, and code:
 | `chain_id` | INTEGER | NOT NULL, PK, DEFAULT 1 | Blockchain network ID |
 | `round_id` | INTEGER | NOT NULL, PK | Incremental round ID per auction |
 | `from_token` | VARCHAR(100) | NOT NULL | Token being sold in this round |
-| `kicked_at` | TIMESTAMPTZ | NOT NULL | When round was started |
-| `timestamp` | BIGINT | NOT NULL | Unix timestamp when round was kicked (blockchain time) |
-| `initial_available` | NUMERIC(30,0) | NOT NULL | Initial token amount for sale |
-| `is_active` | BOOLEAN | DEFAULT TRUE | Whether round is still active |
-| `current_price` | NUMERIC(30,0) | NULL | Current calculated price |
-| `available_amount` | NUMERIC(30,0) | NULL | Remaining tokens available |
-| `time_remaining` | INTEGER | NULL | Seconds until round ends |
-| `seconds_elapsed` | INTEGER | DEFAULT 0 | Seconds since round started |
-| `total_sales` | INTEGER | DEFAULT 0 | Number of takes in this round |
-| `total_volume_sold` | NUMERIC(30,0) | DEFAULT 0 | Total tokens sold |
+| `initial_available` | NUMERIC(78,18) | NOT NULL | Initial token amount for sale |
+| `available_amount` | NUMERIC(78,18) | NULL | Remaining tokens available |
+| `total_takes` | INTEGER | DEFAULT 0 | Number of takes in this round |
+| `total_volume_sold` | NUMERIC(78,18) | DEFAULT 0 | Total tokens sold |
 | `progress_percentage` | NUMERIC(5,2) | DEFAULT 0 | Progress 0-100% |
 | `block_number` | BIGINT | NOT NULL | Block where round was kicked |
-| `transaction_hash` | VARCHAR(100) | NOT NULL | Transaction hash of kick |
+| `transaction_hash` | VARCHAR(200) | NOT NULL | Transaction hash of kick |
+| `kicked_at` | BIGINT | NOT NULL | Unix timestamp when round was kicked |
+| `timestamp` | BIGINT | NOT NULL, DEFAULT EXTRACT(epoch FROM now()) | Record creation timestamp |
+| `round_start` | BIGINT | NULL | Unix timestamp when round started |
+| `round_end` | BIGINT | NULL | Unix timestamp when round ends |
 
 **Primary Key**: `(auction_address, chain_id, round_id)`
+
+**Note**: `is_active` is calculated dynamically in views based on `round_end > current_time AND available_amount > 0`
 
 ### `takes`
 
@@ -115,26 +114,25 @@ Always use **CONCISE NAMES** for consistency across all tables, views, and code:
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `sale_id` | VARCHAR(200) | NOT NULL, PK | Format: {auction}-{roundId}-{saleSeq} |
+| `take_id` | VARCHAR(200) | NOT NULL, PK | Format: {auction}-{roundId}-{takeSeq} |
 | `auction_address` | VARCHAR(100) | NOT NULL | Parent auction contract |
 | `chain_id` | INTEGER | NOT NULL, DEFAULT 1 | Blockchain network ID |
 | `round_id` | INTEGER | NOT NULL | Parent round ID |
-| `sale_seq` | INTEGER | NOT NULL | Sequence number within round |
+| `take_seq` | INTEGER | NOT NULL | Sequence number within round |
 | `taker` | VARCHAR(100) | NOT NULL | Address that made the purchase |
 | `from_token` | VARCHAR(100) | NOT NULL | Token purchased |
 | `to_token` | VARCHAR(100) | NOT NULL | Token paid (want_token) |
-| `amount_taken` | NUMERIC(30,0) | NOT NULL | Amount of from_token purchased |
-| `amount_paid` | NUMERIC(30,0) | NOT NULL | Amount of to_token paid |
-| `price` | NUMERIC(30,0) | NOT NULL | Price per from_token at time of sale |
+| `amount_taken` | NUMERIC(78,18) | NOT NULL | Amount of from_token purchased |
+| `amount_paid` | NUMERIC(78,18) | NOT NULL | Amount of to_token paid |
+| `price` | NUMERIC(78,18) | NOT NULL | Price per from_token at time of take |
 | `timestamp` | TIMESTAMPTZ | NOT NULL | When transaction occurred (for hypertable partitioning) |
-| `ts_unix` | BIGINT | NOT NULL | Unix timestamp of transaction (blockchain time) |
 | `seconds_from_round_start` | INTEGER | NOT NULL | Timing within round |
 | `block_number` | BIGINT | NOT NULL | Block number |
-| `transaction_hash` | VARCHAR(100) | NOT NULL | Transaction hash |
+| `transaction_hash` | VARCHAR(200) | NOT NULL | Transaction hash |
 | `log_index` | INTEGER | NOT NULL | Log index within transaction |
 
-**Primary Key**: `(sale_id, timestamp)`  
-**Hypertable**: Partitioned by `timestamp` for time-series optimization
+**Primary Key**: `(take_id, timestamp)`  
+**Hypertable**: Partitioned by `timestamp` for time-series optimization (TimescaleDB)
 
 ### `tokens`
 
@@ -149,29 +147,66 @@ Always use **CONCISE NAMES** for consistency across all tables, views, and code:
 | `decimals` | INTEGER | NULL | Number of decimal places |
 | `chain_id` | INTEGER | NOT NULL, DEFAULT 1 | Blockchain network ID |
 | `first_seen` | TIMESTAMPTZ | DEFAULT NOW() | When first discovered |
-| `timestamp` | BIGINT | NULL | Unix timestamp when first discovered (blockchain time) |
 | `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | Last updated |
+| `timestamp` | BIGINT | NULL | Unix timestamp when first discovered |
 
-**Unique Constraint**: `(address, chain_id)`
+**Unique Constraints**: `(address)`, `(address, chain_id)`
 
-### `price_history`
+### `enabled_tokens`
 
-**Purpose**: Time-series price tracking for charting
+**Purpose**: Track which tokens are enabled for each auction
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `auction_address` | VARCHAR(100) | NOT NULL | Parent auction |
-| `chain_id` | INTEGER | NOT NULL, DEFAULT 1 | Blockchain network ID |
-| `round_id` | INTEGER | NOT NULL | Parent round |
-| `from_token` | VARCHAR(100) | NOT NULL | Token being priced |
-| `timestamp` | TIMESTAMPTZ | NOT NULL | Price observation time (for hypertable partitioning) |
-| `ts_unix` | BIGINT | NOT NULL | Unix timestamp of price observation (blockchain time) |
-| `price` | NUMERIC(30,0) | NOT NULL | Price at this timestamp |
-| `available_amount` | NUMERIC(30,0) | NOT NULL | Tokens available |
-| `seconds_from_round_start` | INTEGER | NOT NULL | Timing within round |
-| `block_number` | BIGINT | NOT NULL | Block context |
+| `auction_address` | VARCHAR(100) | NOT NULL, PK | Parent auction contract |
+| `chain_id` | INTEGER | NOT NULL, PK, DEFAULT 1 | Blockchain network ID |
+| `token_address` | VARCHAR(100) | NOT NULL, PK | Enabled token address |
+| `enabled_at` | BIGINT | NOT NULL | Unix timestamp when enabled |
+| `enabled_at_block` | BIGINT | NOT NULL | Block number when enabled |
+| `enabled_at_tx_hash` | VARCHAR(100) | NOT NULL | Transaction hash of enable event |
 
-**Hypertable**: Partitioned by `timestamp` for time-series optimization
+**Primary Key**: `(auction_address, chain_id, token_address)`
+**Foreign Key**: `REFERENCES auctions(auction_address, chain_id) ON DELETE CASCADE`
+
+### `price_requests`
+
+**Purpose**: Track price fetch requests for tokens
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | SERIAL | PRIMARY KEY | Auto-incrementing ID |
+| `chain_id` | INTEGER | NOT NULL | Blockchain network ID |
+| `block_number` | BIGINT | NOT NULL | Block number that triggered request |
+| `token_address` | VARCHAR(100) | NOT NULL | Token to fetch price for |
+| `request_type` | VARCHAR(20) | NOT NULL, CHECK('kick', 'take') | Event type that triggered request |
+| `auction_address` | VARCHAR(100) | NULL | Related auction address |
+| `round_id` | INTEGER | NULL | Related round ID |
+| `status` | VARCHAR(20) | DEFAULT 'pending', CHECK('pending', 'processing', 'completed', 'failed') | Request status |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | When request was created |
+| `processed_at` | TIMESTAMP | NULL | When request was processed |
+| `error_message` | TEXT | NULL | Error details if failed |
+| `retry_count` | INTEGER | DEFAULT 0 | Number of retry attempts |
+
+**Unique Constraint**: `(chain_id, block_number, token_address)`
+
+### `token_prices`
+
+**Purpose**: Store historical token prices in USD
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | SERIAL | PRIMARY KEY | Auto-incrementing ID |
+| `chain_id` | INTEGER | NOT NULL | Blockchain network ID |
+| `block_number` | BIGINT | NOT NULL | Block number for price |
+| `token_address` | VARCHAR(100) | NOT NULL | Token contract address |
+| `price_usd` | NUMERIC(40,18) | NOT NULL | Token price in USD with high precision |
+| `timestamp` | BIGINT | NOT NULL | Unix timestamp of price |
+| `source` | VARCHAR(50) | NOT NULL, DEFAULT 'ypricemagic' | Price data source |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | When record was created |
+
+**Unique Constraint**: `(chain_id, block_number, token_address, source)`
+
+> Note: The previously proposed `price_history` table has been removed as unused. Price history is computed on-demand by the API/service when needed.
 
 ### `indexer_state`
 
@@ -189,71 +224,59 @@ Always use **CONCISE NAMES** for consistency across all tables, views, and code:
 
 **Unique Constraint**: `(chain_id, factory_address)`
 
-**Rationale**: Each factory on each network may have different deployment blocks and indexing progress. This granular tracking ensures we can:
-- Track multiple factories per network independently
-- Resume indexing from the correct block per factory
-- Handle factory-specific start blocks from configuration
-
 ## Views
 
-### `active_auction_rounds`
+### `vw_rounds`
 
-**Purpose**: Active rounds with calculated time fields
+**Purpose**: Rounds with calculated time fields and token metadata
 
 ```sql
-CREATE OR REPLACE VIEW active_auction_rounds AS
-SELECT 
-    ar.*,
-    ahp.want_token,
-    ahp.decay_rate,
-    ahp.update_interval,
-    ahp.auction_length,
-    ahp.step_decay_rate,
-    -- Calculate time remaining
-    GREATEST(0, 
-        ahp.auction_length - EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))
-    )::INTEGER as calculated_time_remaining,
-    -- Calculate seconds elapsed
-    EXTRACT(EPOCH FROM (NOW() - ar.kicked_at))::INTEGER as calculated_seconds_elapsed
-FROM rounds ar
-JOIN auctions ahp 
-    ON ar.auction_address = ahp.auction_address 
+WITH base AS (
+  SELECT ar.auction_address, ar.chain_id, ar.round_id, ar.from_token,
+         ar.kicked_at, ar.initial_available, ar.available_amount,
+         ar.total_takes, ar.total_volume_sold, ar.block_number,
+         ar.transaction_hash, ahp.want_token, ahp.auction_length, ar.round_end
+  FROM rounds ar
+  JOIN auctions ahp ON ar.auction_address = ahp.auction_address 
     AND ar.chain_id = ahp.chain_id
-WHERE ar.is_active = TRUE
-ORDER BY ar.kicked_at DESC;
+)
+SELECT b.*, 
+  tf.symbol AS from_symbol, tf.name AS from_name, tf.decimals AS from_decimals,
+  tw.symbol AS want_symbol, tw.name AS want_name, tw.decimals AS want_decimals,
+  GREATEST(0, b.round_end - EXTRACT(EPOCH FROM NOW())::BIGINT)::INTEGER AS time_remaining,
+  GREATEST(0, b.auction_length - GREATEST(0, b.round_end - EXTRACT(EPOCH FROM NOW())::BIGINT)::INTEGER) AS seconds_elapsed,
+  (GREATEST(0, b.round_end - EXTRACT(EPOCH FROM NOW())::BIGINT)::INTEGER > 0 AND COALESCE(b.available_amount, 0) > 0) AS is_active
+FROM base b
+LEFT JOIN tokens tf ON LOWER(tf.address) = LOWER(b.from_token) AND tf.chain_id = b.chain_id
+LEFT JOIN tokens tw ON LOWER(tw.address) = LOWER(b.want_token) AND tw.chain_id = b.chain_id
 ```
 
-### `recent_takes`
+### `vw_active_rounds`
 
-**Purpose**: Recent takes with full token and round context
+**Purpose**: Active rounds only (where is_active = true)
 
 ```sql
-CREATE OR REPLACE VIEW recent_takes AS
-SELECT 
-    als.*,
-    ar.kicked_at as round_kicked_at,
-    ahp.want_token,
-    t1.symbol as from_token_symbol,
-    t1.name as from_token_name,
-    t1.decimals as from_token_decimals,
-    t2.symbol as to_token_symbol,
-    t2.name as to_token_name,
-    t2.decimals as to_token_decimals
+SELECT * FROM vw_rounds 
+WHERE is_active = true 
+ORDER BY kicked_at DESC
+```
+
+### `vw_takes`
+
+**Purpose**: Takes with full token and round context
+
+```sql
+SELECT als.take_id, als.auction_address, als.chain_id, als.round_id, als.take_seq,
+       als.taker, als.from_token, als.to_token, als.amount_taken, als.amount_paid,
+       als.price, als.timestamp, als.seconds_from_round_start, als.block_number,
+       als.transaction_hash, als.log_index, ar.kicked_at AS round_kicked_at,
+       tf.symbol AS from_symbol, tf.name AS from_name, tf.decimals AS from_decimals,
+       tw.symbol AS to_symbol, tw.name AS to_name, tw.decimals AS to_decimals
 FROM takes als
-JOIN rounds ar 
-    ON als.auction_address = ar.auction_address 
-    AND als.chain_id = ar.chain_id 
-    AND als.round_id = ar.round_id
-JOIN auctions ahp 
-    ON als.auction_address = ahp.auction_address 
-    AND als.chain_id = ahp.chain_id
-LEFT JOIN tokens t1 
-    ON als.from_token = t1.address 
-    AND als.chain_id = t1.chain_id
-LEFT JOIN tokens t2 
-    ON als.to_token = t2.address 
-    AND als.chain_id = t2.chain_id
-ORDER BY als.timestamp DESC;
+LEFT JOIN rounds ar ON als.auction_address = ar.auction_address 
+  AND als.chain_id = ar.chain_id AND als.round_id = ar.round_id
+LEFT JOIN tokens tf ON LOWER(tf.address) = LOWER(als.from_token) AND tf.chain_id = als.chain_id
+LEFT JOIN tokens tw ON LOWER(tw.address) = LOWER(als.to_token) AND tw.chain_id = als.chain_id
 ```
 
 ## Indexes
@@ -265,13 +288,16 @@ ORDER BY als.timestamp DESC;
 CREATE INDEX idx_auctions_deployer ON auctions (deployer);
 CREATE INDEX idx_auctions_factory ON auctions (factory_address);
 CREATE INDEX idx_auctions_chain ON auctions (chain_id);
+CREATE INDEX idx_auctions_address_chain ON auctions (auction_address, chain_id);
+CREATE INDEX idx_auctions_timestamp ON auctions (timestamp);
 
 -- Rounds
-CREATE INDEX idx_rounds_active ON rounds (is_active);
 CREATE INDEX idx_rounds_kicked_at ON rounds (kicked_at);
 CREATE INDEX idx_rounds_chain ON rounds (chain_id);
 CREATE INDEX idx_rounds_from_token ON rounds (from_token);
-CREATE INDEX idx_rounds_active_kicked_at ON rounds (kicked_at DESC) WHERE is_active = TRUE;
+CREATE INDEX idx_rounds_round_end ON rounds (round_end);
+CREATE INDEX idx_rounds_round_start ON rounds (round_start);
+CREATE INDEX idx_rounds_timestamp ON rounds (timestamp);
 
 -- Takes
 CREATE INDEX idx_takes_timestamp ON takes (timestamp);
@@ -279,11 +305,32 @@ CREATE INDEX idx_takes_chain ON takes (chain_id);
 CREATE INDEX idx_takes_round ON takes (auction_address, chain_id, round_id);
 CREATE INDEX idx_takes_taker ON takes (taker);
 CREATE INDEX idx_takes_tx_hash ON takes (transaction_hash);
-CREATE INDEX idx_takes_recent ON takes (timestamp DESC, auction_address, round_id, sale_seq);
+CREATE INDEX idx_takes_recent ON takes (timestamp DESC, auction_address, round_id, take_seq);
+CREATE INDEX idx_takes_auction_chain_timestamp ON takes (auction_address, chain_id, timestamp DESC);
+CREATE INDEX idx_takes_timestamp_unix ON takes (timestamp);
+CREATE UNIQUE INDEX idx_takes_unique_chain_tx_log_ts ON takes (chain_id, transaction_hash, log_index, timestamp);
 
 -- Tokens
 CREATE INDEX idx_tokens_address ON tokens (address);
 CREATE INDEX idx_tokens_chain_id ON tokens (chain_id);
+CREATE INDEX idx_tokens_lower_address_chain ON tokens (LOWER(address), chain_id);
+CREATE INDEX idx_tokens_timestamp ON tokens (timestamp);
+
+-- Enabled Tokens
+CREATE INDEX idx_enabled_tokens_auction ON enabled_tokens (auction_address, chain_id);
+CREATE INDEX idx_enabled_tokens_token ON enabled_tokens (token_address, chain_id);
+CREATE INDEX idx_enabled_tokens_enabled_at ON enabled_tokens (enabled_at);
+
+-- Price Requests
+CREATE INDEX idx_price_requests_chain_token ON price_requests (chain_id, token_address);
+CREATE INDEX idx_price_requests_status ON price_requests (status);
+CREATE INDEX idx_price_requests_created ON price_requests (created_at DESC);
+
+-- Token Prices
+CREATE INDEX idx_token_prices_lookup ON token_prices (chain_id, token_address, block_number DESC);
+CREATE INDEX idx_token_prices_chain_block ON token_prices (chain_id, block_number DESC);
+CREATE INDEX idx_token_prices_timestamp ON token_prices (timestamp DESC);
+CREATE INDEX idx_token_prices_source ON token_prices (source);
 
 -- Price History
 CREATE INDEX idx_price_history_timestamp ON price_history (timestamp);
@@ -300,8 +347,9 @@ CREATE INDEX idx_indexer_state_updated ON indexer_state (updated_at);
 ### Blockchain Values
 
 - **Addresses**: `VARCHAR(100)` - Supports 0x prefix + 40 hex chars + buffer
-- **Transaction Hashes**: `VARCHAR(100)` - Same format as addresses  
-- **Wei Values**: `NUMERIC(30,0)` - Supports up to 78-digit integers
+- **Transaction Hashes**: `VARCHAR(200)` - Extended for various blockchain formats
+- **Token Amounts**: `NUMERIC(78,18)` - High precision for token values
+- **Wei Values**: `NUMERIC(30,0)` - Raw blockchain values
 - **Block Numbers**: `BIGINT` - Sufficient for all current blockchains
 - **Chain IDs**: `INTEGER` - Standard network identifiers
 
@@ -309,9 +357,11 @@ CREATE INDEX idx_indexer_state_updated ON indexer_state (updated_at);
 
 - **Human-readable rates**: `NUMERIC(10,4)` - e.g., 0.0050 (0.5%)
 - **Percentages**: `NUMERIC(5,2)` - e.g., 99.50 (99.5%)
-- **Timestamps**: `TIMESTAMPTZ` - Always timezone-aware
+- **Timestamps**: `TIMESTAMPTZ` - Always timezone-aware for PostgreSQL timestamps
+- **Unix Timestamps**: `BIGINT` - Blockchain time values
+- **USD Prices**: `NUMERIC(40,18)` - High precision for price data
 
-### Version Values
+### Contract Versions
 
 - **Legacy contracts**: `'0.0.1'`
 - **Modern contracts**: `'0.1.0'`
@@ -321,7 +371,7 @@ CREATE INDEX idx_indexer_state_updated ON indexer_state (updated_at);
 ### Process for Schema Changes
 
 1. **Update this specification FIRST**
-   - Modify column names, types, or constraints here
+   - Modify table definitions to reflect new current state
    - Update version number and last updated date
    - Document reasoning in commit message
 
@@ -341,24 +391,17 @@ CREATE INDEX idx_indexer_state_updated ON indexer_state (updated_at);
    - API documentation
    - README files
 
-### Backwards Compatibility
-
-When changing column names:
-1. Add new column with preferred name
-2. Populate with data from old column  
-3. Update all application code
-4. Drop old column in separate migration
-5. Update this specification
-
 ### Validation
 
 Before deploying changes:
-- [ ] All column names match this specification
+- [ ] All column names match this specification exactly
 - [ ] Indexer inserts use exact column names from spec
 - [ ] Views reference correct column names
 - [ ] API responses use standardized names
 - [ ] Frontend types match database schema
+- [ ] All indexes are created as specified
+- [ ] Constraints are properly defined
 
 ---
 
-**⚠️ IMPORTANT**: This document is the single source of truth for database schema. All changes must be reflected here first before implementation.
+**⚠️ IMPORTANT**: This document is the single source of truth for the current database schema. All code changes must reference this specification.

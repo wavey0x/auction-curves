@@ -1,0 +1,5 @@
+2025-09-01 14:02:39,772 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:02:39,772 - __main__ - INFO - 🚀 Starting Odos Price Service
+2025-09-01 14:02:39,772 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=1000
+2025-09-01 14:02:39,772 - __main__ - WARNING - ⚠️  No Odos API key configured - may hit rate limits
+2025-09-01 14:02:39,792 - __main__ - INFO - ✅ Single cycle completed (--once mode)

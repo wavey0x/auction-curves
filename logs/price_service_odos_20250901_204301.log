@@ -1,0 +1,12 @@
+2025-09-01 20:43:01,931 - __main__ - INFO - ✅ Database connection established
+2025-09-01 20:43:01,931 - __main__ - INFO - 🚀 Starting Odos Price Service
+2025-09-01 20:43:01,931 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=40
+2025-09-01 20:43:01,931 - __main__ - WARNING - ⚠️  No Odos API key configured - may hit rate limits
+2025-09-01 20:43:01,951 - __main__ - INFO - [ODOS] Found 1 recent unprocessed takes (< 40 blocks old)
+2025-09-01 20:43:02,118 - __main__ - ERROR - Failed to store price for 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E: duplicate key value violates unique constraint "token_prices_chain_id_block_number_token_address_source_key"
+DETAIL:  Key (chain_id, block_number, token_address, source)=(1, 23267077, 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E, odos) already exists.
+
+2025-09-01 20:43:02,382 - __main__ - ERROR - Failed to store price for 0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7: duplicate key value violates unique constraint "token_prices_chain_id_block_number_token_address_source_key"
+DETAIL:  Key (chain_id, block_number, token_address, source)=(1, 23267077, 0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7, odos) already exists.
+
+2025-09-01 20:43:02,382 - __main__ - INFO - [ODOS] ✅ Processed take 0x3B41F0...: stored 2 prices

@@ -1,0 +1,25 @@
+2025-09-01 14:40:51,008 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:40:51,008 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 14:40:51,009 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000
+2025-09-01 14:40:51,009 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 14:40:51,029 - __main__ - INFO - [COWSWAP] Found 11 recent unprocessed mainnet takes (< 5000 blocks old)
+2025-09-01 14:40:51,029 - __main__ - INFO - [COWSWAP] Processing 11 takes with 15 unique tokens
+2025-09-01 14:40:51,029 - __main__ - INFO - [COWSWAP] 🔍 Fetching prices for 15 tokens via quotes
+2025-09-01 14:40:51,068 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x4125..a275: Access forbidden
+2025-09-01 14:40:51,196 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xb7b1..4b99: Access forbidden
+2025-09-01 14:40:51,340 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xdAC1..1ec7: Access forbidden
+2025-09-01 14:40:51,469 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x5B8C..E270: Access forbidden
+2025-09-01 14:40:51,609 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x132d..2125: Access forbidden
+2025-09-01 14:40:51,743 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x57a2..D0e2: Access forbidden
+2025-09-01 14:40:51,870 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xc3b1..51dD: Access forbidden
+2025-09-01 14:40:52,002 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x9798..2E37: Access forbidden
+2025-09-01 14:40:52,137 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x47D1..f05e: Access forbidden
+2025-09-01 14:40:52,266 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xBfed..4857: Access forbidden
+2025-09-01 14:40:52,397 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xa393..7fbD: Access forbidden
+2025-09-01 14:40:52,525 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x62B9..0Aa7: Access forbidden
+2025-09-01 14:40:52,657 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xf939..1b4E: Access forbidden
+2025-09-01 14:40:52,792 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0x9571..b098: Access forbidden
+2025-09-01 14:40:52,918 - __main__ - ERROR - [COWSWAP] ❌ Quote blocked for 0xD533..cd52: Access forbidden
+2025-09-01 14:40:53,023 - __main__ - INFO - [COWSWAP] 📊 Successfully got 0/15 prices
+2025-09-01 14:40:53,023 - __main__ - INFO - [COWSWAP] ✅ Processed 11 takes: stored 0 prices
+2025-09-01 14:40:53,023 - __main__ - INFO - ✅ Single cycle completed (--once mode)

@@ -169,35 +169,6 @@ CREATE TABLE indexer_state (
 -- Create indexes for indexer_state table
 CREATE INDEX idx_indexer_state_updated ON indexer_state (updated_at);
 
--- ============================================================================
--- PRICE HISTORY TRACKING
--- ============================================================================
--- Track price changes over time for each round (for charting)
-CREATE TABLE price_history (
-    auction_address VARCHAR(100) NOT NULL,
-    chain_id INTEGER NOT NULL DEFAULT 1,
-    round_id INTEGER NOT NULL,
-    from_token VARCHAR(100) NOT NULL,
-    
-    -- Price data
-    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
-    price DECIMAL(30,0) NOT NULL,
-    available_amount NUMERIC(78,18) NOT NULL,
-    seconds_from_round_start INTEGER NOT NULL,
-    
-    -- Block context
-    block_number BIGINT NOT NULL
-    
-    -- FOREIGN KEY (auction_address, chain_id, round_id) REFERENCES auction_rounds(auction_address, chain_id, round_id) -- Removed: not needed
-);
-
--- Create indexes for price_history table
-CREATE INDEX idx_price_history_timestamp ON price_history (timestamp);
-CREATE INDEX idx_price_history_round ON price_history (auction_address, chain_id, round_id);
-CREATE INDEX idx_price_history_chain ON price_history (chain_id);
-
--- Make price_history a hypertable for time-series optimization
-SELECT create_hypertable('price_history', 'timestamp', if_not_exists => TRUE);
 
 -- Insert some common tokens for reference across different chains
 INSERT INTO tokens (address, symbol, name, decimals, chain_id) VALUES
@@ -386,7 +357,7 @@ COMMENT ON TABLE tokens IS 'Token metadata cache for display purposes across mul
 COMMENT ON TABLE auctions IS 'Main auction contracts table - one entry per deployed auction contract';
 COMMENT ON TABLE rounds IS 'Tracks individual rounds within Auctions, created by kick events';
 COMMENT ON TABLE takes IS 'Tracks individual takes within rounds, created by take events';
-COMMENT ON TABLE price_history IS 'Time-series price data for charting and analytics';
+-- price_history removed (unused)
 COMMENT ON VIEW active_auction_rounds IS 'Active rounds with calculated time remaining and elapsed time';
 COMMENT ON VIEW recent_takes IS 'Recent takes with full token and round context';
 

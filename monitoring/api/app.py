@@ -153,11 +153,12 @@ async def get_auction_takes(
     auction_address: str,
     round_id: Optional[int] = Query(None, description="Filter by round ID"),
     limit: int = Query(50, ge=1, le=100, description="Number of takes to return"),
+    offset: int = Query(0, ge=0, description="Number of takes to skip for pagination"),
     data_service: DataProvider = Depends(get_data_service)
 ):
     """Get takes for a specific auction"""
     try:
-        result = await data_service.get_auction_takes(auction_address, round_id, limit, chain_id)
+        result = await data_service.get_auction_takes(auction_address, round_id, limit, chain_id, offset)
         return result
     except Exception as e:
         logger.error(f"Error fetching auction takes: {e}")

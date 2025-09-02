@@ -1,0 +1,70 @@
+2025-09-01 14:59:05,048 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:59:05,048 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 14:59:05,048 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000
+2025-09-01 14:59:05,048 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 14:59:05,070 - __main__ - INFO - [COWSWAP] Found 11 recent unprocessed mainnet takes (< 5000 blocks old)
+2025-09-01 14:59:05,070 - __main__ - INFO - [COWSWAP] Processing 11 takes with 15 unique tokens
+2025-09-01 14:59:05,070 - __main__ - INFO - [COWSWAP] 🔍 Fetching prices for 15 tokens via quotes
+2025-09-01 14:59:05,070 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x132d..2125
+2025-09-01 14:59:05,070 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0x132d..2125
+2025-09-01 14:59:05,070 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:05,074 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:05,212 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:05,212 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:05,212 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:05,212 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0x132d..2125: Token not supported
+2025-09-01 14:59:05,213 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0x132d..2125
+2025-09-01 14:59:05,318 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xBfed..4857
+2025-09-01 14:59:05,318 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0xBfed..4857
+2025-09-01 14:59:05,318 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:05,319 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:05,456 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:05,456 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:05,456 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:05,456 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0xBfed..4857: Token not supported
+2025-09-01 14:59:05,457 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0xBfed..4857
+2025-09-01 14:59:05,559 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x4125..a275
+2025-09-01 14:59:05,560 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0x4125..a275
+2025-09-01 14:59:05,560 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:05,561 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:05,695 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:05,696 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:05,696 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:05,696 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0x4125..a275: Token not supported
+2025-09-01 14:59:05,696 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0x4125..a275
+2025-09-01 14:59:05,801 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xD533..cd52
+2025-09-01 14:59:05,801 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0xD533..cd52
+2025-09-01 14:59:05,801 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:05,803 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:06,222 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:06,222 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:06,222 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:06,222 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0xD533..cd52: Token not supported
+2025-09-01 14:59:06,222 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0xD533..cd52
+2025-09-01 14:59:06,327 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x5B8C..E270
+2025-09-01 14:59:06,327 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0x5B8C..E270
+2025-09-01 14:59:06,327 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:06,329 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:06,466 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:06,466 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:06,466 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:06,466 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0x5B8C..E270: Token not supported
+2025-09-01 14:59:06,466 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0x5B8C..E270
+2025-09-01 14:59:06,571 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x9798..2E37
+2025-09-01 14:59:06,571 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0x9798..2E37
+2025-09-01 14:59:06,571 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:06,574 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:06,714 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:06,714 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:06,714 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:06,714 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0x9798..2E37: Token not supported
+2025-09-01 14:59:06,714 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0x9798..2E37
+2025-09-01 14:59:06,819 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xb7b1..4b99
+2025-09-01 14:59:06,819 - __main__ - INFO - [COWSWAP] 📤 Sell amount: 1000000000000000000 0xb7b1..4b99
+2025-09-01 14:59:06,819 - __main__ - INFO - [COWSWAP] 📤 From address: 0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503
+2025-09-01 14:59:06,822 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 14:59:06,963 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 14:59:06,964 - __main__ - INFO - xxxxxurl: https://api.cow.fi/mainnet/api/v1/quote
+2025-09-01 14:59:06,964 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 14:59:06,964 - __main__ - DEBUG - [COWSWAP] ⚠️ Quote failed for 0xb7b1..4b99: Token not supported
+2025-09-01 14:59:06,964 - __main__ - DEBUG - [COWSWAP] ❌ No price for 0xb7b1..4b99

@@ -13,6 +13,7 @@ import {
   Check,
   Activity,
   Home,
+  Gavel,
 } from "lucide-react";
 import { apiClient } from "../lib/api";
 import StatsCard from "../components/StatsCard";
@@ -20,9 +21,11 @@ import TakesTable from "../components/TakesTable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ChainIcon from "../components/ChainIcon";
 import CollapsibleSection from "../components/CollapsibleSection";
+import TokensList from "../components/TokensList";
 import {
   formatAddress,
   formatTokenAmount,
+  formatReadableTokenAmount,
   formatUSD,
   formatTimeAgo,
   formatDuration,
@@ -37,6 +40,19 @@ const AuctionDetails: React.FC = () => {
     new Set()
   );
 
+  // Pagination state for takes
+  const [currentPage, setCurrentPage] = useState(1);
+  const takesPerPage = 50;
+
+  // Pagination handlers
+  const handleNextPage = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
   // Fetch auction details
   const {
     data: auction,
@@ -48,12 +64,19 @@ const AuctionDetails: React.FC = () => {
     enabled: !!chainId && !!address,
   });
 
-  // Fetch recent takes
+  // Fetch takes with pagination
   const { data: takes } = useQuery({
-    queryKey: ["auctionTakes", chainId, address],
-    queryFn: () => apiClient.getAuctionTakes(address!, parseInt(chainId!), undefined, 25),
+    queryKey: ["auctionTakes", chainId, address, currentPage],
+    queryFn: () => {
+      const offset = (currentPage - 1) * takesPerPage;
+      return apiClient.getAuctionTakes(address!, parseInt(chainId!), undefined, takesPerPage, offset);
+    },
     enabled: !!chainId && !!address,
   });
+
+  // Pagination state (calculated after takes is available)
+  const canGoNext = takes && takes.length === takesPerPage;
+  const canGoPrev = currentPage > 1;
 
   // Fetch tokens for symbol resolution
   const { data: tokens } = useQuery({
@@ -127,96 +150,10 @@ const AuctionDetails: React.FC = () => {
             Back to Dashboard
           </Link>
 
-          <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <Home className="h-6 w-6 text-primary-500" />
-              <h1 className="text-2xl font-bold text-gray-100">Auction</h1>
-              <ChainIcon chainId={auction.chain_id} size="sm" showName={true} />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleCopy(auction.address)}
-                className="font-mono text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-1 transition-colors"
-              >
-                <span>{formatAddress(auction.address, 12)}</span>
-                {copiedAddresses.has(auction.address) ? (
-                  <Check className="h-3 w-3 text-primary-500 animate-pulse" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
-              </button>
-
-              {chainInfo.explorer !== "#" && (
-                <a
-                  href={`${chainInfo.explorer}/address/${auction.address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <div
-            className={cn(
-              "flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium",
-              isActive
-                ? "bg-success-500/20 text-success-400"
-                : "bg-gray-700 text-gray-400"
-            )}
-          >
-            <div
-              className={cn(
-                "h-2 w-2 rounded-full",
-                isActive ? "bg-success-500 animate-pulse" : "bg-gray-600"
-              )}
-            ></div>
-            <span>{isActive ? "Active" : "Inactive"}</span>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-100">Auction</h1>
         </div>
       </div>
 
-      {/* Trading Pairs */}
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Trading Configuration</h3>
-
-        <div className="flex items-center justify-center space-x-8 py-6">
-          <div className="text-center">
-            <div className="text-sm text-gray-500 mb-2">From Tokens</div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {auction.from_tokens.map((token, index) => (
-                <span
-                  key={token.address}
-                  className="inline-flex items-center space-x-1"
-                >
-                  <span className="text-primary-400 font-medium text-lg">
-                    {token.symbol}
-                  </span>
-                  {index < auction.from_tokens.length - 1 && (
-                    <span className="text-gray-500">,</span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <TrendingDown className="h-8 w-8 text-gray-500" />
-          </div>
-
-          <div className="text-center">
-            <div className="text-sm text-gray-500 mb-2">Want Token</div>
-            <span className="text-yellow-400 font-medium text-lg">
-              {auction.want_token.symbol}
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Key Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -249,97 +186,93 @@ const AuctionDetails: React.FC = () => {
         />
       </div>
 
-      {/* Current Round Info */}
-      {currentRound && (
-        <CollapsibleSection
-          title="Current Round"
-          icon={Activity}
-          iconColor="text-primary-500"
-        >
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Round ID</div>
-              <Link
-                to={`/round/${chainId}/${auction.address}/${currentRound.round_id}`}
-                className="inline-flex items-center space-x-1 text-primary-400 hover:text-primary-300 transition-colors"
-              >
-                <span className="font-mono font-semibold">
-                  R{currentRound.round_id}
-                </span>
-              </Link>
-            </div>
-
-            {currentRound.current_price && (
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">Current Price</div>
-                <div className="font-mono text-gray-200 text-sm">
-                  {formatTokenAmount(currentRound.current_price, 6, 4)}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {formatUSD(parseFloat(currentRound.current_price) * 1.5)}
-                </div>
-              </div>
-            )}
-
-            {currentRound.available_amount && (
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">Available</div>
-                <div className="font-mono text-gray-200 text-sm">
-                  {formatTokenAmount(currentRound.available_amount, 18, 2)}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  of {formatTokenAmount(currentRound.initial_available, 18, 2)}
-                </div>
-              </div>
-            )}
-
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Kicked At</div>
-              <div className="text-gray-300 text-sm">
-                {formatTimeAgo(
-                  new Date(currentRound.kicked_at).getTime() / 1000
-                )}
-              </div>
-            </div>
-
-            {timeRemaining > 0 && (
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">Time Remaining</div>
-                <div className="text-success-400 font-medium text-sm">
-                  {Math.floor(timeRemaining / 60)}m{" "}
-                  {timeRemaining % 60}s
-                </div>
-              </div>
-            )}
-
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-2">Sales This Round</div>
-              <div className="text-gray-200 font-medium text-sm">
-                {currentRound.total_takes}
+      {/* Auction Details */}
+      <CollapsibleSection
+        title="Auction Details"
+        icon={Gavel}
+        iconColor="text-purple-500"
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 justify-items-center">
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-2">Chain</div>
+            <div className="flex justify-center">
+              <div title={`Chain ID: ${auction.chain_id}`}>
+                <ChainIcon chainId={auction.chain_id} size="sm" showName={false} />
               </div>
             </div>
           </div>
-        </CollapsibleSection>
-      )}
 
-      {/* Auction Parameters */}
-      <CollapsibleSection
-        title="Configuration"
-        icon={Activity}
-        iconColor="text-purple-500"
-      >
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-2">Address</div>
+            <button
+              onClick={() => handleCopy(auction.address)}
+              className="font-mono text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-1 transition-colors"
+            >
+              <span>{formatAddress(auction.address, 4)}</span>
+              {copiedAddresses.has(auction.address) ? (
+                <Check className="h-3 w-3 text-primary-500 animate-pulse" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </button>
+            {chainInfo.explorer !== "#" && (
+              <a
+                href={`${chainInfo.explorer}/address/${auction.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors inline-block mt-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-2">Enabled Tokens</div>
+            {auction.from_tokens && auction.from_tokens.length > 0 ? (
+              <TokensList
+                tokens={auction.from_tokens}
+                displayMode="grid"
+                maxDisplay={6}
+                expandable={true}
+                showSearch={auction.from_tokens.length > 20}
+                gridColumns={3}
+                className="max-w-xs"
+                tokenClassName="text-primary-400 font-medium"
+                showAddressFeatures={true}
+                chainId={auction.chain_id}
+              />
+            ) : (
+              <span className="text-gray-500 text-sm">—</span>
+            )}
+          </div>
+
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-2">Want Token</div>
+            <div className="text-yellow-400 font-medium text-sm">
+              {auction.want_token?.symbol || "—"}
+            </div>
+          </div>
+
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-2">Decay Rate</div>
             <div className="flex items-center justify-center space-x-1">
               <TrendingDown className="h-3 w-3 text-gray-400" />
-              <span className="font-medium text-sm">
-                {(
-                  (1 - parseFloat(auction.parameters.step_decay_rate) / 1e27) *
-                  100
-                ).toFixed(2)}
-                %
-              </span>
+              {auction.parameters?.decay_rate !== undefined ? (
+                <span className="font-medium text-sm">
+                  {(auction.parameters.decay_rate * 100).toFixed(2)}%
+                </span>
+              ) : auction.parameters?.step_decay_rate ? (
+                <span className="font-medium text-sm">
+                  {(
+                    (1 - parseFloat(auction.parameters.step_decay_rate) / 1e27) *
+                    100
+                  ).toFixed(2)}
+                  %
+                </span>
+              ) : (
+                <span className="text-gray-500">—</span>
+              )}
             </div>
           </div>
 
@@ -347,23 +280,31 @@ const AuctionDetails: React.FC = () => {
             <div className="text-xs text-gray-500 mb-2">Update Interval</div>
             <div className="flex items-center justify-center space-x-1">
               <Clock className="h-3 w-3 text-gray-400" />
-              <span className="font-medium text-sm">
-                {auction.parameters.price_update_interval}s
-              </span>
+              {auction.parameters?.price_update_interval ? (
+                <span className="font-medium text-sm">
+                  {auction.parameters.price_update_interval}s
+                </span>
+              ) : (
+                <span className="text-gray-500">—</span>
+              )}
             </div>
           </div>
 
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-2">Auction Length</div>
             <div className="font-medium text-sm">
-              {formatDuration(auction.parameters.auction_length)}
+              {auction.parameters?.auction_length
+                ? `${(auction.parameters.auction_length / 3600).toFixed(1)} hours`
+                : "—"}
             </div>
           </div>
 
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-2">Starting Price</div>
             <div className="font-mono text-sm">
-              {formatTokenAmount(auction.parameters.starting_price, 6, 6)}
+              {auction.parameters?.starting_price
+                ? formatReadableTokenAmount(auction.parameters.starting_price, 6)
+                : "—"}
             </div>
           </div>
 
@@ -385,15 +326,104 @@ const AuctionDetails: React.FC = () => {
         </div>
       </CollapsibleSection>
 
-      {/* Recent Takes */}
+      {/* Current Round Info */}
+      {currentRound && (
+        <CollapsibleSection
+          title="Current Round"
+          icon={() => (
+            <div
+              className={cn(
+                "h-4 w-4 rounded-full",
+                isActive ? "bg-success-500 animate-pulse" : "bg-gray-600"
+              )}
+            />
+          )}
+          iconColor=""
+        >
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
+            <div className="text-center">
+              <div className="text-xs text-gray-500 mb-2">Round ID</div>
+              <Link
+                to={`/round/${chainId}/${auction.address}/${currentRound.round_id}`}
+                className="inline-flex items-center space-x-1 text-primary-400 hover:text-primary-300 transition-colors"
+              >
+                <span className="font-mono font-semibold">
+                  R{currentRound.round_id}
+                </span>
+              </Link>
+            </div>
+
+            {currentRound.current_price && (
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-2">Current Price</div>
+                <div className="font-mono text-gray-200 text-sm">
+                  {formatReadableTokenAmount(currentRound.current_price, 4)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {formatUSD(parseFloat(currentRound.current_price) * 1.5)}
+                </div>
+              </div>
+            )}
+
+            {currentRound.initial_available && (
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-2">Starting Amount</div>
+                <div className="font-mono text-gray-200 text-sm">
+                  {formatTokenAmount(currentRound.initial_available, 18, 2)}
+                </div>
+              </div>
+            )}
+
+            <div className="text-center">
+              <div className="text-xs text-gray-500 mb-2">Kicked At</div>
+              <div className="text-gray-300 text-sm">
+                {formatTimeAgo(
+                  new Date(currentRound.kicked_at).getTime() / 1000
+                )}
+              </div>
+            </div>
+
+            {timeRemaining > 0 && (
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-2">Time Remaining</div>
+                <div className="text-success-400 font-medium text-sm">
+                  {timeRemaining >= 3600 ? (
+                    // >= 1 hour: show hours + minutes
+                    `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m`
+                  ) : (
+                    // < 1 hour: show minutes + seconds
+                    `${Math.floor(timeRemaining / 60)}m ${timeRemaining % 60}s`
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="text-center">
+              <div className="text-xs text-gray-500 mb-2">Sales This Round</div>
+              <div className="text-gray-200 font-medium text-sm">
+                {currentRound.total_takes}
+              </div>
+            </div>
+          </div>
+        </CollapsibleSection>
+      )}
+
+
+      {/* All Takes */}
       {takes && takes.length > 0 && (
         <TakesTable
           takes={takes}
-          title="Recent Takes"
+          title="All Takes"
           tokens={tokens?.tokens}
           showRoundInfo={true}
-          maxHeight="max-h-96"
+          maxHeight="max-h-[600px]"
           auctionAddress={auction.address}
+          // Pagination props
+          currentPage={currentPage}
+          canGoNext={canGoNext}
+          canGoPrev={canGoPrev}
+          onNextPage={handleNextPage}
+          onPrevPage={handlePrevPage}
         />
       )}
 

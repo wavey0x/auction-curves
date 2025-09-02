@@ -8,7 +8,7 @@ compiler:
       enabled: true
       runs: 200
     remappings:
-      - "@openzeppelin=./OpenZeppelin/openzeppelin-contracts@4.9.0"
+      - "@openzeppelin/contracts=OpenZeppelin/openzeppelin-contracts@4.9.0/contracts"
     exclude_paths:
       - "contracts/legacy"
 
@@ -18,14 +18,14 @@ networks:
     gas_limit: 12000000
     gas_price: 20000000000
     required_confs: 1
-    
+
   anvil:
     host: http://127.0.0.1:8545
     gas_limit: 12000000
     gas_price: 20000000000
     chain_id: 31337
     required_confs: 1
-    
+
   mainnet-fork:
     host: http://127.0.0.1:8545
     gas_limit: 12000000

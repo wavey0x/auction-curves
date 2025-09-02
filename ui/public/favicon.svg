@@ -1,0 +1,30 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Blue gradient background matching app -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.1"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background rounded rectangle matching app's bg-primary-500/10 -->
+  <rect x="4" y="4" width="24" height="24" rx="6" ry="6" fill="url(#bgGradient)" stroke="#3b82f6" stroke-width="0.5" stroke-opacity="0.3"/>
+  
+  <!-- Lucide Gavel icon (h-6 w-6 text-primary-400 equivalent) -->
+  <g fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Gavel head -->
+    <path d="m11.5 11.5 4 4"/>
+    <path d="m15.5 15.5 4-4"/>
+    <path d="m14 12 1 1"/>
+    
+    <!-- Gavel handle -->
+    <path d="m18.5 18.5-4-4"/>
+    <path d="m20 20-1.5-1.5"/>
+    <path d="m20 20 2 2"/>
+    
+    <!-- Sound block -->
+    <path d="M9.5 9.5 12 12"/>
+    <path d="M8 8 10.5 10.5"/>
+    <path d="M8 8l-2-2"/>
+  </g>
+</svg>

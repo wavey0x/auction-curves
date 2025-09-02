@@ -103,22 +103,37 @@ PROD_NETWORKS_ENABLED=ethereum,polygon,arbitrum,optimism,base
 PROD_ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/YOUR_KEY
 ```
 
-### Deployment Modes
+### Development Mode
 
-#### Development Mode (`./run.sh dev`)
+#### Modern Development Orchestration (`./dev.sh`)
 
-- Local Anvil blockchain (chain_id: 31337)
-- PostgreSQL via Docker
-- Smart contract auto-deployment
-- **Custom Web3.py indexer** (see below)
-- Full API with database integration
+The development environment has been simplified with a modern orchestration script that replaces the complex `run.sh`:
+
+**Core Services:**
+- PostgreSQL database (via Docker if needed)
+- Custom Web3.py indexer for blockchain event processing
+- FastAPI backend with database integration
 - React dev server with hot reload
-- Price monitoring and activity simulation
+- All pricing services (ypm, odos, cowswap) running in parallel
+
+**Key Features:**
+- **Unified Command**: Single `./dev.sh` command starts all services
+- **Session Management**: Uses tmux for better service visibility and control
+- **Health Checks**: Verifies each service is ready before proceeding
+- **Logging**: All services log to `logs/` directory with timestamps
+- **Clean Shutdown**: Ctrl+C stops all services gracefully
+
+**Usage Examples:**
+```bash
+./dev.sh                    # Start all services with tmux
+./dev.sh --no-ui            # Start without React UI
+./dev.sh --attach           # Start and attach to session
+./dev.sh --no-tmux          # Use background processes
+```
 
 **Dev Mode Custom Indexer:**
-In development mode, the custom Web3.py indexer processes blockchain events:
+The custom Web3.py indexer processes blockchain events:
 
-- `./run.sh dev` deploys contracts and starts the indexer
 - Factory pattern automatically discovers new auction deployments
 - Real-time event processing with database integration
 - Human-readable value conversion (9 instead of 9e18)
@@ -147,23 +162,23 @@ decay_rate = 1.0 - (float(step_decay_rate_wei) / 1e27)  # 0.005 instead of 995e2
 starting_price = float(starting_price_wei) / 1e18      # 9.0 instead of 9e18
 ```
 
-#### Mock Mode (`./run.sh mock`)
+#### Session Management
 
-- Hardcoded test data (no blockchain/database required)
-- Simple FastAPI server (`simple_server.py`)
-- React dev server
-- All networks supported with fake data
-- 10-second startup time
-- Perfect for UI development and testing
+**Tmux Integration:**
+The development script uses tmux sessions for better service management:
+- Each service runs in its own pane for easy monitoring
+- Use `tmux attach -t auction_dev` to connect to the active session
+- Individual panes show real-time logs for each service
+- Fallback to background processes if tmux is not available
 
-#### Production Mode (`./run.sh prod`)
+**Service Control:**
+- Individual service logs available in `logs/` directory
+- Health checks ensure services are ready before proceeding
+- Clean shutdown stops all services when interrupted (Ctrl+C)
 
-- Multi-network blockchain indexing
-- Production database
-- Full API with all endpoints
-- Custom Web3.py indexer with multi-network support
-- Optional UI (use `--no-ui` flag for server-only)
-- Health monitoring endpoints
+#### Legacy Modes (Deprecated)
+
+**Note:** The old `run.sh` with dev/mock/prod modes has been replaced by `dev.sh` for simplicity. The new approach focuses solely on development orchestration without complex mode switching.
 
 ## API Endpoints
 
@@ -273,11 +288,24 @@ Always verify database connection settings:
 
 ```bash
 # Test connection works
-python3 -c "import psycopg2; conn = psycopg2.connect('postgresql://postgres@localhost:5432/auction_dev'); print('✅ Connection successful')"
+python3 -c "import psycopg2; conn = psycopg2.connect('postgresql://wavey@localhost:5432/auction_dev'); print('✅ Connection successful')"
 
 # Verify table access
 docker exec auction_postgres psql -U wavey -d auction_dev -c "SELECT COUNT(*) FROM auctions;"
 ```
+
+#### LLM Development Note
+
+**CRITICAL FOR AI ASSISTANTS**: When working with this codebase, pay special attention to database user consistency:
+
+- **Always use `wavey` user** for all development database connections in this project
+- **Never suggest mixing `postgres` and `wavey` users** - this causes connection failures
+- **Always verify which user is configured** in `.env` files before suggesting database operations
+- **Reference the exact user account** when providing connection examples or troubleshooting
+- The `dev.sh` script automatically loads `DEV_DATABASE_URL=postgresql://wavey@localhost:5432/auction_dev`
+- All services (API, indexer, pricing) must use the same database user for consistency
+
+This prevents the most common development issues and ensures all services can access shared database resources.
 
 ## Frontend Architecture
 
@@ -433,15 +461,30 @@ event AuctionSale(address indexed auction, uint256 indexed roundId, uint256 sale
 ### Starting Development
 
 ```bash
-# Quick UI testing (10 seconds)
-./run.sh mock
+# Start all services (UI, API, Indexer, Pricing)
+./dev.sh
 
-# Full development stack (60 seconds)
-./run.sh dev
+# Start without UI (backend services only)
+./dev.sh --no-ui
 
-# Production deployment (2-5 minutes)
-./run.sh prod
+# Start and immediately attach to tmux session
+./dev.sh --attach
+
+# Use background processes instead of tmux
+./dev.sh --no-tmux
 ```
+
+**Quick Start Guide:**
+1. Ensure `.env` file is configured (copy from `.env.example`)
+2. Start PostgreSQL (Docker: `docker-compose up -d postgres`)
+3. Run `./dev.sh` to start all services
+4. Access UI at http://localhost:3000, API at http://localhost:8000
+
+**Session Management:**
+- Use `tmux attach -t auction_dev` to connect to running session
+- Each service has its own pane for monitoring
+- Ctrl+C stops all services cleanly
+- Logs are saved to `logs/` directory
 
 ### Common Development Tasks
 

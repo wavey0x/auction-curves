@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 export function formatAddress(address: string, length = 4): string {
   if (!address) return ''
   if (address.length <= length * 2) return address
-  return `${address.slice(0, length)}...${address.slice(-length)}`
+  return `${address.slice(0, length)}..${address.slice(-length)}`
 }
 
 /**
@@ -51,6 +51,31 @@ function getSignificantDecimals(num: number): number {
   if (num >= 1) return 3
   if (num >= 0.1) return 4
   return 6
+}
+
+/**
+ * Format already human-readable token amounts (from API)
+ */
+export function formatReadableTokenAmount(
+  amount: string | number,
+  maxDecimals: number = 4
+): string {
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount
+  if (!num || num === 0) return '0'
+  
+  if (num < 0.0001) {
+    return '< 0.0001'
+  }
+  
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(2)}M`
+  }
+  
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(2)}K`
+  }
+  
+  return num.toFixed(Math.min(maxDecimals, getSignificantDecimals(num)))
 }
 
 /**

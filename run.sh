@@ -283,7 +283,7 @@ check_database_consistency() {
     fi
     
     # List of required tables
-    local required_tables=("auctions" "rounds" "takes" "tokens" "price_history" "indexer_state")
+    local required_tables=("auctions" "rounds" "takes" "tokens" "indexer_state")
     local missing_tables=()
     
     # Check each required table
@@ -441,7 +441,7 @@ cleanup_dev_data() {
         
         # Truncate business logic tables (only if they exist)
         echo -e "${BLUE}   Truncating business logic tables...${NC}"
-        for table in auctions rounds takes tokens price_history; do
+        for table in auctions rounds takes tokens; do
             psql "$DATABASE_URL" -c "
                 DO \$\$ BEGIN
                     IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = '$table') THEN

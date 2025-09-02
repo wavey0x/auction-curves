@@ -1,0 +1,8 @@
+2025-09-01 14:03:15,026 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:03:15,026 - __main__ - INFO - 🚀 Starting Odos Price Service
+2025-09-01 14:03:15,026 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000000
+2025-09-01 14:03:15,026 - __main__ - WARNING - ⚠️  No Odos API key configured - may hit rate limits
+2025-09-01 14:03:15,046 - __main__ - INFO - [ODOS] Found 1 recent unprocessed takes (< 5000000 blocks old)
+2025-09-01 14:03:15,477 - __main__ - INFO - [ODOS] 💰 Stored price: 0xC02a..6Cc2 = $4310.4290
+2025-09-01 14:03:15,640 - __main__ - INFO - [ODOS] ✅ Processed take TEST-TAK...: stored 1 prices
+2025-09-01 14:03:15,744 - __main__ - INFO - ✅ Single cycle completed (--once mode)

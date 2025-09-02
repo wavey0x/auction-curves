@@ -1,0 +1,71 @@
+2025-09-01 19:16:07,999 - __main__ - INFO - Database connection established
+2025-09-01 19:16:07,999 - __main__ - INFO - 🚀 Starting ypricemagic Price Service
+2025-09-01 19:16:09,496 - __main__ - INFO - 🌐 Initializing Brownie network connection...
+2025-09-01 19:16:09,496 - __main__ - INFO - Connecting to 'electro' network...
+2025-09-01 19:16:11,825 - __main__ - INFO - ✅ Connected to Brownie network: electro
+2025-09-01 19:16:12,099 - __main__ - INFO - 📊 Chain info: height=23271511, id=1
+2025-09-01 19:16:12,240 - __main__ - INFO - 🌐 Web3 connection test: latest block = 23271511
+2025-09-01 19:16:12,240 - __main__ - INFO - 📦 Importing ypricemagic...
+2025-09-01 19:16:12,825 - dank_mids.envs - INFO - For your information, you can tweak your configuration for optimal performance using any of the envs below:
+2025-09-01 19:16:12,825 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_MULTICALL_SIZE`, default_value=10000, using_default=True)
+2025-09-01 19:16:12,825 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_JSONRPC_BATCH_SIZE`, default_value=500, using_default=True)
+2025-09-01 19:16:12,825 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_REQUESTS_PER_SECOND`, default_value=50, using_default=True)
+2025-09-01 19:16:12,825 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MIN_REQUESTS_PER_SECOND`, default_value=10, using_default=True)
+2025-09-01 19:16:12,825 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_GANACHE_FORK`, default_value=False, using_default=True)
+2025-09-01 19:16:12,825 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_AIOHTTP_TIMEOUT`, default_value=1200, using_default=True)
+2025-09-01 19:16:12,838 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_COLLECT_STATS`, default_value=False, using_default=True)
+2025-09-01 19:16:12,838 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_STUCK_CALL_TIMEOUT`, default_value=120, using_default=True)
+2025-09-01 19:16:12,838 - dank_mids.envs - INFO - More details can be found in dank_mids/ENVIRONMENT_VARIABLES.py
+2025-09-01 19:16:12,838 - dank_mids.envs - INFO - NOTE: You can disable these logs by setting the `TYPEDENVS_SHUTUP` env var to any value.
+2025-09-01 19:16:13,324 - typed_envs - INFO - EnvironmentVariable[int](name=`YPRICEMAGIC_GETLOGS_BATCH_SIZE`, default_value=0, using_default=True)
+2025-09-01 19:16:14,043 - __main__ - INFO - ✅ ypricemagic imported successfully
+2025-09-01 19:16:14,043 - __main__ - INFO - 🧪 Testing ypricemagic functionality...
+2025-09-01 19:16:14,043 - __main__ - INFO - 🔄 Checking for stale 'processing' requests from previous service instances...
+2025-09-01 19:16:14,058 - __main__ - INFO - [2 remaining] Processing 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E (crvUSD) at block 23270429 (req 3052)
+2025-09-01 19:16:14,077 - y.prices.utils.ypriceapi - INFO - ypriceAPI is now in beta!
+
+Head to ypriceapi-beta.yearn.finance and sign up for access. You get:
+ - access to your desired price data more quickly...
+ - ...from nodes run by yearn-affiliated big brains...
+ - ...on all the networks Yearn supports.
+
+Check out some testimonials from our close frens:
+ - from anon4338, "I can now get prices for all of my useless shitcoins without waiting all day for ypricemagic to load logs."
+ - from anon6458, "I don't need to maintain an archive node anymore and that's saving me money."
+ - from anon1537, "Wow, so fast!"
+
+2025-09-01 19:16:14,080 - dank_mids.controller - INFO - Dank Middleware initializing... Strap on your rocket boots...
+2025-09-01 19:16:14,778 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> is cached thru block 23271504, loading from db
+2025-09-01 19:16:14,778 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf, topic0=0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc)
+2025-09-01 19:16:14,997 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> loaded 261 objects thru block 23271504 from disk
+2025-09-01 19:16:15,918 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for uniswap v2 on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 19:16:15,918 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for sushiswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 19:16:15,918 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for shibaswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 19:16:15,919 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> is cached thru block 23271503, loading from db
+2025-09-01 19:16:15,920 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x0000000022D53366457F9d5E68Ec105046FC4383)
+2025-09-01 19:16:16,047 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> is cached thru block 23269147, loading from db
+2025-09-01 19:16:16,048 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'], topic0=0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118)
+2025-09-01 19:16:17,751 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> is cached thru block 23269123, loading from db
+2025-09-01 19:16:17,751 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 19:16:17,757 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> is cached thru block 23271507, loading from db
+2025-09-01 19:16:17,758 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 19:16:17,758 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> is cached thru block 23271506, loading from db
+2025-09-01 19:16:17,758 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x115934131916C8b277DD010Ee02de363c09d037c'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 19:16:33,483 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> loaded 37 objects thru block 23271503 from disk
+2025-09-01 19:16:34,370 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> is cached thru block 23271504, loading from db
+2025-09-01 19:16:34,370 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5)
+2025-09-01 19:16:34,372 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> is cached thru block 23271504, loading from db
+2025-09-01 19:16:34,372 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x8F942C20D02bEfc377D41445793068908E2250D0)
+2025-09-01 19:16:34,422 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> loaded 1021 objects thru block 23271506 from disk
+2025-09-01 19:16:34,633 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> loaded 10 objects thru block 23271504 from disk
+2025-09-01 19:16:34,698 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> loaded 57 objects thru block 23271504 from disk
+2025-09-01 19:16:35,338 - y.prices.dex.uniswap.v2 - INFO - Loaded 1022 pools supporting 848 tokens on shibaswap
+2025-09-01 19:16:38,420 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> loaded 4379 objects thru block 23271507 from disk
+2025-09-01 19:16:39,333 - y.prices.dex.uniswap.v2 - INFO - Loaded 4397 pools supporting 3666 tokens on sushiswap
+2025-09-01 19:16:40,322 - y.prices.stable_swap.curve.startup - INFO - loaded 1836 pools from 2 registries and 7 factories
+2025-09-01 19:17:06,902 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> loaded 45326 objects thru block 23269147 from disk
+2025-09-01 19:19:27,203 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> loaded 453535 objects thru block 23269123 from disk
+2025-09-01 19:20:49,800 - y.prices.dex.uniswap.v2 - INFO - Loaded 453872 pools supporting 444933 tokens on uniswap v2
+2025-09-01 19:23:07,727 - __main__ - INFO - [1 remaining] ✅ Completed 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E = $1.00005
+2025-09-01 19:23:07,728 - __main__ - INFO - [1 remaining] Processing 0xdC035D45d973E3EC169d2276DDab16f1e407384F (USDS) at block 23270429 (req 3054)
+2025-09-01 19:23:08,323 - __main__ - INFO - [0 remaining] ✅ Completed 0xdC035D45d973E3EC169d2276DDab16f1e407384F = $0.99983483

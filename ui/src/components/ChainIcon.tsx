@@ -4,7 +4,7 @@ import { apiClient } from '../lib/api'
 
 interface ChainIconProps {
   chainId: number
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
   showName?: boolean
   className?: string
 }
@@ -42,12 +42,14 @@ const ChainIcon: React.FC<ChainIconProps> = ({
   })
 
   const sizeClasses = {
+    xs: 'h-4 w-4',
     sm: 'h-5 w-5',
     md: 'h-6 w-6', 
     lg: 'h-8 w-8'
   }
 
   const textSizes = {
+    xs: 'text-xs',
     sm: 'text-xs',
     md: 'text-sm',
     lg: 'text-base'
@@ -66,19 +68,20 @@ const ChainIcon: React.FC<ChainIconProps> = ({
     setImageError(true)
   }
 
+  const containerSpacing = showName ? 'space-x-2' : 'space-x-0'
   return (
-    <div className={`inline-flex items-center space-x-2 tooltip ${className}`}>
+    <div className={`inline-flex items-center ${containerSpacing} tooltip ${className}`}>
       {chainInfo.icon && !imageError ? (
         <img 
           src={chainInfo.icon}
           alt={chainInfo.name}
-          className={`${sizeClasses[size]} rounded-full bg-gray-800`}
+          className={`${sizeClasses[size]} rounded-full bg-gray-800 shrink-0`}
           onError={handleImageError}
           loading="lazy"
         />
       ) : (
         // Fallback: show first letter of chain name in a colored circle
-        <div className={`${sizeClasses[size]} bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center`}>
+        <div className={`${sizeClasses[size]} bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shrink-0`}>
           <span className="text-xs font-bold text-white">
             {chainInfo.shortName.charAt(0).toUpperCase()}
           </span>

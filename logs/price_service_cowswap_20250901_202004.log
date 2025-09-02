@@ -1,0 +1,21 @@
+2025-09-01 20:20:04,254 - __main__ - INFO - ✅ Database connection established
+2025-09-01 20:20:04,254 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 20:20:04,254 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=40
+2025-09-01 20:20:04,254 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 20:20:04,288 - __main__ - INFO - [COWSWAP] Found 1 recent unprocessed mainnet takes (< 40 blocks old)
+2025-09-01 20:20:04,288 - __main__ - INFO - [COWSWAP] Processing 1 takes with 2 unique tokens
+2025-09-01 20:20:04,288 - __main__ - INFO - [COWSWAP] 🔍 Fetching prices for 2 tokens via quotes
+2025-09-01 20:20:04,288 - __main__ - INFO - [COWSWAP] ⏰ Using 30-second delays between requests to avoid rate limiting
+2025-09-01 20:20:04,288 - __main__ - INFO - [COWSWAP] 🚀 Processing token 1/2: 0x62B9..0Aa7
+2025-09-01 20:20:04,288 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x62B9..0Aa7 (amount: 100000000000000000)
+2025-09-01 20:20:06,784 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 20:20:06,785 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x62B9..0Aa7 (amount: 1000000000000000000)
+2025-09-01 20:20:07,666 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 20:20:07,666 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x62B9..0Aa7 (amount: 1000000)
+2025-09-01 20:20:11,016 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 20:20:11,016 - __main__ - INFO - [COWSWAP] ❌ No price for 0x62B9..0Aa7
+2025-09-01 20:20:11,016 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (2/2)...
+2025-09-01 20:20:41,017 - __main__ - INFO - [COWSWAP] 🚀 Processing token 2/2: 0xf939..1b4E
+2025-09-01 20:20:41,017 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xf939..1b4E (amount: 100000000000000000)
+2025-09-01 20:20:43,619 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 20:20:43,620 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xf939..1b4E (amount: 1000000000000000000)

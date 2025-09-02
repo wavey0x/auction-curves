@@ -1,0 +1,4 @@
+2025-09-01 14:28:32,885 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:28:32,885 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 14:28:32,886 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000
+2025-09-01 14:28:32,886 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only

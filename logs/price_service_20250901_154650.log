@@ -1,0 +1,84 @@
+2025-09-01 15:46:53,540 - __main__ - INFO - ✅ Database connection established
+2025-09-01 15:46:53,540 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 15:46:53,540 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000
+2025-09-01 15:46:53,540 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 15:46:53,563 - __main__ - INFO - [COWSWAP] Found 11 recent unprocessed mainnet takes (< 5000 blocks old)
+2025-09-01 15:46:53,563 - __main__ - INFO - [COWSWAP] Processing 11 takes with 15 unique tokens
+2025-09-01 15:46:53,563 - __main__ - INFO - [COWSWAP] 🔍 Fetching prices for 15 tokens via quotes
+2025-09-01 15:46:53,563 - __main__ - INFO - [COWSWAP] ⏰ Using 30-second delays between requests to avoid rate limiting
+2025-09-01 15:46:53,563 - __main__ - INFO - [COWSWAP] 🚀 Processing token 1/15: 0x62B9..0Aa7
+2025-09-01 15:46:53,563 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x62B9..0Aa7 (amount: 100000000000000000)
+2025-09-01 15:46:53,598 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:46:54,892 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:46:54,892 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:46:54,892 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0x62B9..0Aa7 (amount: 100000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:46:54,892 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x62B9..0Aa7 (amount: 1000000000000000000)
+2025-09-01 15:46:54,897 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:46:55,986 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:46:55,986 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:46:55,986 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0x62B9..0Aa7 (amount: 1000000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:46:55,986 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x62B9..0Aa7 (amount: 1000000)
+2025-09-01 15:46:55,992 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:46:56,981 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:46:56,982 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:46:56,982 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0x62B9..0Aa7 (amount: 1000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:46:56,982 - __main__ - DEBUG - [COWSWAP] ❌ All quote attempts failed for 0x62B9..0Aa7
+2025-09-01 15:46:56,982 - __main__ - INFO - [COWSWAP] ❌ No price for 0x62B9..0Aa7
+2025-09-01 15:46:56,982 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (2/15)...
+2025-09-01 15:47:26,987 - __main__ - INFO - [COWSWAP] 🚀 Processing token 2/15: 0xa393..7fbD
+2025-09-01 15:47:26,987 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xa393..7fbD (amount: 100000000000000000)
+2025-09-01 15:47:26,990 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:47:28,117 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:47:28,118 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:47:28,118 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0xa393..7fbD (amount: 100000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:47:28,118 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xa393..7fbD (amount: 1000000000000000000)
+2025-09-01 15:47:28,120 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:47:29,293 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:47:29,294 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:47:29,294 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0xa393..7fbD (amount: 1000000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:47:29,294 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xa393..7fbD (amount: 1000000)
+2025-09-01 15:47:29,297 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:47:31,917 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:47:31,918 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:47:31,918 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0xa393..7fbD (amount: 1000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:47:31,918 - __main__ - DEBUG - [COWSWAP] ❌ All quote attempts failed for 0xa393..7fbD
+2025-09-01 15:47:31,918 - __main__ - INFO - [COWSWAP] ❌ No price for 0xa393..7fbD
+2025-09-01 15:47:31,918 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (3/15)...
+2025-09-01 15:48:01,919 - __main__ - INFO - [COWSWAP] 🚀 Processing token 3/15: 0xf939..1b4E
+2025-09-01 15:48:01,919 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xf939..1b4E (amount: 100000000000000000)
+2025-09-01 15:48:01,924 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:48:03,257 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:48:03,257 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:48:03,257 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0xf939..1b4E (amount: 100000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:48:03,257 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xf939..1b4E (amount: 1000000000000000000)
+2025-09-01 15:48:03,260 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:48:05,833 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:48:05,834 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:48:05,834 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0xf939..1b4E (amount: 1000000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:48:05,834 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0xf939..1b4E (amount: 1000000)
+2025-09-01 15:48:05,836 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:48:08,949 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:48:08,950 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:48:08,950 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0xf939..1b4E (amount: 1000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:48:08,950 - __main__ - DEBUG - [COWSWAP] ❌ All quote attempts failed for 0xf939..1b4E
+2025-09-01 15:48:08,950 - __main__ - INFO - [COWSWAP] ❌ No price for 0xf939..1b4E
+2025-09-01 15:48:08,950 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (4/15)...
+2025-09-01 15:48:38,955 - __main__ - INFO - [COWSWAP] 🚀 Processing token 4/15: 0x9798..2E37
+2025-09-01 15:48:38,955 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x9798..2E37 (amount: 100000000000000000)
+2025-09-01 15:48:38,969 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:48:39,113 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:48:39,113 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:48:39,113 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0x9798..2E37 (amount: 100000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:48:39,113 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x9798..2E37 (amount: 1000000000000000000)
+2025-09-01 15:48:39,116 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:48:42,238 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:48:42,239 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:48:42,239 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0x9798..2E37 (amount: 1000000000000000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:48:42,239 - __main__ - INFO - [COWSWAP] 📤 Requesting quote for 0x9798..2E37 (amount: 1000000)
+2025-09-01 15:48:42,241 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.cow.fi:443
+2025-09-01 15:48:42,387 - urllib3.connectionpool - DEBUG - https://api.cow.fi:443 "POST /mainnet/api/v1/quote HTTP/1.1" 404 58
+2025-09-01 15:48:42,388 - __main__ - INFO - [COWSWAP] 📥 Response: 404
+2025-09-01 15:48:42,388 - __main__ - DEBUG - [COWSWAP] ⚠️ 404 for 0x9798..2E37 (amount: 1000000): {"errorType":"NoLiquidity","description":"no route found"}
+2025-09-01 15:48:42,388 - __main__ - DEBUG - [COWSWAP] ❌ All quote attempts failed for 0x9798..2E37
+2025-09-01 15:48:42,388 - __main__ - INFO - [COWSWAP] ❌ No price for 0x9798..2E37
+2025-09-01 15:48:42,389 - __main__ - INFO - [COWSWAP] 💤 Waiting 30 seconds before next request (5/15)...

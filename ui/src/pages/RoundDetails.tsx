@@ -18,7 +18,8 @@ import TakesTable from '../components/TakesTable'
 import StatsCard from '../components/StatsCard'
 import StackedProgressMeter from '../components/StackedProgressMeter'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { formatAddress, formatTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
+import AddressDisplay from '../components/AddressDisplay'
+import { formatAddress, formatTokenAmount, formatReadableTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 
 const RoundDetails: React.FC = () => {
   const { chainId, auctionAddress, roundId } = useParams<{
@@ -41,13 +42,25 @@ const RoundDetails: React.FC = () => {
     enabled: !!chainId && !!auctionAddress && !!roundId
   })
 
+  // Fetch rounds data to get specific round info (use the from_token from takes)
+  const { data: roundsData, isLoading: roundsLoading } = useQuery({
+    queryKey: ['auctionRounds', chainId, auctionAddress, takes?.[0]?.from_token],
+    queryFn: async () => {
+      if (takes && takes.length > 0) {
+        return apiClient.getAuctionRounds(auctionAddress!, parseInt(chainId!), takes[0].from_token)
+      }
+      return null
+    },
+    enabled: !!chainId && !!auctionAddress && !!takes && takes.length > 0
+  })
+
   // Fetch tokens for symbol resolution
   const { data: tokens } = useQuery({
     queryKey: ['tokens'],
     queryFn: apiClient.getTokens
   })
 
-  const isLoading = detailsLoading || takesLoading
+  const isLoading = detailsLoading || takesLoading || roundsLoading
 
   if (isLoading) {
     return (
@@ -82,7 +95,24 @@ const RoundDetails: React.FC = () => {
 
   const currentRound = auctionDetails.current_round
   const isCurrentRound = currentRound && currentRound.round_id.toString() === roundId
-  const roundInfo = isCurrentRound ? currentRound : {
+  
+  // Find the specific round data from the rounds API
+  const specificRound = roundsData?.rounds?.find(r => r.round_id.toString() === roundId)
+  
+  const roundInfo = isCurrentRound ? currentRound : specificRound ? {
+    round_id: specificRound.round_id,
+    kicked_at: specificRound.kicked_at,
+    round_start: specificRound.round_start,
+    round_end: specificRound.round_end,
+    initial_available: specificRound.initial_available,
+    is_active: specificRound.is_active,
+    total_takes: specificRound.total_takes || takes.length,
+    seconds_elapsed: specificRound.round_start ? Math.floor(Date.now() / 1000) - specificRound.round_start : 0,
+    progress_percentage: specificRound.is_active ? 
+      (specificRound.total_takes || takes.length) / Math.max(1, parseFloat(specificRound.initial_available)) * 100 
+      : 100
+  } : {
+    // Fallback if no round data found
     round_id: parseInt(roundId!),
     kicked_at: new Date().toISOString(),
     initial_available: "0",
@@ -96,6 +126,23 @@ const RoundDetails: React.FC = () => {
   const timeRemaining = roundInfo.round_end 
     ? Math.max(0, roundInfo.round_end - Math.floor(Date.now() / 1000))
     : roundInfo.time_remaining || 0
+  
+  // Calculate time progress (0-100%) from round start to round end
+  const calculateTimeProgress = () => {
+    if (!roundInfo.round_start || !roundInfo.round_end) {
+      return roundInfo.is_active ? 0 : 100
+    }
+    
+    const totalDuration = roundInfo.round_end - roundInfo.round_start
+    const elapsed = Math.floor(Date.now() / 1000) - roundInfo.round_start
+    
+    if (totalDuration <= 0) return 100
+    
+    const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100))
+    return progress
+  }
+  
+  const timeProgress = calculateTimeProgress()
 
   const fromTokens = auctionDetails.from_tokens
   const wantToken = auctionDetails.want_token
@@ -133,28 +180,26 @@ const RoundDetails: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
-              <Link 
-                to={`/auction/${chainId}/${auctionAddress}`}
-                className="hover:text-primary-400 transition-colors"
-              >
-                Auction {formatAddress(auctionAddress!, 8)}
-              </Link>
+              <div className="flex items-center space-x-2">
+                <span>Auction</span>
+                <AddressDisplay
+                  address={auctionAddress!}
+                  chainId={parseInt(chainId!)}
+                  showExternalLink={false}
+                  className="text-primary-400 hover:text-primary-300"
+                />
+              </div>
               <span>•</span>
               <span>
-                {fromTokens.map(t => t.symbol).join(', ')} → {wantToken.symbol}
+                {takes.length > 0 && takes[0].from_token_symbol ? 
+                  `${takes[0].from_token_symbol} → ${wantToken.symbol}` : 
+                  `${fromTokens[0]?.symbol || '?'} → ${wantToken.symbol}`
+                }
               </span>
             </div>
           </div>
         </div>
 
-        {roundInfo.is_active && timeRemaining > 0 && (
-          <div className="text-right">
-            <div className="text-lg font-semibold text-success-400">
-              {Math.floor(timeRemaining / 60)}m {timeRemaining % 60}s
-            </div>
-            <div className="text-sm text-gray-500">Time Remaining</div>
-          </div>
-        )}
       </div>
 
       {/* Round Stats */}
@@ -192,8 +237,17 @@ const RoundDetails: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card">
           <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
-            <Target className="h-5 w-5 text-primary-500" />
+            {roundInfo.is_active ? (
+              <div className="h-2 w-2 rounded-full bg-success-500 animate-pulse"></div>
+            ) : (
+              <div className="h-2 w-2 rounded-full bg-gray-600"></div>
+            )}
             <span>Round Information</span>
+            {roundInfo.is_active && (
+              <div className="px-2 py-0.5 rounded-full text-xs font-medium bg-success-500/20 text-success-400">
+                ACTIVE
+              </div>
+            )}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -215,20 +269,6 @@ const RoundDetails: React.FC = () => {
                     {formatTimeAgo(new Date(roundInfo.kicked_at).getTime() / 1000)}
                   </div>
                 </div>
-
-                <div>
-                  <span className="text-sm text-gray-500">Status</span>
-                  <div className="flex items-center space-x-2">
-                    <div className={`h-2 w-2 rounded-full ${
-                      roundInfo.is_active ? 'bg-success-500 animate-pulse' : 'bg-gray-600'
-                    }`}></div>
-                    <span className={`font-medium ${
-                      roundInfo.is_active ? 'text-success-400' : 'text-gray-400'
-                    }`}>
-                      {roundInfo.is_active ? 'Active' : 'Completed'}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -237,15 +277,28 @@ const RoundDetails: React.FC = () => {
                 <div>
                   <span className="text-sm text-gray-500">Initial Available</span>
                   <div className="font-mono text-gray-200">
-                    {formatTokenAmount(roundInfo.initial_available, 18, 4)}
+                    {formatReadableTokenAmount(roundInfo.initial_available, 4)} {fromTokens[0]?.symbol || ''}
                   </div>
                 </div>
+
+                {roundInfo.is_active && timeRemaining > 0 && (
+                  <div>
+                    <span className="text-sm text-gray-500">Time Remaining</span>
+                    <div className="text-gray-200 font-medium">
+                      {timeRemaining >= 3600 ? (
+                        `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m`
+                      ) : (
+                        `${Math.floor(timeRemaining / 60)}m ${timeRemaining % 60}s`
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {roundInfo.current_price && (
                   <div>
                     <span className="text-sm text-gray-500">Current Price</span>
                     <div className="font-mono text-gray-200">
-                      {formatTokenAmount(roundInfo.current_price, 6, 6)}
+                      {formatReadableTokenAmount(roundInfo.current_price, 6)}
                     </div>
                     <div className="text-xs text-gray-500">
                       {formatUSD(parseFloat(roundInfo.current_price) * 1.5)}
@@ -257,10 +310,10 @@ const RoundDetails: React.FC = () => {
                   <div>
                     <span className="text-sm text-gray-500">Average Sale Price</span>
                     <div className="font-mono text-gray-200">
-                      {formatTokenAmount(avgPrice.toString(), 6, 6)}
+                      {avgPrice.toFixed(6)} {auctionDetails.want_token.symbol}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {formatUSD(avgPrice * 1.5)}
+                      per {auctionDetails.from_tokens[0]?.symbol || 'token'}
                     </div>
                   </div>
                 )}
@@ -273,12 +326,10 @@ const RoundDetails: React.FC = () => {
             <div className="mt-6">
               <h4 className="text-sm font-medium text-gray-400 mb-3">Round Progress</h4>
               <StackedProgressMeter
-                timeProgress={roundInfo.is_active && timeRemaining > 0 ? 
-                  (roundInfo.seconds_elapsed / (roundInfo.seconds_elapsed + timeRemaining)) * 100 : 100
-                }
+                timeProgress={timeProgress}
                 amountProgress={roundInfo.progress_percentage}
                 timeRemaining={timeRemaining}
-                totalSales={roundInfo.total_takes}
+                totalTakes={roundInfo.total_takes}
                 size="lg"
               />
             </div>
@@ -314,22 +365,38 @@ const RoundDetails: React.FC = () => {
             </button>
           </div>
           
-          {/* Round Parameters */}
+          {/* Auction Parameters */}
           <div className="mt-6 pt-4 border-t border-gray-800">
-            <h4 className="text-sm font-medium text-gray-400 mb-3">Parameters</h4>
+            <h4 className="text-sm font-medium text-gray-400 mb-3">Auction Parameters</h4>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-500">Update Interval</span>
-                <span className="text-gray-300">{auctionDetails.price_update_interval}s</span>
+                <span className="text-gray-300">
+                  {auctionDetails.parameters?.price_update_interval || 'N/A'}s
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Auction Length</span>
-                <span className="text-gray-300">{auctionDetails.auction_length}s</span>
+                <span className="text-gray-300">
+                  {auctionDetails.parameters?.auction_length || 'N/A'}s
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Step Decay</span>
+                <span className="text-gray-500">Decay Rate</span>
                 <span className="text-gray-300 font-mono">
-                  {(parseFloat(auctionDetails.step_decay) / 1e27 * 100).toFixed(2)}%
+                  {auctionDetails.parameters?.decay_rate ? 
+                    `${(auctionDetails.parameters.decay_rate * 100).toFixed(3)}%` : 
+                    'N/A'
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Starting Price</span>
+                <span className="text-gray-300 font-mono">
+                  {auctionDetails.parameters?.starting_price && auctionDetails.parameters.starting_price !== "0" ? 
+                    auctionDetails.parameters.starting_price : 
+                    'Dynamic'
+                  }
                 </span>
               </div>
             </div>

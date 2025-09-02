@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/wavey/yearn/auctions_charts/scripts/price_service_ypm.py", line 11, in <module>
+    import psycopg2
+ModuleNotFoundError: No module named 'psycopg2'

@@ -1,0 +1,9 @@
+2025-09-01 14:47:13,036 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:47:13,036 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 14:47:13,036 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000
+2025-09-01 14:47:13,036 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 14:47:13,055 - __main__ - INFO - [COWSWAP] Found 11 recent unprocessed mainnet takes (< 5000 blocks old)
+2025-09-01 14:47:13,055 - __main__ - INFO - [COWSWAP] Processing 11 takes with 15 unique tokens
+2025-09-01 14:47:13,055 - __main__ - INFO - [COWSWAP] 🔍 Fetching prices for 15 tokens via quotes
+2025-09-01 14:47:17,025 - __main__ - INFO - [COWSWAP] 📊 Successfully got 0/15 prices
+2025-09-01 14:47:17,025 - __main__ - INFO - [COWSWAP] ✅ Processed 11 takes: stored 0 prices

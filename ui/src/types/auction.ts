@@ -8,7 +8,9 @@ export interface Token {
 
 export interface AuctionParameters {
   price_update_interval: number;
-  step_decay: string;
+  step_decay?: string;
+  step_decay_rate?: string;
+  decay_rate?: number;
   auction_length: number;
   starting_price: string;
   fixed_starting_price?: string;
@@ -29,7 +31,7 @@ export interface AuctionRoundInfo {
   progress_percentage?: number;
 }
 
-export interface AuctionSale {
+export interface AuctionTake {
   take_id: string;
   auction: string;
   chain_id: number;
@@ -51,6 +53,13 @@ export interface AuctionSale {
   to_token_symbol?: string;
   to_token_name?: string;
   to_token_decimals?: number;
+  // USD price information
+  from_token_price_usd?: string;
+  want_token_price_usd?: string;
+  amount_taken_usd?: string;
+  amount_paid_usd?: string;
+  price_differential_usd?: string;
+  price_differential_percent?: number;
 }
 
 export interface AuctionActivity {
@@ -58,7 +67,7 @@ export interface AuctionActivity {
   total_volume: string;
   total_rounds: number;
   total_takes: number;
-  recent_takes: AuctionSale[];
+  recent_takes: AuctionTake[];
 }
 
 export interface AuctionListItem {

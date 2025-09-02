@@ -31,9 +31,11 @@ else:
     ASYNC_DATABASE_URL = DATABASE_URL
 
 # Create async engine
+# Only enable SQL logging in debug mode (set SQL_DEBUG=true to enable)
+sql_debug = os.getenv("SQL_DEBUG", "false").lower() == "true"
 engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    echo=True,  # Enable SQL logging for debugging
+    echo=sql_debug,  # Enable SQL logging only when SQL_DEBUG=true
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
@@ -76,131 +78,25 @@ class DatabaseQueries:
     @staticmethod
     async def get_auctions(db: AsyncSession, active_only: bool = False, chain_id: int = None):
         """Get auctions with optional active filter"""
-        chain_filter = "AND ahp.chain_id = :chain_id" if chain_id else ""
+        chain_filter = "AND chain_id = :chain_id" if chain_id else ""
         
         if active_only:
-            # For active-only, only return auctions with active rounds
             query = text(f"""
-                SELECT DISTINCT ON (ahp.auction_address, ahp.chain_id)
-                    ahp.auction_address,
-                    ahp.chain_id,
-                    ar.round_id,
-                    ar.from_token,
-                    ar.kicked_at,
-                    ar.round_start,
-                    ar.round_end,
-                    ar.initial_available,
-                    ar.available_amount,
-                    ar.total_takes,
-                    ar.progress_percentage,
-                    ahp.want_token,
-                    ahp.decay_rate,
-                    ahp.update_interval,
-                    ahp.auction_length,
-                    (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) as is_active,
-                    -- Want token info
-                    wt.symbol as want_token_symbol,
-                    wt.name as want_token_name,
-                    wt.decimals as want_token_decimals,
-                    -- From token info (from current round if any)
-                    ft.symbol as from_token_symbol,
-                    ft.name as from_token_name,
-                    ft.decimals as from_token_decimals,
-                    -- Get enabled tokens as JSON array
-                    (
-                        SELECT COALESCE(
-                            json_agg(
-                                json_build_object(
-                                    'address', et.token_address,
-                                    'symbol', COALESCE(et_tokens.symbol, 'Unknown'),
-                                    'name', COALESCE(et_tokens.name, 'Unknown'),
-                                    'decimals', COALESCE(et_tokens.decimals, 18),
-                                    'chain_id', et.chain_id
-                                ) ORDER BY et.enabled_at ASC
-                            ), '[]'::json
-                        )
-                        FROM enabled_tokens et
-                        LEFT JOIN tokens et_tokens ON LOWER(et.token_address) = LOWER(et_tokens.address) AND et.chain_id = et_tokens.chain_id
-                        WHERE et.auction_address = ahp.auction_address AND et.chain_id = ahp.chain_id
-                    ) as from_tokens_json
-                FROM auctions ahp
-                INNER JOIN rounds ar 
-                    ON ahp.auction_address = ar.auction_address 
-                    AND ahp.chain_id = ar.chain_id
-                    AND ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT 
-                AND ar.available_amount > 0
-                LEFT JOIN tokens wt
-                    ON LOWER(ahp.want_token) = LOWER(wt.address)
-                    AND ahp.chain_id = wt.chain_id
-                LEFT JOIN tokens ft
-                    ON LOWER(ar.from_token) = LOWER(ft.address)
-                    AND ar.chain_id = ft.chain_id
-                WHERE 1=1
+                SELECT vw.*, a.decay_rate
+                FROM vw_auctions vw
+                JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
+                WHERE vw.has_active_round = TRUE
                 {chain_filter}
-                ORDER BY ahp.auction_address, ahp.chain_id, ar.kicked_at DESC
+                ORDER BY vw.last_kicked DESC NULLS LAST
             """)
         else:
-            # For all auctions, get each auction once with their most recent active round (if any)
             query = text(f"""
-                SELECT DISTINCT ON (ahp.auction_address, ahp.chain_id)
-                    ahp.auction_address,
-                    ahp.chain_id,
-                    COALESCE(ar.round_id, 0) as round_id,
-                    COALESCE(ar.from_token, '') as from_token,
-                    COALESCE(ar.kicked_at, 0) as kicked_at,
-                    COALESCE(ar.round_start, 0) as round_start,
-                    COALESCE(ar.round_end, 0) as round_end,
-                    COALESCE(ar.initial_available, 0) as initial_available,
-                    COALESCE(ar.available_amount, 0) as available_amount,
-                    COALESCE(ar.total_takes, 0) as total_takes,
-                    COALESCE(ar.progress_percentage, 0) as progress_percentage,
-                    ahp.want_token,
-                    ahp.decay_rate,
-                    ahp.update_interval,
-                    ahp.auction_length,
-                    CASE 
-                        WHEN ar.round_end IS NOT NULL 
-                        THEN (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0)
-                        ELSE FALSE
-                    END as is_active,
-                    -- Want token info
-                    wt.symbol as want_token_symbol,
-                    wt.name as want_token_name,
-                    wt.decimals as want_token_decimals,
-                    -- From token info (from current round if any)
-                    ft.symbol as from_token_symbol,
-                    ft.name as from_token_name,
-                    ft.decimals as from_token_decimals,
-                    -- Get enabled tokens as JSON array
-                    (
-                        SELECT COALESCE(
-                            json_agg(
-                                json_build_object(
-                                    'address', et.token_address,
-                                    'symbol', COALESCE(et_tokens.symbol, 'Unknown'),
-                                    'name', COALESCE(et_tokens.name, 'Unknown'),
-                                    'decimals', COALESCE(et_tokens.decimals, 18),
-                                    'chain_id', et.chain_id
-                                ) ORDER BY et.enabled_at ASC
-                            ), '[]'::json
-                        )
-                        FROM enabled_tokens et
-                        LEFT JOIN tokens et_tokens ON LOWER(et.token_address) = LOWER(et_tokens.address) AND et.chain_id = et_tokens.chain_id
-                        WHERE et.auction_address = ahp.auction_address AND et.chain_id = ahp.chain_id
-                    ) as from_tokens_json
-                FROM auctions ahp
-                LEFT JOIN rounds ar 
-                    ON ahp.auction_address = ar.auction_address 
-                    AND ahp.chain_id = ar.chain_id
-                LEFT JOIN tokens wt
-                    ON LOWER(ahp.want_token) = LOWER(wt.address)
-                    AND ahp.chain_id = wt.chain_id
-                LEFT JOIN tokens ft
-                    ON LOWER(ar.from_token) = LOWER(ft.address)
-                    AND ar.chain_id = ft.chain_id
+                SELECT vw.*, a.decay_rate
+                FROM vw_auctions vw
+                JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
                 WHERE 1=1
                 {chain_filter}
-                ORDER BY ahp.auction_address, ahp.chain_id, (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) DESC NULLS LAST, ar.kicked_at DESC NULLS LAST
+                ORDER BY vw.last_kicked DESC NULLS LAST
             """)
         
         params = {"chain_id": chain_id} if chain_id else {}
@@ -210,38 +106,13 @@ class DatabaseQueries:
     @staticmethod
     async def get_auction_details(db: AsyncSession, auction_address: str, chain_id: int = None):
         """Get detailed information about a specific Auction"""
-        chain_filter = "AND ahp.chain_id = :chain_id" if chain_id else ""
+        chain_filter = "AND vw.chain_id = :chain_id" if chain_id else ""
         
         query = text(f"""
-            SELECT 
-                ahp.*,
-                -- Get the most recent round info
-                recent_round.kicked_at as last_kicked,
-                recent_round.round_start,
-                recent_round.round_end,
-                recent_round.round_id as current_round_id,
-                recent_round.available_amount as current_available,
-                (recent_round.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND recent_round.available_amount > 0) as has_active_round,
-                recent_round.total_takes as current_round_takes,
-                recent_round.progress_percentage,
-                -- Token info for want_token
-                t2.symbol as want_token_symbol,
-                t2.name as want_token_name,
-                t2.decimals as want_token_decimals,
-                -- Round end timestamp (no calculated fields needed)
-                recent_round.round_end
-            FROM auctions ahp
-            LEFT JOIN LATERAL (
-                SELECT * FROM rounds ar
-                WHERE ar.auction_address = ahp.auction_address 
-                AND ar.chain_id = ahp.chain_id
-                ORDER BY ar.kicked_at DESC NULLS LAST
-                LIMIT 1
-            ) recent_round ON true
-            LEFT JOIN tokens t2 
-                ON ahp.want_token = t2.address 
-                AND ahp.chain_id = t2.chain_id
-            WHERE LOWER(ahp.auction_address) = LOWER(:auction_address)
+            SELECT vw.*, a.timestamp as deployed_timestamp, a.decay_rate
+            FROM vw_auctions vw
+            JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
+            WHERE LOWER(vw.auction_address) = LOWER(:auction_address)
             {chain_filter}
             LIMIT 1
         """)
@@ -311,46 +182,54 @@ class DatabaseQueries:
         return result.fetchall()
     
     @staticmethod
-    async def get_auction_takes(db: AsyncSession, auction_address: str, round_id: int = None, chain_id: int = None, limit: int = 50):
-        """Get takes history for an Auction"""
-        chain_filter = "AND als.chain_id = :chain_id" if chain_id else ""
-        round_filter = "AND als.round_id = :round_id" if round_id else ""
+    async def get_auction_takes(db: AsyncSession, auction_address: str, round_id: int = None, chain_id: int = None, limit: int = 50, offset: int = 0):
+        """Get takes history for an Auction using enhanced vw_takes view with USD prices"""
+        chain_filter = "AND chain_id = :chain_id" if chain_id else ""
+        round_filter = "AND round_id = :round_id" if round_id else ""
         
         query = text(f"""
             SELECT 
-                als.*,
-                ar.kicked_at as round_kicked_at,
-                ahp.want_token,
-                t1.symbol as from_token_symbol,
-                t1.name as from_token_name,
-                t1.decimals as from_token_decimals,
-                t2.symbol as to_token_symbol,
-                t2.name as to_token_name,
-                t2.decimals as to_token_decimals
-            FROM takes als
-            JOIN rounds ar 
-                ON als.auction_address = ar.auction_address 
-                AND als.chain_id = ar.chain_id 
-                AND als.round_id = ar.round_id
-            JOIN auctions ahp 
-                ON als.auction_address = ahp.auction_address 
-                AND als.chain_id = ahp.chain_id
-            LEFT JOIN tokens t1 
-                ON als.from_token = t1.address 
-                AND als.chain_id = t1.chain_id
-            LEFT JOIN tokens t2 
-                ON als.to_token = t2.address 
-                AND als.chain_id = t2.chain_id
-            WHERE LOWER(als.auction_address) = LOWER(:auction_address)
+                take_id,
+                auction_address,
+                chain_id,
+                round_id,
+                take_seq,
+                taker,
+                from_token,
+                to_token,
+                amount_taken,
+                amount_paid,
+                price,
+                timestamp,
+                seconds_from_round_start,
+                block_number,
+                transaction_hash,
+                log_index,
+                round_kicked_at,
+                from_symbol,
+                from_name,
+                from_decimals,
+                to_symbol,
+                to_name,
+                to_decimals,
+                from_token_price_usd,
+                want_token_price_usd,
+                amount_taken_usd,
+                amount_paid_usd,
+                price_differential_usd,
+                price_differential_percent
+            FROM vw_takes
+            WHERE LOWER(auction_address) = LOWER(:auction_address)
             {chain_filter}
             {round_filter}
-            ORDER BY als.timestamp DESC
-            LIMIT :limit
+            ORDER BY timestamp DESC
+            LIMIT :limit OFFSET :offset
         """)
         
         params = {
             "auction_address": auction_address,
-            "limit": limit
+            "limit": limit,
+            "offset": offset
         }
         if chain_id:
             params["chain_id"] = chain_id
@@ -528,7 +407,8 @@ class DataProvider(ABC):
         auction_address: str, 
         round_id: Optional[int] = None, 
         limit: int = 50,
-        chain_id: int = None
+        chain_id: int = None,
+        offset: int = 0
     ) -> List['Take']:
         """Get takes for an auction"""
         pass
@@ -633,7 +513,7 @@ class MockDataProvider(DataProvider):
             last_kicked=datetime.now() - timedelta(minutes=30)
         )
 
-    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None) -> List[Take]:
+    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None, offset: int = 0) -> List[Take]:
         """Generate mock takes data"""
         return []
 
@@ -685,17 +565,20 @@ class DatabaseDataProvider(DataProvider):
                         "address": auction_row.auction_address,
                         "chain_id": auction_row.chain_id,
                         "from_tokens": auction_row.from_tokens_json if hasattr(auction_row, 'from_tokens_json') and auction_row.from_tokens_json else [],
-                        "want_token": {"address": auction_row.want_token, "symbol": auction_row.want_token_symbol or "Unknown", "name": auction_row.want_token_name or "Unknown", "decimals": auction_row.want_token_decimals or 18, "chain_id": auction_row.chain_id},
-                        "current_round": {
-                            "round_id": auction_row.round_id,
-                            "round_start": auction_row.round_start,
-                            "round_end": auction_row.round_end,
-                            "is_active": auction_row.is_active if hasattr(auction_row, 'is_active') else False,
-                            "total_takes": auction_row.total_takes
-                        } if auction_row.round_id else None,
-                        "last_kicked": datetime.fromtimestamp(auction_row.kicked_at, tz=timezone.utc) if auction_row.kicked_at and auction_row.kicked_at != 0 else None,
-                        "decay_rate": 0.005,
-                        "update_interval": 60
+                        "want_token": {"address": auction_row.want_token, "symbol": getattr(auction_row, 'want_token_symbol', None) or "Unknown", "name": getattr(auction_row, 'want_token_name', None) or "Unknown", "decimals": getattr(auction_row, 'want_token_decimals', None) or 18, "chain_id": auction_row.chain_id},
+                        "current_round": (
+                            {
+                                "round_id": getattr(auction_row, 'current_round_id', None),
+                                "round_start": getattr(auction_row, 'round_start', None),
+                                "round_end": getattr(auction_row, 'round_end', None),
+                                "is_active": getattr(auction_row, 'has_active_round', False),
+                                "total_takes": getattr(auction_row, 'current_round_takes', 0) if hasattr(auction_row, 'current_round_takes') else 0
+                            }
+                            if getattr(auction_row, 'current_round_id', None) else None
+                        ),
+                        "last_kicked": datetime.fromtimestamp(auction_row.last_kicked, tz=timezone.utc) if getattr(auction_row, 'last_kicked', None) else None,
+                        "decay_rate": float(getattr(auction_row, 'decay_rate')) if getattr(auction_row, 'decay_rate', None) is not None else None,
+                        "update_interval": getattr(auction_row, 'price_update_interval', None)
                     }
                     auctions.append(auction)
 
@@ -753,35 +636,37 @@ class DatabaseDataProvider(DataProvider):
                 if not auction_data:
                     raise Exception(f"Auction {auction_address} not found in database")
 
-                # Use actual database data
+                # Use actual database data from vw_auctions
                 want_token = TokenInfo(
                     address=auction_data.want_token,
-                    symbol=auction_data.want_token_symbol or "Unknown",
-                    name=auction_data.want_token_name or "Unknown", 
-                    decimals=auction_data.want_token_decimals or 18,
+                    symbol=getattr(auction_data, 'want_token_symbol', None) or "Unknown",
+                    name=getattr(auction_data, 'want_token_name', None) or "Unknown", 
+                    decimals=getattr(auction_data, 'want_token_decimals', None) or 18,
                     chain_id=chain_id
                 )
-                
+
                 parameters = AuctionParameters(
-                    price_update_interval=auction_data.update_interval or 60,
-                    step_decay=str(auction_data.step_decay) if auction_data.step_decay else "995000000000000000000000000",
-                    auction_length=auction_data.auction_length or 3600,
-                    starting_price=str(auction_data.starting_price) if auction_data.starting_price else "0"
+                    price_update_interval=int(getattr(auction_data, 'price_update_interval', 60) or 60),
+                    step_decay=None,
+                    step_decay_rate=str(getattr(auction_data, 'step_decay_rate')) if getattr(auction_data, 'step_decay_rate', None) is not None else None,
+                    decay_rate=float(getattr(auction_data, 'decay_rate')) if getattr(auction_data, 'decay_rate', None) is not None else None,
+                    auction_length=int(getattr(auction_data, 'auction_length', 0) or 0),
+                    starting_price=str(getattr(auction_data, 'starting_price')) if getattr(auction_data, 'starting_price', None) is not None else "0"
                 )
                 
                 current_round = None
-                if auction_data.has_active_round and auction_data.current_round_id:
+                if getattr(auction_data, 'has_active_round', False) and getattr(auction_data, 'current_round_id', None):
                     current_round = AuctionRoundInfo(
-                        round_id=auction_data.current_round_id,
-                        kicked_at=datetime.fromtimestamp(auction_data.last_kicked) if auction_data.last_kicked and auction_data.last_kicked != 0 else datetime.now(),
-                        round_start=auction_data.round_start if hasattr(auction_data, 'round_start') and auction_data.round_start else None,
-                        round_end=auction_data.round_end if hasattr(auction_data, 'round_end') and auction_data.round_end else None,
-                        initial_available=str(auction_data.current_available or 0),
-                        is_active=auction_data.has_active_round,
-                        available_amount=str(auction_data.current_available or 0),
+                        round_id=getattr(auction_data, 'current_round_id'),
+                        kicked_at=datetime.fromtimestamp(getattr(auction_data, 'last_kicked')) if getattr(auction_data, 'last_kicked', None) else datetime.now(),
+                        round_start=getattr(auction_data, 'round_start', None),
+                        round_end=getattr(auction_data, 'round_end', None),
+                        initial_available=str(getattr(auction_data, 'current_available', 0) or 0),
+                        is_active=getattr(auction_data, 'has_active_round', False),
+                        available_amount=str(getattr(auction_data, 'current_available', 0) or 0),
                         seconds_elapsed=0,  # Can be calculated on frontend if needed
-                        total_takes=auction_data.current_round_takes or 0,
-                        progress_percentage=auction_data.progress_percentage or 0.0
+                        total_takes=getattr(auction_data, 'current_round_takes', 0) or 0,
+                        progress_percentage=getattr(auction_data, 'progress_percentage', 0.0) or 0.0
                     )
                 
                 # Get enabled tokens for this auction
@@ -812,20 +697,20 @@ class DatabaseDataProvider(DataProvider):
                         total_takes=0,         # TODO: Calculate from takes table
                         recent_takes=[]        # TODO: Get from takes table
                     ),
-                    deployed_at=datetime.fromtimestamp(auction_data.timestamp) if auction_data.timestamp else datetime.now(),
-                    last_kicked=datetime.fromtimestamp(auction_data.last_kicked) if auction_data.last_kicked and auction_data.last_kicked != 0 else None
+                    deployed_at=datetime.fromtimestamp(getattr(auction_data, 'deployed_timestamp', 0), tz=timezone.utc) if getattr(auction_data, 'deployed_timestamp', None) else datetime.now(tz=timezone.utc),
+                    last_kicked=datetime.fromtimestamp(getattr(auction_data, 'last_kicked')) if getattr(auction_data, 'last_kicked', None) else None
                 )
         except Exception as e:
             logger.error(f"Database error in get_auction_details: {e}")
             raise Exception(f"Failed to fetch auction details from database: {e}")
 
-    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None) -> List[Take]:
+    async def get_auction_takes(self, auction_address: str, round_id: Optional[int] = None, limit: int = 50, chain_id: int = None, offset: int = 0) -> List[Take]:
         """Get takes from database"""
         try:
             async with AsyncSessionLocal() as session:
                 # Use the proper method name for takes
                 takes_data = await DatabaseQueries.get_auction_takes(
-                    session, auction_address, round_id, chain_id, limit
+                    session, auction_address, round_id, chain_id, limit, offset
                 )
                 
                 takes = []
@@ -846,12 +731,19 @@ class DatabaseDataProvider(DataProvider):
                         # Add token information
                         from_token=take_row.from_token,
                         to_token=take_row.to_token,
-                        from_token_symbol=getattr(take_row, 'from_token_symbol', None),
-                        from_token_name=getattr(take_row, 'from_token_name', None),
-                        from_token_decimals=getattr(take_row, 'from_token_decimals', None),
-                        to_token_symbol=getattr(take_row, 'to_token_symbol', None),
-                        to_token_name=getattr(take_row, 'to_token_name', None),
-                        to_token_decimals=getattr(take_row, 'to_token_decimals', None)
+                        from_token_symbol=getattr(take_row, 'from_symbol', None),
+                        from_token_name=getattr(take_row, 'from_name', None),
+                        from_token_decimals=getattr(take_row, 'from_decimals', None),
+                        to_token_symbol=getattr(take_row, 'to_symbol', None),
+                        to_token_name=getattr(take_row, 'to_name', None),
+                        to_token_decimals=getattr(take_row, 'to_decimals', None),
+                        # Add USD price information
+                        from_token_price_usd=str(take_row.from_token_price_usd) if getattr(take_row, 'from_token_price_usd', None) is not None else None,
+                        want_token_price_usd=str(take_row.want_token_price_usd) if getattr(take_row, 'want_token_price_usd', None) is not None else None,
+                        amount_taken_usd=str(take_row.amount_taken_usd) if getattr(take_row, 'amount_taken_usd', None) is not None else None,
+                        amount_paid_usd=str(take_row.amount_paid_usd) if getattr(take_row, 'amount_paid_usd', None) is not None else None,
+                        price_differential_usd=str(take_row.price_differential_usd) if getattr(take_row, 'price_differential_usd', None) is not None else None,
+                        price_differential_percent=float(take_row.price_differential_percent) if getattr(take_row, 'price_differential_percent', None) is not None else None
                     )
                     takes.append(take)
                 

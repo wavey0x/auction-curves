@@ -1,0 +1,32 @@
+usage: brownie [-h] [--retry-failed]
+brownie: error: unrecognized arguments: run scripts/price_service_ypm.py --network electro
+Brownie v1.21.0 - Python development framework for Ethereum
+
+Compiling contracts...
+  Solc version: 0.8.19
+  Optimizer: Enabled  Runs: 200
+  EVM Version: Istanbul
+Generating build data...
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/ReentrancyGuard
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/ERC20
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/IERC20
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/IERC20Metadata
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/IERC20Permit
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/SafeERC20
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/Address
+ - OpenZeppelin/openzeppelin-contracts@4.9.0/Context
+ - Auction
+ - ICowSettlement
+ - AuctionFactory
+ - ICowSettlement
+ - LegacyAuction
+ - LegacyAuctionFactory
+ - GPv2Order
+ - Maths
+ - Clonable
+ - Governance2Step
+ - ITaker
+
+AuctionsChartsProject is the active project.
+
+Running '[0;1;34mscripts/price_service_ypm.py[0;m::[0;1;36mmain[0;m'...

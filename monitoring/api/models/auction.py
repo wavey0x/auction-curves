@@ -27,6 +27,7 @@ class AuctionParameters(BaseModel):
     price_update_interval: int = Field(..., description="Seconds between price updates")
     step_decay: Optional[str] = Field(None, description="DEPRECATED: Decay rate in RAY format (1e27)")
     step_decay_rate: Optional[str] = Field(None, description="Step decay rate per 36-second step (e.g., 0.995 * 1e27)")
+    decay_rate: Optional[float] = Field(None, description="Decay rate as decimal (e.g., 0.0115 for 1.15%)")
     auction_length: int = Field(..., description="Total auction round duration in seconds (now AUCTION_LENGTH constant)")
     starting_price: str = Field(..., description="Starting price in wei")
     fixed_starting_price: Optional[str] = Field(None, description="Fixed price if set")
@@ -75,6 +76,13 @@ class Take(BaseModel):
     to_token_symbol: Optional[str] = Field(None, description="To token symbol")
     to_token_name: Optional[str] = Field(None, description="To token name") 
     to_token_decimals: Optional[int] = Field(None, description="To token decimals")
+    # USD price information
+    from_token_price_usd: Optional[str] = Field(None, description="USD price of from_token at block")
+    want_token_price_usd: Optional[str] = Field(None, description="USD price of want_token at block")
+    amount_taken_usd: Optional[str] = Field(None, description="USD value of amount taken")
+    amount_paid_usd: Optional[str] = Field(None, description="USD value of amount paid")
+    price_differential_usd: Optional[str] = Field(None, description="USD differential from auction perspective (positive = auction benefits)")
+    price_differential_percent: Optional[float] = Field(None, description="Percentage differential from auction perspective")
 
 class AuctionActivity(BaseModel):
     """Recent activity for an Auction"""

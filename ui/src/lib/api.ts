@@ -3,7 +3,7 @@ import type {
   AuctionDetails,
   AuctionRoundHistory,
   PriceHistory,
-  AuctionSale,
+  AuctionTake,
   Token,
   SystemStats,
 } from '../types/auction'
@@ -84,9 +84,10 @@ class APIClient {
     auctionAddress: string,
     chainId: number,
     roundId?: number,
-    limit: number = 50
-  ): Promise<AuctionSale[]> {
-    let url = `/auctions/${chainId}/${auctionAddress}/takes?limit=${limit}`
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<AuctionTake[]> {
+    let url = `/auctions/${chainId}/${auctionAddress}/takes?limit=${limit}&offset=${offset}`
     if (roundId) url += `&round_id=${roundId}`
     
     const response = await fetch(`${BASE_URL}${url}`, {

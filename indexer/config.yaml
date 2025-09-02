@@ -8,6 +8,7 @@ database:
   url: ${DATABASE_URL}
 indexer:
   block_batch_size: 15000
+  transfer_batch_size: 100
   enable_price_tracking: true
   log_level: INFO
   max_retries: 3

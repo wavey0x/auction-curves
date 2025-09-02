@@ -5,11 +5,14 @@ import Dashboard from "./pages/Dashboard";
 import AuctionDetails from "./pages/AuctionDetails";
 import RoundDetails from "./pages/RoundDetails";
 
+// Global refresh interval - change this to adjust all auto-refresh timing
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0, // Consider data stale immediately for development
-      refetchInterval: 5 * 1000, // Refetch every 5 seconds
+      refetchInterval: REFRESH_INTERVAL, // Global auto-refresh interval
       retry: 2,
     },
   },

@@ -1,26 +1,33 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ExternalLink, Copy, TrendingDown, Check } from "lucide-react";
-import type { AuctionSale, Token } from "../types/auction";
+import { TrendingDown } from "lucide-react";
+import type { AuctionTake, Token } from "../types/auction";
 import ChainIcon from "./ChainIcon";
+import AddressDisplay from "./AddressDisplay";
+import TxHashDisplay from "./TxHashDisplay";
+import TxHashLink from "./TxHashLink";
+import AddressLink from "./AddressLink";
 import {
-  formatAddress,
   formatTokenAmount,
+  formatReadableTokenAmount,
   formatUSD,
   formatTimeAgo,
-  getTxLink,
-  getChainInfo,
-  copyToClipboard,
   cn,
 } from "../lib/utils";
 
 interface TakesTableProps {
-  takes: AuctionSale[];
+  takes: AuctionTake[];
   title: string;
   maxHeight?: string;
   tokens?: Token[];
   showRoundInfo?: boolean;
   auctionAddress?: string;
+  // Pagination props
+  currentPage?: number;
+  canGoNext?: boolean;
+  canGoPrev?: boolean;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 const TakesTable: React.FC<TakesTableProps> = ({
@@ -30,26 +37,14 @@ const TakesTable: React.FC<TakesTableProps> = ({
   tokens = [],
   showRoundInfo = false,
   auctionAddress,
+  // Pagination props
+  currentPage,
+  canGoNext = false,
+  canGoPrev = false,
+  onNextPage,
+  onPrevPage,
 }) => {
-  const [copiedAddresses, setCopiedAddresses] = useState<Set<string>>(
-    new Set()
-  );
-
-  const handleCopy = async (text: string) => {
-    const success = await copyToClipboard(text);
-    if (success) {
-      setCopiedAddresses((prev) => new Set(prev).add(text));
-      setTimeout(() => {
-        setCopiedAddresses((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(text);
-          return newSet;
-        });
-      }, 600);
-    }
-  };
-
-  const chainInfo = getChainInfo(31337); // Using Anvil chain
+  const [showUSD, setShowUSD] = useState(false);
 
   if (takes.length === 0) {
     return (
@@ -77,172 +72,185 @@ const TakesTable: React.FC<TakesTableProps> = ({
         </h3>
       </div>
 
-      <div
-        className={cn(
-          "overflow-hidden rounded-lg border border-gray-800",
-          maxHeight
-        )}
-      >
-        <div className="overflow-y-auto">
-          <table className="table">
-            <thead className="bg-gray-800/50 sticky top-0">
+      <div className="overflow-hidden rounded-lg border border-gray-800">
+        <div className={cn("overflow-y-auto", maxHeight)}>
+          <table className="table w-full table-fixed">
+            <thead className="bg-gray-800 sticky top-0">
               <tr>
-                <th className="text-center">Take ID</th>
-                <th className="text-center w-16">Chain</th>
-                <th className="text-center">Transaction</th>
-                {showRoundInfo && <th className="text-center">Round</th>}
-                <th className="text-center">Auction</th>
-                <th className="text-center">Amount</th>
-                <th className="text-center">Price</th>
-                <th className="text-center">Taker</th>
-                <th className="text-center">Time</th>
+                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0 py-1"><span className="sr-only">Chain</span></th>
+                <th className="text-center w-16 px-0.5 py-1">Take ID</th>
+                <th className="text-center w-24 px-0.5 py-1">Transaction</th>
+                {showRoundInfo && <th className="text-center w-16 px-0.5 py-1">Round</th>}
+                <th className="text-center w-24 px-0.5 py-1">Auction</th>
+                <th 
+                  className="text-center w-32 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  onClick={() => setShowUSD(!showUSD)}
+                  title="Click to toggle between token and USD values"
+                >
+                  Amount {showUSD ? '($)' : '(🪙)'}
+                </th>
+                <th 
+                  className="text-center w-28 px-0.5 py-1 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  onClick={() => setShowUSD(!showUSD)}
+                  title="Click to toggle between token and USD values"
+                >
+                  Price {showUSD ? '($)' : '(🪙)'}
+                </th>
+                <th className="text-center w-24 px-0.5 py-1">Profit/Loss</th>
+                <th className="text-center w-24 px-0.5 py-1">Taker</th>
+                <th className="text-center w-20 px-0.5 py-1">Time</th>
               </tr>
             </thead>
             <tbody>
               {takes.map((take, index) => (
                 <tr key={take.take_id || `take-${index}`} className="group">
-                  <td>
-                    <div className="flex items-center space-x-1.5">
-                      <TrendingDown className="h-3.5 w-3.5 text-primary-500" />
-                      <div className="text-sm">
-                        <div className="font-mono text-xs text-gray-500 leading-tight">
-                          T{take.take_seq}
-                        </div>
-                        <div className="font-medium text-primary-400 text-xs leading-tight">
-                          {take.take_id ? take.take_id.split("-").slice(-2).join("-") : 'N/A'}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="w-16 text-center">
+                  <td className="w-[22px] min-w-[22px] max-w-[22px] px-0 py-1 text-center">
                     <div className="flex justify-center">
                       <ChainIcon
                         chainId={take.chain_id}
-                        size="sm"
+                        size="xs"
                         showName={false}
                       />
                     </div>
                   </td>
 
-                  <td>
-                    <div className="flex items-center space-x-2">
-                      {getChainInfo(take.chain_id).explorer !== "#" ? (
-                        <a
-                          href={getTxLink(take.tx_hash, take.chain_id)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
-                          title="View transaction"
-                        >
-                          <span>{formatAddress(take.tx_hash)}</span>
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        <button
-                          onClick={() => handleCopy(take.tx_hash)}
-                          className="font-mono text-sm text-gray-400 hover:text-gray-200 transition-colors flex items-center space-x-1"
-                          title="Copy transaction hash"
-                        >
-                          <span>{formatAddress(take.tx_hash)}</span>
-                          {copiedAddresses.has(take.tx_hash) ? (
-                            <Check className="h-3 w-3 text-primary-500 animate-pulse" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
+                  <td className="px-0.5 py-1">
+                    <div className="text-sm text-center">
+                      <div className="font-mono text-xs text-gray-500 leading-tight">
+                        T{take.take_seq}
+                      </div>
+                      <div className="font-medium text-primary-400 text-xs leading-tight">
+                        {take.take_id ? take.take_id.split("-").slice(-2).join("-") : 'N/A'}
+                      </div>
                     </div>
+                  </td>
+
+                  <td className="px-0.5 py-1">
+                    <TxHashLink
+                      txHash={take.tx_hash}
+                      chainId={take.chain_id}
+                    />
                   </td>
 
                   {showRoundInfo && (
-                    <td>
-                      {auctionAddress ? (
-                        <Link
-                          to={`/round/${take.chain_id}/${auctionAddress}/${take.round_id}`}
-                          className="inline-flex items-center space-x-1 px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
-                        >
-                          <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
-                            R{take.round_id}
-                          </span>
-                        </Link>
-                      ) : (
-                        <div className="flex items-center space-x-1">
+                    <td className="px-0.5 py-1">
+                      <div className="flex justify-center">
+                        {auctionAddress ? (
+                          <Link
+                            to={`/round/${take.chain_id}/${auctionAddress}/${take.round_id}`}
+                            className="inline-flex items-center px-2 py-0.5 hover:bg-gray-800/30 rounded transition-all duration-200 group"
+                          >
+                            <span className="font-mono text-sm font-semibold text-gray-300 group-hover:text-primary-300">
+                              R{take.round_id}
+                            </span>
+                          </Link>
+                        ) : (
                           <span className="font-mono text-sm text-gray-300">
                             R{take.round_id}
                           </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </td>
                   )}
 
-                  <td>
-                    <Link
-                      to={`/auction/${take.chain_id}/${take.auction}`}
-                      className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
-                    >
-                      {formatAddress(take.auction)}
-                    </Link>
+                  <td className="px-0.5 py-1">
+                    <AddressLink
+                      address={take.auction}
+                      chainId={take.chain_id}
+                      type="auction"
+                      className="text-primary-400"
+                    />
                   </td>
 
-                  <td>
+                  <td className="px-0.5 py-1">
                     <div className="text-sm">
                       <div className="font-medium text-gray-200 leading-tight">
-                        {formatTokenAmount(take.amount_taken, take.from_token_decimals || 18, 4)} {take.from_token_symbol || '?'}
-                      </div>
-                      <div className="text-xs text-gray-500 leading-tight">
-                        paid: {formatTokenAmount(take.amount_paid, take.to_token_decimals || 18, 2)} {take.to_token_symbol || '?'}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="text-sm">
-                      <div className="font-medium text-gray-200 leading-tight">
-                        {formatTokenAmount(take.price, take.to_token_decimals || 18, 6)} {take.to_token_symbol || '?'}
-                      </div>
-                      <div className="text-xs text-gray-500 leading-tight">
-                        per {take.from_token_symbol || '?'}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="flex items-center space-x-2">
-                      {getChainInfo(take.chain_id).explorer !== "#" ? (
-                        <a
-                          href={`${
-                            getChainInfo(take.chain_id).explorer
-                          }/address/${take.taker}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center space-x-1"
-                          title="View address on explorer"
-                        >
-                          <span>{formatAddress(take.taker)}</span>
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        <span className="font-mono text-sm text-gray-400">
-                          {formatAddress(take.taker)}
-                        </span>
-                      )}
-
-                      <button
-                        onClick={() => handleCopy(take.taker)}
-                        className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
-                        title="Copy address"
-                      >
-                        {copiedAddresses.has(take.taker) ? (
-                          <Check className="h-3 w-3 text-primary-500 animate-pulse" />
+                        {showUSD ? (
+                          take.amount_taken_usd ? (
+                            formatUSD(parseFloat(take.amount_taken_usd))
+                          ) : (
+                            <span className="text-gray-500">—</span>
+                          )
                         ) : (
-                          <Copy className="h-3 w-3" />
+                          `${formatReadableTokenAmount(take.amount_taken, 4)} ${take.from_token_symbol || '?'}`
                         )}
-                      </button>
+                      </div>
+                      <div className="text-xs text-gray-500 leading-tight">
+                        {showUSD ? (
+                          take.amount_paid_usd ? (
+                            formatUSD(parseFloat(take.amount_paid_usd))
+                          ) : (
+                            <span className="text-gray-500">—</span>
+                          )
+                        ) : (
+                          `${formatReadableTokenAmount(take.amount_paid, 2)} ${take.to_token_symbol || '?'}`
+                        )}
+                      </div>
                     </div>
                   </td>
 
-                  <td>
+                  <td className="px-0.5 py-1">
+                    <div className="text-sm">
+                      <div className="font-medium text-gray-200 leading-tight">
+                        {showUSD ? (
+                          take.amount_taken_usd && take.amount_paid_usd ? (
+                            `${formatUSD(parseFloat(take.amount_paid_usd) / parseFloat(take.amount_taken))}`
+                          ) : (
+                            <span className="text-gray-500">—</span>
+                          )
+                        ) : (
+                          `${formatReadableTokenAmount(take.price, 6)} ${take.to_token_symbol || '?'}`
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 leading-tight">
+                        {showUSD ? (
+                          `per ${take.from_token_symbol || '?'}`
+                        ) : (
+                          `per ${take.from_token_symbol || '?'}`
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-0.5 py-1">
+                    <div className="text-sm text-center">
+                      {take.price_differential_usd && take.price_differential_percent !== null ? (
+                        <>
+                          <div className={cn(
+                            "font-medium leading-tight",
+                            parseFloat(take.price_differential_usd) >= 0 
+                              ? "text-green-400" 
+                              : "text-red-400"
+                          )}>
+                            {formatUSD(Math.abs(parseFloat(take.price_differential_usd)), 2)}
+                          </div>
+                          <div className={cn(
+                            "text-xs leading-tight font-medium",
+                            parseFloat(take.price_differential_usd) >= 0 
+                              ? "text-green-500" 
+                              : "text-red-500"
+                          )}>
+                            {Math.abs(take.price_differential_percent).toFixed(2)}%
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-xs text-gray-500">
+                          N/A
+                        </div>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="px-0.5 py-1">
+                    <AddressLink
+                      address={take.taker}
+                      chainId={take.chain_id}
+                      type="address"
+                      className="text-gray-400"
+                    />
+                  </td>
+
+                  <td className="px-0.5 py-1">
                     <span
                       className="text-sm text-gray-400"
                       title={new Date(take.timestamp).toLocaleString()}
@@ -256,6 +264,47 @@ const TakesTable: React.FC<TakesTableProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Compact Pagination */}
+      {(onNextPage || onPrevPage) && (
+        <div className="flex items-center justify-center pt-4 border-t border-gray-800">
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={onPrevPage}
+              disabled={!canGoPrev}
+              className={cn(
+                "w-8 h-8 flex items-center justify-center rounded text-lg font-medium transition-all duration-200",
+                canGoPrev 
+                  ? "text-gray-300 hover:text-white hover:bg-gray-700" 
+                  : "text-gray-600 cursor-not-allowed"
+              )}
+              title="Previous page"
+            >
+              &lt;
+            </button>
+
+            {currentPage && (
+              <span className="text-sm text-gray-400 px-2">
+                Page {currentPage}
+              </span>
+            )}
+
+            <button
+              onClick={onNextPage}
+              disabled={!canGoNext}
+              className={cn(
+                "w-8 h-8 flex items-center justify-center rounded text-lg font-medium transition-all duration-200",
+                canGoNext 
+                  ? "text-gray-300 hover:text-white hover:bg-gray-700" 
+                  : "text-gray-600 cursor-not-allowed"
+              )}
+              title="Next page"
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

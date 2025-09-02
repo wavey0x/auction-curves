@@ -69,29 +69,6 @@ const StackedProgressMeter: React.FC<StackedProgressMeterProps> = ({
         </div>
       </div>
 
-      {/* Progress Relationship Indicator */}
-      {size !== 'sm' && (
-        <div className="flex items-center justify-center mt-2">
-          <div className="flex items-center space-x-2 text-xs text-gray-500">
-            {amountProgress > timeProgress ? (
-              <>
-                <div className="h-1 w-1 bg-green-400 rounded-full animate-pulse"></div>
-                <span>Fast selling</span>
-              </>
-            ) : amountProgress < timeProgress - 10 ? (
-              <>
-                <div className="h-1 w-1 bg-yellow-400 rounded-full animate-pulse"></div>
-                <span>Slow selling</span>
-              </>
-            ) : (
-              <>
-                <div className="h-1 w-1 bg-gray-400 rounded-full"></div>
-                <span>Normal pace</span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

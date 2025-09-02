@@ -10,7 +10,7 @@ import {
   Activity
 } from 'lucide-react'
 import type { AuctionListItem } from '../types/auction'
-import { formatAddress, formatTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
+import { formatAddress, formatTokenAmount, formatReadableTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 import StackedProgressMeter from './StackedProgressMeter'
 import TokensList from './TokensList'
 
@@ -105,7 +105,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
                 <div>
                   <span className="text-gray-500">Current Price</span>
                   <div className="font-mono text-gray-200">
-                    {formatTokenAmount(currentRound.current_price, 6, 2)}
+                    {formatReadableTokenAmount(currentRound.current_price, 2)}
                   </div>
                 </div>
               )}

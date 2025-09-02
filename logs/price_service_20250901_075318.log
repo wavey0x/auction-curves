@@ -1,0 +1,787 @@
+2025-09-01 07:53:25,161 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - Database connection established
+2025-09-01 07:53:25,161 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🚀 Starting ypricemagic Price Service
+2025-09-01 07:53:25,162 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🌐 Initializing Brownie network connection...
+2025-09-01 07:53:25,292 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Already connected to Brownie network: electro
+2025-09-01 07:53:25,553 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📊 Chain info: height=23268111, id=1
+2025-09-01 07:53:25,689 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🌐 Web3 connection test: latest block = 23268111
+2025-09-01 07:53:25,689 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📦 Importing ypricemagic...
+2025-09-01 07:53:26,231 - dank_mids.envs - INFO - For your information, you can tweak your configuration for optimal performance using any of the envs below:
+2025-09-01 07:53:26,232 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_MULTICALL_SIZE`, default_value=10000, using_default=True)
+2025-09-01 07:53:26,232 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_JSONRPC_BATCH_SIZE`, default_value=500, using_default=True)
+2025-09-01 07:53:26,232 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_REQUESTS_PER_SECOND`, default_value=50, using_default=True)
+2025-09-01 07:53:26,232 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MIN_REQUESTS_PER_SECOND`, default_value=10, using_default=True)
+2025-09-01 07:53:26,232 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_GANACHE_FORK`, default_value=False, using_default=True)
+2025-09-01 07:53:26,232 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_AIOHTTP_TIMEOUT`, default_value=1200, using_default=True)
+2025-09-01 07:53:26,244 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_COLLECT_STATS`, default_value=False, using_default=True)
+2025-09-01 07:53:26,244 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_STUCK_CALL_TIMEOUT`, default_value=120, using_default=True)
+2025-09-01 07:53:26,244 - dank_mids.envs - INFO - More details can be found in dank_mids/ENVIRONMENT_VARIABLES.py
+2025-09-01 07:53:26,244 - dank_mids.envs - INFO - NOTE: You can disable these logs by setting the `TYPEDENVS_SHUTUP` env var to any value.
+2025-09-01 07:53:26,717 - typed_envs - INFO - EnvironmentVariable[int](name=`YPRICEMAGIC_GETLOGS_BATCH_SIZE`, default_value=0, using_default=True)
+2025-09-01 07:53:27,455 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ ypricemagic imported successfully
+2025-09-01 07:53:27,455 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🧪 Testing ypricemagic functionality...
+2025-09-01 07:53:27,455 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔄 Checking for stale 'processing' requests from previous service instances...
+2025-09-01 07:53:27,467 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📋 Processing 50 pending price requests
+2025-09-01 07:53:27,467 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 65: 6797a275 at block 22580064 (type: kick, chain: 1)
+2025-09-01 07:53:27,468 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22580064
+2025-09-01 07:53:27,489 - y.prices.utils.ypriceapi - INFO - ypriceAPI is now in beta!
+
+Head to ypriceapi-beta.yearn.finance and sign up for access. You get:
+ - access to your desired price data more quickly...
+ - ...from nodes run by yearn-affiliated big brains...
+ - ...on all the networks Yearn supports.
+
+Check out some testimonials from our close frens:
+ - from anon4574, "I can now get prices for all of my useless shitcoins without waiting all day for ypricemagic to load logs."
+ - from anon2952, "I don't need to maintain an archive node anymore and that's saving me money."
+ - from anon3082, "Wow, so fast!"
+
+2025-09-01 07:53:27,494 - dank_mids.controller - INFO - Dank Middleware initializing... Strap on your rocket boots...
+2025-09-01 07:53:28,863 - y.prices.lending.aave - INFO - loaded 37 v2 atokens for <AaveMarketV2 '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9'>
+2025-09-01 07:53:28,863 - y.prices.lending.aave - INFO - loaded 23 v2 atokens for <AaveMarketV2 '0x7937D4799803FbBe595ed57278Bc4cA21f3bFfCB'>
+2025-09-01 07:53:28,863 - y.prices.lending.aave - INFO - loaded 5 v2 atokens for <AaveMarketV2 '0xcE744a9BAf573167B2CF138114BA32ed7De274Fa'>
+2025-09-01 07:53:28,864 - y.prices.lending.aave - INFO - loaded 53 v3 atokens for <AaveMarketV3 '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'>
+2025-09-01 07:53:28,864 - y.prices.lending.aave - INFO - loaded 22 v1 atokens for <AaveMarketV1 '0x398eC7346DcD622eDc5ae82352F02bE94C62d119'>
+loaded 92 markets for 0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258
+2025-09-01 07:53:29,731 - y.prices.lending.compound - INFO - loaded 92 markets for 0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258
+loaded 24 markets for 0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB
+2025-09-01 07:53:29,732 - y.prices.lending.compound - INFO - loaded 24 markets for 0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB
+loaded 24 markets for 0x4dCf7407AE5C07f8681e1659f626E114A7667339
+2025-09-01 07:53:29,732 - y.prices.lending.compound - INFO - loaded 24 markets for 0x4dCf7407AE5C07f8681e1659f626E114A7667339
+loaded 11 markets for 0x3105D328c66d8d55092358cF595d54608178E9B5
+2025-09-01 07:53:29,732 - y.prices.lending.compound - INFO - loaded 11 markets for 0x3105D328c66d8d55092358cF595d54608178E9B5
+loaded 5 markets for 0x95Af143a021DF745bc78e845b54591C53a8B3A51
+2025-09-01 07:53:29,732 - y.prices.lending.compound - INFO - loaded 5 markets for 0x95Af143a021DF745bc78e845b54591C53a8B3A51
+loaded 23 markets for 0x687a01ecF6d3907658f7A7c714749fAC32336D1B
+2025-09-01 07:53:29,733 - y.prices.lending.compound - INFO - loaded 23 markets for 0x687a01ecF6d3907658f7A7c714749fAC32336D1B
+loaded 20 markets for 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
+2025-09-01 07:53:29,734 - y.prices.lending.compound - INFO - loaded 20 markets for 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
+2025-09-01 07:53:30,008 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> is cached thru block 23268101, loading from db
+2025-09-01 07:53:30,008 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf, topic0=0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc)
+2025-09-01 07:53:30,344 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> loaded 261 objects thru block 23268101 from disk
+2025-09-01 07:53:31,123 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> is cached thru block 23268060, loading from db
+2025-09-01 07:53:31,124 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x0000000022D53366457F9d5E68Ec105046FC4383)
+2025-09-01 07:53:31,881 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> loaded 37 objects thru block 23268060 from disk
+2025-09-01 07:53:32,150 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> is cached thru block 23268060, loading from db
+2025-09-01 07:53:32,151 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5)
+2025-09-01 07:53:32,151 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> is cached thru block 23268060, loading from db
+2025-09-01 07:53:32,151 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x8F942C20D02bEfc377D41445793068908E2250D0)
+2025-09-01 07:53:32,375 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> loaded 10 objects thru block 23268060 from disk
+2025-09-01 07:53:32,410 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> loaded 57 objects thru block 23268060 from disk
+2025-09-01 07:53:36,447 - y.prices.stable_swap.curve.startup - INFO - loaded 1836 pools from 2 registries and 7 factories
+2025-09-01 07:53:36,473 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for uniswap v2 on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 07:53:36,473 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for sushiswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 07:53:36,473 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for shibaswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 07:53:36,496 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> is cached thru block 23268101, loading from db
+2025-09-01 07:53:36,497 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'], topic0=0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118)
+2025-09-01 07:53:38,062 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> is cached thru block 23268061, loading from db
+2025-09-01 07:53:38,062 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 07:53:38,063 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> is cached thru block 23268073, loading from db
+2025-09-01 07:53:38,063 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 07:53:52,238 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> is cached thru block 23268060, loading from db
+2025-09-01 07:53:52,239 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x115934131916C8b277DD010Ee02de363c09d037c'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 07:53:53,789 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> loaded 1021 objects thru block 23268060 from disk
+2025-09-01 07:53:54,391 - y.prices.dex.uniswap.v2 - INFO - Loaded 1022 pools supporting 848 tokens on shibaswap
+2025-09-01 07:53:56,922 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> loaded 4379 objects thru block 23268061 from disk
+2025-09-01 07:53:57,765 - y.prices.dex.uniswap.v2 - INFO - Loaded 4397 pools supporting 3666 tokens on sushiswap
+2025-09-01 07:54:24,480 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> loaded 45320 objects thru block 23268101 from disk
+2025-09-01 07:56:31,466 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> loaded 453530 objects thru block 23268073 from disk
+2025-09-01 07:57:49,976 - y.prices.dex.uniswap.v2 - INFO - Loaded 453830 pools supporting 444892 tokens on uniswap v2
+2025-09-01 08:00:13,972 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4733.428235 at block 22580064
+2025-09-01 08:00:13,979 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 65: 6797a275 = $4733.42823494180402783667194116918062718468718230724334716796875 at block 22580064
+2025-09-01 08:00:14,980 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 66: 69c52E37 at block 22580064 (type: kick, chain: 1)
+2025-09-01 08:00:14,983 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22580064
+2025-09-01 08:00:20,603 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4927.501762 at block 22580064
+2025-09-01 08:00:20,608 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 66: 69c52E37 = $4927.501762485074619277540370603483552536320000000000000000 at block 22580064
+2025-09-01 08:00:21,608 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 67: 6797a275 at block 22583321 (type: take, chain: 1)
+2025-09-01 08:00:21,612 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22583321
+2025-09-01 08:00:22,455 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4723.728976 at block 22583321
+2025-09-01 08:00:22,458 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 67: 6797a275 = $4723.728976118978333514989287739486826467327773571014404296875 at block 22583321
+2025-09-01 08:00:23,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 68: 69c52E37 at block 22583321 (type: take, chain: 1)
+2025-09-01 08:00:23,467 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22583321
+2025-09-01 08:00:24,547 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4864.171146 at block 22583321
+2025-09-01 08:00:24,551 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 68: 69c52E37 = $4864.171146363948212218994098182586073038080000000000000000 at block 22583321
+2025-09-01 08:00:25,556 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 69: A034cd52 at block 22587641 (type: take, chain: 1)
+2025-09-01 08:00:25,559 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22587641
+2025-09-01 08:00:28,351 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.788691 at block 22587641
+2025-09-01 08:00:28,351 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22587641: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:00:28,351 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:00:28,483 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 69: Failed to fetch price from ypricemagic
+2025-09-01 08:00:29,491 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 70: F9810Aa7 at block 22587641 (type: take, chain: 1)
+2025-09-01 08:00:29,495 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22587641
+2025-09-01 08:00:31,901 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.359421 at block 22587641
+2025-09-01 08:00:31,906 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 70: F9810Aa7 = $0.359421440054968888982808793747103700 at block 22587641
+2025-09-01 08:00:32,911 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 71: A034cd52 at block 22608088 (type: kick, chain: 1)
+2025-09-01 08:00:32,917 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22608088
+2025-09-01 08:00:34,055 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.668923 at block 22608088
+2025-09-01 08:00:34,055 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22608088: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:00:34,055 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:00:34,055 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 71: Failed to fetch price from ypricemagic
+2025-09-01 08:00:35,063 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 72: F9810Aa7 at block 22608088 (type: kick, chain: 1)
+2025-09-01 08:00:35,065 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22608088
+2025-09-01 08:00:35,561 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.325811 at block 22608088
+2025-09-01 08:00:35,568 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 72: F9810Aa7 = $0.325811102376139988750544093733521800 at block 22608088
+2025-09-01 08:00:36,573 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 73: 6797a275 at block 22604965 (type: kick, chain: 1)
+2025-09-01 08:00:36,576 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22604965
+2025-09-01 08:00:37,416 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4540.697615 at block 22604965
+2025-09-01 08:00:37,426 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 73: 6797a275 = $4540.69761504610669242141458871210079450975172221660614013671875 at block 22604965
+2025-09-01 08:00:38,438 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 74: 69c52E37 at block 22604965 (type: kick, chain: 1)
+2025-09-01 08:00:38,442 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22604965
+2025-09-01 08:00:39,472 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4515.304042 at block 22604965
+2025-09-01 08:00:39,476 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 74: 69c52E37 = $4515.304042402428603230620978806428359217910400000000000000 at block 22604965
+2025-09-01 08:00:40,482 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 75: 6797a275 at block 22607897 (type: take, chain: 1)
+2025-09-01 08:00:40,485 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22607897
+2025-09-01 08:00:41,305 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4367.844675 at block 22607897
+2025-09-01 08:00:41,310 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 75: 6797a275 = $4367.84467489233159347451858399730917881242930889129638671875 at block 22607897
+2025-09-01 08:00:42,312 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 76: 69c52E37 at block 22607897 (type: take, chain: 1)
+2025-09-01 08:00:42,315 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22607897
+2025-09-01 08:00:43,254 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4600.146453 at block 22607897
+2025-09-01 08:00:43,258 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 76: 69c52E37 = $4600.146452792721995902058183911237389480960000000000000000 at block 22607897
+2025-09-01 08:00:44,258 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 77: A034cd52 at block 22611941 (type: take, chain: 1)
+2025-09-01 08:00:44,264 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22611941
+2025-09-01 08:00:45,309 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.670862 at block 22611941
+2025-09-01 08:00:45,309 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22611941: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:00:45,309 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:00:45,309 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 77: Failed to fetch price from ypricemagic
+2025-09-01 08:00:46,318 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 78: F9810Aa7 at block 22611941 (type: take, chain: 1)
+2025-09-01 08:00:46,322 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22611941
+2025-09-01 08:00:46,745 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.324145 at block 22611941
+2025-09-01 08:00:46,750 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 78: F9810Aa7 = $0.324144634856754505219904076903054000 at block 22611941
+2025-09-01 08:00:47,752 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 79: A034cd52 at block 22619985 (type: kick, chain: 1)
+2025-09-01 08:00:47,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22619985
+2025-09-01 08:00:48,831 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.687189 at block 22619985
+2025-09-01 08:00:48,831 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22619985: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:00:48,831 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:00:49,091 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 79: Failed to fetch price from ypricemagic
+2025-09-01 08:00:50,103 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 80: 57ac1b4E at block 22619985 (type: kick, chain: 1)
+2025-09-01 08:00:50,107 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 57ac1b4E at block 22619985
+2025-09-01 08:00:52,518 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 57ac1b4E = $1.000026 at block 22619985
+2025-09-01 08:00:52,523 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 80: 57ac1b4E = $1.000026 at block 22619985
+2025-09-01 08:00:53,528 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 81: 6797a275 at block 22615609 (type: kick, chain: 1)
+2025-09-01 08:00:53,533 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22615609
+2025-09-01 08:00:54,346 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4357.894185 at block 22615609
+2025-09-01 08:00:54,351 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 81: 6797a275 = $4357.89418487617715900088142733836502884514629840850830078125000 at block 22615609
+2025-09-01 08:00:55,356 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 82: 69c52E37 at block 22615609 (type: kick, chain: 1)
+2025-09-01 08:00:55,363 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22615609
+2025-09-01 08:00:56,234 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4549.636861 at block 22615609
+2025-09-01 08:00:56,238 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 82: 69c52E37 = $4549.636860793812037833185038457970065663563000000000000000 at block 22615609
+2025-09-01 08:00:57,243 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 83: 6797a275 at block 22626995 (type: kick, chain: 1)
+2025-09-01 08:00:57,246 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22626995
+2025-09-01 08:00:58,062 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4467.318596 at block 22626995
+2025-09-01 08:00:58,070 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 83: 6797a275 = $4467.31859608223990914930252327297375813941471278667449951171875 at block 22626995
+2025-09-01 08:00:59,075 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 84: 69c52E37 at block 22626995 (type: kick, chain: 1)
+2025-09-01 08:00:59,078 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22626995
+2025-09-01 08:00:59,919 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4525.864258 at block 22626995
+2025-09-01 08:00:59,923 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 84: 69c52E37 = $4525.8642583159010302665201977584098746400000000000000000 at block 22626995
+2025-09-01 08:01:00,924 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 85: 6797a275 at block 22619171 (type: take, chain: 1)
+2025-09-01 08:01:00,928 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22619171
+2025-09-01 08:01:01,744 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4401.803042 at block 22619171
+2025-09-01 08:01:01,750 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 85: 6797a275 = $4401.8030424570587329041673259174831400741823017597198486328125 at block 22619171
+2025-09-01 08:01:02,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 86: 69c52E37 at block 22619171 (type: take, chain: 1)
+2025-09-01 08:01:02,758 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22619171
+2025-09-01 08:01:03,705 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4513.300159 at block 22619171
+2025-09-01 08:01:03,709 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 86: 69c52E37 = $4513.300158645360540827858581780871357993268576000000000000 at block 22619171
+2025-09-01 08:01:04,713 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 87: A034cd52 at block 22620775 (type: take, chain: 1)
+2025-09-01 08:01:04,720 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22620775
+2025-09-01 08:01:05,766 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.697555 at block 22620775
+2025-09-01 08:01:05,766 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22620775: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:01:05,766 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:01:05,766 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 87: Failed to fetch price from ypricemagic
+2025-09-01 08:01:06,773 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 88: 57ac1b4E at block 22620775 (type: take, chain: 1)
+2025-09-01 08:01:06,774 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 57ac1b4E at block 22620775
+2025-09-01 08:01:07,366 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 57ac1b4E = $1.000017 at block 22620775
+2025-09-01 08:01:07,371 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 88: 57ac1b4E = $1.000017 at block 22620775
+2025-09-01 08:01:08,376 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 89: A034cd52 at block 22634429 (type: kick, chain: 1)
+2025-09-01 08:01:08,380 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22634429
+2025-09-01 08:01:09,428 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.655352 at block 22634429
+2025-09-01 08:01:09,428 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22634429: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:01:09,428 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:01:09,428 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 89: Failed to fetch price from ypricemagic
+2025-09-01 08:01:10,433 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 90: F9810Aa7 at block 22634429 (type: kick, chain: 1)
+2025-09-01 08:01:10,438 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22634429
+2025-09-01 08:01:10,858 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.314633 at block 22634429
+2025-09-01 08:01:10,863 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 90: F9810Aa7 = $0.314633175162357044855110322509401600 at block 22634429
+2025-09-01 08:01:11,868 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 91: da5B9D2B at block 22634429 (type: kick, chain: 1)
+2025-09-01 08:01:11,872 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for da5B9D2B at block 22634429
+2025-09-01 08:01:14,860 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: da5B9D2B = $2.725094 at block 22634429
+2025-09-01 08:01:14,864 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 91: da5B9D2B = $2.72509428122847440778194261550561350304633378982543945312500 at block 22634429
+2025-09-01 08:01:15,869 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 93: 6797a275 at block 22643339 (type: kick, chain: 1)
+2025-09-01 08:01:15,872 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22643339
+2025-09-01 08:01:16,843 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4194.924108 at block 22643339
+2025-09-01 08:01:16,851 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 93: 6797a275 = $4194.9241076123223359634777720760284864809364080429077148437500 at block 22643339
+2025-09-01 08:01:17,856 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 94: 69c52E37 at block 22643339 (type: kick, chain: 1)
+2025-09-01 08:01:17,866 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22643339
+2025-09-01 08:01:18,691 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4356.102436 at block 22643339
+2025-09-01 08:01:18,698 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 94: 69c52E37 = $4356.102436054149283134932372415638085571545011360000000000 at block 22643339
+2025-09-01 08:01:19,703 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 95: 6797a275 at block 22630499 (type: take, chain: 1)
+2025-09-01 08:01:19,707 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22630499
+2025-09-01 08:01:20,525 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4524.016462 at block 22630499
+2025-09-01 08:01:20,529 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 95: 6797a275 = $4524.016462139005840724336116067079274216666817665100097656250 at block 22630499
+2025-09-01 08:01:21,535 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 96: 69c52E37 at block 22630499 (type: take, chain: 1)
+2025-09-01 08:01:21,538 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22630499
+2025-09-01 08:01:22,269 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4569.358253 at block 22630499
+2025-09-01 08:01:22,273 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 96: 69c52E37 = $4569.358253461244960947264657417330857638098000000000000000 at block 22630499
+2025-09-01 08:01:23,274 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 97: da5B9D2B at block 22638150 (type: take, chain: 1)
+2025-09-01 08:01:23,277 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for da5B9D2B at block 22638150
+2025-09-01 08:01:24,380 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: da5B9D2B = $2.603194 at block 22638150
+2025-09-01 08:01:24,386 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 97: da5B9D2B = $2.60319437997238874653248362659496706328354775905609130859375 at block 22638150
+2025-09-01 08:01:25,391 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 98: F9810Aa7 at block 22638150 (type: take, chain: 1)
+2025-09-01 08:01:25,397 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22638150
+2025-09-01 08:01:26,712 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.302567 at block 22638150
+2025-09-01 08:01:26,718 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 98: F9810Aa7 = $0.30256729252587900700605591261001836578259371890453621745109558105468750 at block 22638150
+2025-09-01 08:01:27,723 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 99: A034cd52 at block 22638258 (type: take, chain: 1)
+2025-09-01 08:01:27,726 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22638258
+2025-09-01 08:01:28,886 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.634488 at block 22638258
+2025-09-01 08:01:28,886 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22638258: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:01:28,886 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:01:28,886 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 99: Failed to fetch price from ypricemagic
+2025-09-01 08:01:29,895 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 100: F9810Aa7 at block 22638258 (type: take, chain: 1)
+2025-09-01 08:01:29,899 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22638258
+2025-09-01 08:01:30,318 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.301095 at block 22638258
+2025-09-01 08:01:30,322 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 100: F9810Aa7 = $0.301095132770024352088384793075432000 at block 22638258
+2025-09-01 08:01:31,323 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 101: 6797a275 at block 22651659 (type: kick, chain: 1)
+2025-09-01 08:01:31,326 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22651659
+2025-09-01 08:01:32,146 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4238.114348 at block 22651659
+2025-09-01 08:01:32,151 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 101: 6797a275 = $4238.114347665772272400416586655328501365147531032562255859375 at block 22651659
+2025-09-01 08:01:33,156 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 102: 69c52E37 at block 22651659 (type: kick, chain: 1)
+2025-09-01 08:01:33,159 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22651659
+2025-09-01 08:01:34,061 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4434.473540 at block 22651659
+2025-09-01 08:01:34,066 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 102: 69c52E37 = $4434.473539969215153179556752971148096007350000000000000000 at block 22651659
+2025-09-01 08:01:35,071 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 103: 6797a275 at block 22646681 (type: take, chain: 1)
+2025-09-01 08:01:35,073 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22646681
+2025-09-01 08:01:36,201 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4279.754846 at block 22646681
+2025-09-01 08:01:36,206 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 103: 6797a275 = $4279.75484582470110344905226794516011068481020629405975341796875 at block 22646681
+2025-09-01 08:01:37,208 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 104: 69c52E37 at block 22646681 (type: take, chain: 1)
+2025-09-01 08:01:37,210 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22646681
+2025-09-01 08:01:38,343 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4406.419768 at block 22646681
+2025-09-01 08:01:38,349 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 104: 69c52E37 = $4406.41976758508206802693144056778873301150000000000000000 at block 22646681
+2025-09-01 08:01:39,354 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 105: 6797a275 at block 22655142 (type: take, chain: 1)
+2025-09-01 08:01:39,357 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22655142
+2025-09-01 08:01:40,189 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4285.256951 at block 22655142
+2025-09-01 08:01:40,194 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 105: 6797a275 = $4285.2569508386311905933979176647562780999578535556793212890625 at block 22655142
+2025-09-01 08:01:41,199 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 106: 69c52E37 at block 22655142 (type: take, chain: 1)
+2025-09-01 08:01:41,202 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22655142
+2025-09-01 08:01:42,030 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4539.025824 at block 22655142
+2025-09-01 08:01:42,035 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 106: 69c52E37 = $4539.025824141703099968403178025543699024978631320000000000 at block 22655142
+2025-09-01 08:01:43,040 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 107: 6797a275 at block 22657986 (type: take, chain: 1)
+2025-09-01 08:01:43,045 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22657986
+2025-09-01 08:01:43,861 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4270.367012 at block 22657986
+2025-09-01 08:01:43,866 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 107: 6797a275 = $4270.3670123607380941023152193398891540709882974624633789062500 at block 22657986
+2025-09-01 08:01:44,871 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 108: 69c52E37 at block 22657986 (type: take, chain: 1)
+2025-09-01 08:01:44,875 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22657986
+2025-09-01 08:01:45,699 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4495.459832 at block 22657986
+2025-09-01 08:01:45,704 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 108: 69c52E37 = $4495.459832433696238440895805349394323966000000000000000000 at block 22657986
+2025-09-01 08:01:46,709 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 109: 6797a275 at block 22665261 (type: kick, chain: 1)
+2025-09-01 08:01:46,712 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22665261
+2025-09-01 08:01:47,526 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4196.016822 at block 22665261
+2025-09-01 08:01:47,532 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 109: 6797a275 = $4196.0168216156996032999324772647405552561394870281219482421875 at block 22665261
+2025-09-01 08:01:48,535 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 110: 69c52E37 at block 22665261 (type: kick, chain: 1)
+2025-09-01 08:01:48,539 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22665261
+2025-09-01 08:01:49,504 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4429.898515 at block 22665261
+2025-09-01 08:01:49,510 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 110: 69c52E37 = $4429.898515352322634257569037600827203276932493000000000000 at block 22665261
+2025-09-01 08:01:50,515 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 111: 6797a275 at block 22673186 (type: kick, chain: 1)
+2025-09-01 08:01:50,522 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22673186
+2025-09-01 08:01:51,726 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4512.710776 at block 22673186
+2025-09-01 08:01:51,731 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 111: 6797a275 = $4512.71077630957643457295753083579347730847075581550598144531250 at block 22673186
+2025-09-01 08:01:52,732 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 112: 69c52E37 at block 22673186 (type: kick, chain: 1)
+2025-09-01 08:01:52,734 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22673186
+2025-09-01 08:01:53,588 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4579.957444 at block 22673186
+2025-09-01 08:01:53,593 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 112: 69c52E37 = $4579.957444175591536353620419713051032194770000000000000000 at block 22673186
+2025-09-01 08:01:54,598 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 113: 6797a275 at block 22668798 (type: take, chain: 1)
+2025-09-01 08:01:54,601 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22668798
+2025-09-01 08:01:55,412 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4352.779190 at block 22668798
+2025-09-01 08:01:55,417 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 113: 6797a275 = $4352.77918983197973195523144855820873999618925154209136962890625 at block 22668798
+2025-09-01 08:01:56,423 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 114: 69c52E37 at block 22668798 (type: take, chain: 1)
+2025-09-01 08:01:56,426 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22668798
+2025-09-01 08:01:57,116 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4555.874539 at block 22668798
+2025-09-01 08:01:57,121 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 114: 69c52E37 = $4555.874538766029622393820876341426159625709221530000000000 at block 22668798
+2025-09-01 08:01:58,127 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 115: 6797a275 at block 22683808 (type: kick, chain: 1)
+2025-09-01 08:01:58,130 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22683808
+2025-09-01 08:01:59,052 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4622.906254 at block 22683808
+2025-09-01 08:01:59,055 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 115: 6797a275 = $4622.90625378437631387963437276656713947886601090431213378906250 at block 22683808
+2025-09-01 08:02:05,063 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📋 Processing 50 pending price requests
+2025-09-01 08:02:05,063 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 116: 69c52E37 at block 22683808 (type: kick, chain: 1)
+2025-09-01 08:02:05,065 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22683808
+2025-09-01 08:02:06,176 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4898.711904 at block 22683808
+2025-09-01 08:02:06,181 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 116: 69c52E37 = $4898.711904306231599165320188087966831960480000000000000000 at block 22683808
+2025-09-01 08:02:07,181 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 117: 6797a275 at block 22676720 (type: take, chain: 1)
+2025-09-01 08:02:07,188 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22676720
+2025-09-01 08:02:08,006 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4622.753653 at block 22676720
+2025-09-01 08:02:08,011 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 117: 6797a275 = $4622.753652798424658200637756202464515808969736099243164062500 at block 22676720
+2025-09-01 08:02:09,016 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 118: 69c52E37 at block 22676720 (type: take, chain: 1)
+2025-09-01 08:02:09,019 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22676720
+2025-09-01 08:02:09,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4822.515585 at block 22676720
+2025-09-01 08:02:09,761 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 118: 69c52E37 = $4822.515584988805973660549284262246184068435372610000000000 at block 22676720
+2025-09-01 08:02:10,762 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 119: 6797a275 at block 22687200 (type: take, chain: 1)
+2025-09-01 08:02:10,764 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22687200
+2025-09-01 08:02:11,580 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4462.264757 at block 22687200
+2025-09-01 08:02:11,586 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 119: 6797a275 = $4462.2647568098878462903844378021167358383536338806152343750000 at block 22687200
+2025-09-01 08:02:12,591 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 120: 69c52E37 at block 22687200 (type: take, chain: 1)
+2025-09-01 08:02:12,595 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22687200
+2025-09-01 08:02:13,453 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4727.005343 at block 22687200
+2025-09-01 08:02:13,458 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 120: 69c52E37 = $4727.00534317569304806229868863441964661523200000000000000 at block 22687200
+2025-09-01 08:02:14,459 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 121: A034cd52 at block 22691675 (type: kick, chain: 1)
+2025-09-01 08:02:14,462 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22691675
+2025-09-01 08:02:15,636 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.643420 at block 22691675
+2025-09-01 08:02:15,636 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22691675: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:02:15,636 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:02:15,636 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 121: Failed to fetch price from ypricemagic
+2025-09-01 08:02:16,647 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 122: F9810Aa7 at block 22691675 (type: kick, chain: 1)
+2025-09-01 08:02:16,650 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22691675
+2025-09-01 08:02:17,066 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.316783 at block 22691675
+2025-09-01 08:02:17,071 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 122: F9810Aa7 = $0.316783093158245462095938283400607000 at block 22691675
+2025-09-01 08:02:18,076 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 123: 6797a275 at block 22691329 (type: kick, chain: 1)
+2025-09-01 08:02:18,079 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22691329
+2025-09-01 08:02:18,897 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4262.715313 at block 22691329
+2025-09-01 08:02:18,903 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 123: 6797a275 = $4262.71531309433147914961844243406312671140767633914947509765625 at block 22691329
+2025-09-01 08:02:19,904 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 124: 69c52E37 at block 22691329 (type: kick, chain: 1)
+2025-09-01 08:02:19,907 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22691329
+2025-09-01 08:02:20,742 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4612.024123 at block 22691329
+2025-09-01 08:02:20,746 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 124: 69c52E37 = $4612.02412348540604977706730691324337478300960000000000000 at block 22691329
+2025-09-01 08:02:21,751 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 125: 6797a275 at block 22701248 (type: kick, chain: 1)
+2025-09-01 08:02:21,758 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22701248
+2025-09-01 08:02:22,581 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4080.924532 at block 22701248
+2025-09-01 08:02:22,586 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 125: 6797a275 = $4080.92453165749856056391937331026156243751756846904754638671875 at block 22701248
+2025-09-01 08:02:23,591 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 126: 69c52E37 at block 22701248 (type: kick, chain: 1)
+2025-09-01 08:02:23,594 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22701248
+2025-09-01 08:02:24,418 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4445.569883 at block 22701248
+2025-09-01 08:02:24,422 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 126: 69c52E37 = $4445.569882969751875534412973117404987910525083280000000000 at block 22701248
+2025-09-01 08:02:25,427 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 127: 6797a275 at block 22697127 (type: kick, chain: 1)
+2025-09-01 08:02:25,431 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22697127
+2025-09-01 08:02:26,269 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4090.248696 at block 22697127
+2025-09-01 08:02:26,274 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 127: 6797a275 = $4090.24869626048276670306931453019387845415621995925903320312500 at block 22697127
+2025-09-01 08:02:27,279 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 128: 3606eB48 at block 22697127 (type: kick, chain: 1)
+2025-09-01 08:02:27,282 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3606eB48 at block 22697127
+2025-09-01 08:02:27,414 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3606eB48 = $1.000000 at block 22697127
+2025-09-01 08:02:27,419 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 128: 3606eB48 = $1 at block 22697127
+2025-09-01 08:02:28,424 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 129: 6797a275 at block 22694866 (type: take, chain: 1)
+2025-09-01 08:02:28,428 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22694866
+2025-09-01 08:02:29,227 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4042.326665 at block 22694866
+2025-09-01 08:02:29,232 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 129: 6797a275 = $4042.326665040832028891916174088917614426463842391967773437500 at block 22694866
+2025-09-01 08:02:30,237 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 130: 69c52E37 at block 22694866 (type: take, chain: 1)
+2025-09-01 08:02:30,240 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22694866
+2025-09-01 08:02:30,909 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4379.139688 at block 22694866
+2025-09-01 08:02:30,915 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 130: 69c52E37 = $4379.139688003980999924992940485440600923616008300000000000 at block 22694866
+2025-09-01 08:02:31,920 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 131: A034cd52 at block 22695111 (type: take, chain: 1)
+2025-09-01 08:02:31,925 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22695111
+2025-09-01 08:02:32,981 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.592698 at block 22695111
+2025-09-01 08:02:32,981 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22695111: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:02:32,981 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:02:32,981 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 131: Failed to fetch price from ypricemagic
+2025-09-01 08:02:33,989 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 132: F9810Aa7 at block 22695111 (type: take, chain: 1)
+2025-09-01 08:02:33,993 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22695111
+2025-09-01 08:02:34,411 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.288982 at block 22695111
+2025-09-01 08:02:34,417 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 132: F9810Aa7 = $0.288982263350087678825530018905855400 at block 22695111
+2025-09-01 08:02:35,419 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 133: 6797a275 at block 22701499 (type: take, chain: 1)
+2025-09-01 08:02:35,424 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22701499
+2025-09-01 08:02:36,239 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4075.466936 at block 22701499
+2025-09-01 08:02:36,244 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 133: 6797a275 = $4075.46693580024902151795867206733919374528340995311737060546875 at block 22701499
+2025-09-01 08:02:37,249 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 134: 3606eB48 at block 22701499 (type: take, chain: 1)
+2025-09-01 08:02:37,253 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3606eB48 at block 22701499
+2025-09-01 08:02:37,256 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3606eB48 = $1.000000 at block 22701499
+2025-09-01 08:02:37,260 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 134: 3606eB48 = $1 at block 22701499
+2025-09-01 08:02:38,265 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 135: 6797a275 at block 22704696 (type: take, chain: 1)
+2025-09-01 08:02:38,267 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22704696
+2025-09-01 08:02:39,166 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3999.736765 at block 22704696
+2025-09-01 08:02:39,172 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 135: 6797a275 = $3999.73676463653225936909802924810583135695196688175201416015625 at block 22704696
+2025-09-01 08:02:40,177 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 136: 69c52E37 at block 22704696 (type: take, chain: 1)
+2025-09-01 08:02:40,183 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22704696
+2025-09-01 08:02:41,284 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4396.060755 at block 22704696
+2025-09-01 08:02:41,290 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 136: 69c52E37 = $4396.060754561242842890223127287085388944800000000000000000 at block 22704696
+2025-09-01 08:02:42,295 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 137: 6797a275 at block 22708597 (type: kick, chain: 1)
+2025-09-01 08:02:42,299 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22708597
+2025-09-01 08:02:43,126 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4037.085826 at block 22708597
+2025-09-01 08:02:43,131 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 137: 6797a275 = $4037.08582596599978151346637710020513623021543025970458984375000 at block 22708597
+2025-09-01 08:02:44,136 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 138: 69c52E37 at block 22708597 (type: kick, chain: 1)
+2025-09-01 08:02:44,140 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22708597
+2025-09-01 08:02:44,962 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4412.825176 at block 22708597
+2025-09-01 08:02:44,967 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 138: 69c52E37 = $4412.825176356684233963812762970282573541485405760000000000 at block 22708597
+2025-09-01 08:02:45,972 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 139: 6797a275 at block 22712158 (type: take, chain: 1)
+2025-09-01 08:02:45,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22712158
+2025-09-01 08:02:46,787 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4070.367322 at block 22712158
+2025-09-01 08:02:46,800 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 139: 6797a275 = $4070.3673223468104451180456871180331290815956890583038330078125 at block 22712158
+2025-09-01 08:02:47,805 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 140: 69c52E37 at block 22712158 (type: take, chain: 1)
+2025-09-01 08:02:47,808 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22712158
+2025-09-01 08:02:48,699 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4429.522630 at block 22712158
+2025-09-01 08:02:48,704 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 140: 69c52E37 = $4429.522629788785522511860743004793417000080000000000000000 at block 22712158
+2025-09-01 08:02:49,709 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 141: 6797a275 at block 22715069 (type: take, chain: 1)
+2025-09-01 08:02:49,714 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22715069
+2025-09-01 08:02:50,530 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4185.020784 at block 22715069
+2025-09-01 08:02:50,535 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 141: 6797a275 = $4185.02078359528966410192421015406307560624554753303527832031250 at block 22715069
+2025-09-01 08:02:51,538 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 142: 69c52E37 at block 22715069 (type: take, chain: 1)
+2025-09-01 08:02:51,539 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22715069
+2025-09-01 08:02:52,648 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4510.345013 at block 22715069
+2025-09-01 08:02:52,652 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 142: 69c52E37 = $4510.345013479050668213492680027274983591510151563568200000 at block 22715069
+2025-09-01 08:02:53,657 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 143: 6797a275 at block 22732416 (type: kick, chain: 1)
+2025-09-01 08:02:53,661 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22732416
+2025-09-01 08:02:54,737 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3965.790727 at block 22732416
+2025-09-01 08:02:54,742 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 143: 6797a275 = $3965.79072660241665212848276360467934864573180675506591796875 at block 22732416
+2025-09-01 08:02:55,747 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 144: e407384F at block 22732416 (type: kick, chain: 1)
+2025-09-01 08:02:55,750 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for e407384F at block 22732416
+2025-09-01 08:02:56,303 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: e407384F = $0.999969 at block 22732416
+2025-09-01 08:02:56,303 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for e407384F at block 22732416: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:02:56,303 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:02:56,303 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 144: Failed to fetch price from ypricemagic
+2025-09-01 08:02:57,313 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 145: A034cd52 at block 22720077 (type: kick, chain: 1)
+2025-09-01 08:02:57,317 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22720077
+2025-09-01 08:02:58,385 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.640544 at block 22720077
+2025-09-01 08:02:58,385 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22720077: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:02:58,385 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:02:58,385 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 145: Failed to fetch price from ypricemagic
+2025-09-01 08:02:59,393 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 146: F9810Aa7 at block 22720077 (type: kick, chain: 1)
+2025-09-01 08:02:59,397 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22720077
+2025-09-01 08:02:59,816 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.310062 at block 22720077
+2025-09-01 08:02:59,821 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 146: F9810Aa7 = $0.310062122481989552390743156089004800 at block 22720077
+2025-09-01 08:03:00,824 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 147: da5B9D2B at block 22720077 (type: kick, chain: 1)
+2025-09-01 08:03:00,828 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for da5B9D2B at block 22720077
+2025-09-01 08:03:01,664 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: da5B9D2B = $2.716230 at block 22720077
+2025-09-01 08:03:01,668 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 147: da5B9D2B = $2.716229810124813864446991829114267602562904357910156250000 at block 22720077
+2025-09-01 08:03:02,673 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 149: 6797a275 at block 22722589 (type: kick, chain: 1)
+2025-09-01 08:03:02,675 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22722589
+2025-09-01 08:03:03,600 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4100.445966 at block 22722589
+2025-09-01 08:03:03,607 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 149: 6797a275 = $4100.44596576039387966244759603813918147352524101734161376953125 at block 22722589
+2025-09-01 08:03:04,607 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 150: 69c52E37 at block 22722589 (type: kick, chain: 1)
+2025-09-01 08:03:04,614 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22722589
+2025-09-01 08:03:05,459 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4483.749243 at block 22722589
+2025-09-01 08:03:05,465 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 150: 69c52E37 = $4483.749242926320003078614292438465713270200000000000000000 at block 22722589
+2025-09-01 08:03:06,470 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 152: 3C756Cc2 at block 22732416 (type: kick, chain: 1)
+2025-09-01 08:03:06,474 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22732416
+2025-09-01 08:03:06,739 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2514.538448 at block 22732416
+2025-09-01 08:03:06,745 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 152: 3C756Cc2 = $2514.538448370000000000 at block 22732416
+2025-09-01 08:03:07,750 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 153: da5B9D2B at block 22723880 (type: take, chain: 1)
+2025-09-01 08:03:07,753 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for da5B9D2B at block 22723880
+2025-09-01 08:03:08,831 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: da5B9D2B = $2.462682 at block 22723880
+2025-09-01 08:03:08,837 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 153: da5B9D2B = $2.46268219364677976197665087920540827326476573944091796875 at block 22723880
+2025-09-01 08:03:09,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 154: F9810Aa7 at block 22723880 (type: take, chain: 1)
+2025-09-01 08:03:09,843 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22723880
+2025-09-01 08:03:11,016 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.294307 at block 22723880
+2025-09-01 08:03:11,021 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 154: F9810Aa7 = $0.29430680612117674348836910836142699565698421793058514595031738281250 at block 22723880
+2025-09-01 08:03:12,023 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 155: A034cd52 at block 22724035 (type: take, chain: 1)
+2025-09-01 08:03:12,026 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for A034cd52 at block 22724035
+2025-09-01 08:03:13,084 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: A034cd52 = $0.595247 at block 22724035
+2025-09-01 08:03:13,084 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for A034cd52 at block 22724035: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:03:13,084 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:03:13,084 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 155: Failed to fetch price from ypricemagic
+2025-09-01 08:03:14,093 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 156: F9810Aa7 at block 22724035 (type: take, chain: 1)
+2025-09-01 08:03:14,095 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F9810Aa7 at block 22724035
+2025-09-01 08:03:14,777 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F9810Aa7 = $0.294650 at block 22724035
+2025-09-01 08:03:14,782 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 156: F9810Aa7 = $0.294649899283859568856517534470986000 at block 22724035
+2025-09-01 08:03:15,787 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 157: 6797a275 at block 22726156 (type: take, chain: 1)
+2025-09-01 08:03:15,790 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22726156
+2025-09-01 08:03:16,596 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3936.851627 at block 22726156
+2025-09-01 08:03:16,601 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 157: 6797a275 = $3936.851626647321635029563070790709389257244765758514404296875 at block 22726156
+2025-09-01 08:03:17,606 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 158: 69c52E37 at block 22726156 (type: take, chain: 1)
+2025-09-01 08:03:17,615 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22726156
+2025-09-01 08:03:18,469 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4378.175737 at block 22726156
+2025-09-01 08:03:18,472 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 158: 69c52E37 = $4378.175736610553822871177731864401276943200000000000000000 at block 22726156
+2025-09-01 08:03:19,477 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 159: 6797a275 at block 22729506 (type: take, chain: 1)
+2025-09-01 08:03:19,486 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22729506
+2025-09-01 08:03:20,330 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $4018.876134 at block 22729506
+2025-09-01 08:03:20,334 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 159: 6797a275 = $4018.876133940224781458481243626290961401537060737609863281250 at block 22729506
+2025-09-01 08:03:21,339 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 160: 69c52E37 at block 22729506 (type: take, chain: 1)
+2025-09-01 08:03:21,344 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22729506
+2025-09-01 08:03:22,179 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4439.490702 at block 22729506
+2025-09-01 08:03:22,184 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 160: 69c52E37 = $4439.490702271939173671651079036406158685080000000000000000 at block 22729506
+2025-09-01 08:03:23,188 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 161: 6797a275 at block 22736957 (type: kick, chain: 1)
+2025-09-01 08:03:23,192 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22736957
+2025-09-01 08:03:24,226 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3970.453095 at block 22736957
+2025-09-01 08:03:24,233 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 161: 6797a275 = $3970.453094755886249757029512217573937959969043731689453125000 at block 22736957
+2025-09-01 08:03:25,238 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 162: 69c52E37 at block 22736957 (type: kick, chain: 1)
+2025-09-01 08:03:25,242 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22736957
+2025-09-01 08:03:26,215 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4383.600306 at block 22736957
+2025-09-01 08:03:26,220 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 162: 69c52E37 = $4383.600306398252204652221848127596609531812500000000000000 at block 22736957
+2025-09-01 08:03:27,225 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 163: 6797a275 at block 22744777 (type: kick, chain: 1)
+2025-09-01 08:03:27,229 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22744777
+2025-09-01 08:03:28,193 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3991.797076 at block 22744777
+2025-09-01 08:03:28,198 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 163: 6797a275 = $3991.79707644176318541075046213483301471569575369358062744140625 at block 22744777
+2025-09-01 08:03:29,203 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 164: 69c52E37 at block 22744777 (type: kick, chain: 1)
+2025-09-01 08:03:29,207 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22744777
+2025-09-01 08:03:30,042 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4423.469847 at block 22744777
+2025-09-01 08:03:30,048 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 164: 69c52E37 = $4423.469847244277131155282949372939125721500000000000000000 at block 22744777
+2025-09-01 08:03:31,053 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 165: 6797a275 at block 22740371 (type: kick, chain: 1)
+2025-09-01 08:03:31,056 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22740371
+2025-09-01 08:03:31,914 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3943.223196 at block 22740371
+2025-09-01 08:03:31,919 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 165: 6797a275 = $3943.2231955457541439843234390041834558360278606414794921875000 at block 22740371
+2025-09-01 08:03:32,923 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 166: 3C756Cc2 at block 22740371 (type: kick, chain: 1)
+2025-09-01 08:03:32,926 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22740371
+2025-09-01 08:03:32,929 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2508.003500 at block 22740371
+2025-09-01 08:03:32,933 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 166: 3C756Cc2 = $2508.003500000000000000 at block 22740371
+2025-09-01 08:03:33,938 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 167: 6797a275 at block 22747643 (type: kick, chain: 1)
+2025-09-01 08:03:33,941 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22747643
+2025-09-01 08:03:34,765 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3654.194698 at block 22747643
+2025-09-01 08:03:34,773 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 167: 6797a275 = $3654.194697779190506611111382317285460885614156723022460937500 at block 22747643
+2025-09-01 08:03:40,784 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📋 Processing 50 pending price requests
+2025-09-01 08:03:40,784 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 168: 3C756Cc2 at block 22747643 (type: kick, chain: 1)
+2025-09-01 08:03:40,786 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22747643
+2025-09-01 08:03:41,057 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2427.408931 at block 22747643
+2025-09-01 08:03:41,062 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 168: 3C756Cc2 = $2427.408931000000000000 at block 22747643
+2025-09-01 08:03:42,064 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 169: 6797a275 at block 22737443 (type: kick, chain: 1)
+2025-09-01 08:03:42,067 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22737443
+2025-09-01 08:03:42,985 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3961.362461 at block 22737443
+2025-09-01 08:03:42,990 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 169: 6797a275 = $3961.36246074742371156594379560351444524712860584259033203125000 at block 22737443
+2025-09-01 08:03:43,995 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 170: 9576b098 at block 22737443 (type: kick, chain: 1)
+2025-09-01 08:03:43,999 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 9576b098 at block 22737443
+2025-09-01 08:03:46,951 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 9576b098 = $0.056826 at block 22737443
+2025-09-01 08:03:46,955 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 170: 9576b098 = $0.056825551897690631197973040886172417563500000000000000 at block 22737443
+2025-09-01 08:03:47,960 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 171: 6797a275 at block 22737335 (type: kick, chain: 1)
+2025-09-01 08:03:47,963 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22737335
+2025-09-01 08:03:48,766 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3961.362461 at block 22737335
+2025-09-01 08:03:48,771 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 171: 6797a275 = $3961.36246074742371156594379560351444524712860584259033203125000 at block 22737335
+2025-09-01 08:03:49,776 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 172: 9576b098 at block 22737335 (type: kick, chain: 1)
+2025-09-01 08:03:49,779 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 9576b098 at block 22737335
+2025-09-01 08:03:50,488 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 9576b098 = $0.056826 at block 22737335
+2025-09-01 08:03:50,493 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 172: 9576b098 = $0.056825551897690631197973040886172417563500000000000000 at block 22737335
+2025-09-01 08:03:51,496 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 173: 6797a275 at block 22736417 (type: take, chain: 1)
+2025-09-01 08:03:51,499 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22736417
+2025-09-01 08:03:52,432 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3973.866723 at block 22736417
+2025-09-01 08:03:52,436 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 173: 6797a275 = $3973.86672321875674995037008704130494152195751667022705078125000 at block 22736417
+2025-09-01 08:03:53,442 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 174: e407384F at block 22736417 (type: take, chain: 1)
+2025-09-01 08:03:53,446 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for e407384F at block 22736417
+2025-09-01 08:03:53,729 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: e407384F = $0.999791 at block 22736417
+2025-09-01 08:03:53,729 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for e407384F at block 22736417: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:03:53,729 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:03:53,730 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 174: Failed to fetch price from ypricemagic
+2025-09-01 08:03:54,736 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 175: 6797a275 at block 22740581 (type: take, chain: 1)
+2025-09-01 08:03:54,738 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22740581
+2025-09-01 08:03:55,815 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3941.823079 at block 22740581
+2025-09-01 08:03:55,820 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 175: 6797a275 = $3941.8230787576243576605739960604842053726315498352050781250000 at block 22740581
+2025-09-01 08:03:56,825 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 176: 69c52E37 at block 22740581 (type: take, chain: 1)
+2025-09-01 08:03:56,827 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22740581
+2025-09-01 08:03:57,495 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4359.918087 at block 22740581
+2025-09-01 08:03:57,501 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 176: 69c52E37 = $4359.918086860499813261054139116452465180486500000000000000 at block 22740581
+2025-09-01 08:03:58,505 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 177: 6797a275 at block 22748327 (type: take, chain: 1)
+2025-09-01 08:03:58,508 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22748327
+2025-09-01 08:03:59,376 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3633.678086 at block 22748327
+2025-09-01 08:03:59,381 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 177: 6797a275 = $3633.678085710992990118135417655485071009024977684020996093750 at block 22748327
+2025-09-01 08:04:00,386 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 178: 69c52E37 at block 22748327 (type: take, chain: 1)
+2025-09-01 08:04:00,390 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22748327
+2025-09-01 08:04:01,229 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4031.991146 at block 22748327
+2025-09-01 08:04:01,233 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 178: 69c52E37 = $4031.991146398903196831402791342730846726160000000000000000 at block 22748327
+2025-09-01 08:04:02,238 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 179: 6797a275 at block 22741431 (type: take, chain: 1)
+2025-09-01 08:04:02,242 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22741431
+2025-09-01 08:04:03,169 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3942.330399 at block 22741431
+2025-09-01 08:04:03,176 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 179: 6797a275 = $3942.330398871350033642803387613403174327686429023742675781250 at block 22741431
+2025-09-01 08:04:04,181 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 180: 9576b098 at block 22741431 (type: take, chain: 1)
+2025-09-01 08:04:04,185 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 9576b098 at block 22741431
+2025-09-01 08:04:05,005 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 9576b098 = $0.056578 at block 22741431
+2025-09-01 08:04:05,012 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 180: 9576b098 = $0.056577662796295514336928084979194356640000000000000000 at block 22741431
+2025-09-01 08:04:06,016 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 181: 6797a275 at block 22741665 (type: take, chain: 1)
+2025-09-01 08:04:06,019 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22741665
+2025-09-01 08:04:06,962 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3963.930165 at block 22741665
+2025-09-01 08:04:06,967 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 181: 6797a275 = $3963.930165320643133187642526776937302201986312866210937500000 at block 22741665
+2025-09-01 08:04:07,972 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 182: 9576b098 at block 22741665 (type: take, chain: 1)
+2025-09-01 08:04:07,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 9576b098 at block 22741665
+2025-09-01 08:04:08,673 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 9576b098 = $0.056893 at block 22741665
+2025-09-01 08:04:08,679 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 182: 9576b098 = $0.056892845639473511676814764024112660950000000000000000 at block 22741665
+2025-09-01 08:04:09,680 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 183: 6797a275 at block 22761361 (type: kick, chain: 1)
+2025-09-01 08:04:09,683 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22761361
+2025-09-01 08:04:10,531 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3208.220244 at block 22761361
+2025-09-01 08:04:10,535 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 183: 6797a275 = $3208.22024431063509350027082290188036495237611234188079833984375 at block 22761361
+2025-09-01 08:04:11,540 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 184: e407384F at block 22761361 (type: kick, chain: 1)
+2025-09-01 08:04:11,542 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for e407384F at block 22761361
+2025-09-01 08:04:11,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: e407384F = $0.999745 at block 22761361
+2025-09-01 08:04:11,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for e407384F at block 22761361: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:11,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:11,842 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 184: Failed to fetch price from ypricemagic
+2025-09-01 08:04:12,849 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 185: 6797a275 at block 22752766 (type: kick, chain: 1)
+2025-09-01 08:04:12,852 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22752766
+2025-09-01 08:04:13,665 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3629.801578 at block 22752766
+2025-09-01 08:04:13,670 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 185: 6797a275 = $3629.801577583688552679491698849351450917311012744903564453125 at block 22752766
+2025-09-01 08:04:14,670 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 186: 69c52E37 at block 22752766 (type: kick, chain: 1)
+2025-09-01 08:04:14,673 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22752766
+2025-09-01 08:04:15,775 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $4103.567376 at block 22752766
+2025-09-01 08:04:15,781 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 186: 69c52E37 = $4103.567376292989300184563412021230160181829264000000000000 at block 22752766
+2025-09-01 08:04:16,786 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 187: 6797a275 at block 22761724 (type: kick, chain: 1)
+2025-09-01 08:04:16,788 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22761724
+2025-09-01 08:04:17,631 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3207.951708 at block 22761724
+2025-09-01 08:04:17,635 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 187: 6797a275 = $3207.95170791582066768863815009351992557640187442302703857421875 at block 22761724
+2025-09-01 08:04:18,641 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 188: 69c52E37 at block 22761724 (type: kick, chain: 1)
+2025-09-01 08:04:18,644 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22761724
+2025-09-01 08:04:19,478 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $3754.483729 at block 22761724
+2025-09-01 08:04:19,482 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 188: 69c52E37 = $3754.483728981736500668643446754852746457970127520000000000 at block 22761724
+2025-09-01 08:04:20,484 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 189: 6797a275 at block 22754474 (type: kick, chain: 1)
+2025-09-01 08:04:20,488 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22754474
+2025-09-01 08:04:21,321 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3577.421746 at block 22754474
+2025-09-01 08:04:21,326 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 189: 6797a275 = $3577.42174614205256587355968723379464790923520922660827636718750 at block 22754474
+2025-09-01 08:04:22,329 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 190: 3C756Cc2 at block 22754474 (type: kick, chain: 1)
+2025-09-01 08:04:22,333 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22754474
+2025-09-01 08:04:22,336 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2407.770000 at block 22754474
+2025-09-01 08:04:22,340 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 190: 3C756Cc2 = $2407.770000000000000000 at block 22754474
+2025-09-01 08:04:23,345 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 192: 3C756Cc2 at block 22761361 (type: kick, chain: 1)
+2025-09-01 08:04:23,348 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22761361
+2025-09-01 08:04:23,484 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2188.198181 at block 22761361
+2025-09-01 08:04:23,489 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 192: 3C756Cc2 = $2188.198180770000000000 at block 22761361
+2025-09-01 08:04:24,493 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 193: 6797a275 at block 22756341 (type: take, chain: 1)
+2025-09-01 08:04:24,498 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22756341
+2025-09-01 08:04:25,328 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3361.899539 at block 22756341
+2025-09-01 08:04:25,333 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 193: 6797a275 = $3361.8995385757578880772515325047525038826279342174530029296875 at block 22756341
+2025-09-01 08:04:26,337 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 194: 69c52E37 at block 22756341 (type: take, chain: 1)
+2025-09-01 08:04:26,342 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22756341
+2025-09-01 08:04:27,303 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $3847.334966 at block 22756341
+2025-09-01 08:04:27,308 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 194: 69c52E37 = $3847.334965939901215513755849235188985722840000000000000000 at block 22756341
+2025-09-01 08:04:28,313 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 195: 6797a275 at block 22759160 (type: take, chain: 1)
+2025-09-01 08:04:28,316 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22759160
+2025-09-01 08:04:29,129 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3313.990758 at block 22759160
+2025-09-01 08:04:29,135 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 195: 6797a275 = $3313.99075767137728599893163358217498171143233776092529296875 at block 22759160
+2025-09-01 08:04:30,137 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 196: 3C756Cc2 at block 22759160 (type: take, chain: 1)
+2025-09-01 08:04:30,139 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22759160
+2025-09-01 08:04:30,142 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2260.340000 at block 22759160
+2025-09-01 08:04:30,146 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 196: 3C756Cc2 = $2260.340000000000000000 at block 22759160
+2025-09-01 08:04:31,151 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 197: 6797a275 at block 22752002 (type: take, chain: 1)
+2025-09-01 08:04:31,154 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22752002
+2025-09-01 08:04:31,948 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3627.977677 at block 22752002
+2025-09-01 08:04:31,955 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 197: 6797a275 = $3627.9776768637785491327135726955702921259216964244842529296875 at block 22752002
+2025-09-01 08:04:32,960 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 198: 3C756Cc2 at block 22752002 (type: take, chain: 1)
+2025-09-01 08:04:32,964 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22752002
+2025-09-01 08:04:32,967 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2441.779189 at block 22752002
+2025-09-01 08:04:32,970 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 198: 3C756Cc2 = $2441.779189050000000000 at block 22752002
+2025-09-01 08:04:33,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 199: 6797a275 at block 22772202 (type: kick, chain: 1)
+2025-09-01 08:04:33,978 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22772202
+2025-09-01 08:04:34,819 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3470.807593 at block 22772202
+2025-09-01 08:04:34,823 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 199: 6797a275 = $3470.8075925603614176454174018475650882464833557605743408203125 at block 22772202
+2025-09-01 08:04:35,828 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 200: 9576b098 at block 22772202 (type: kick, chain: 1)
+2025-09-01 08:04:35,834 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 9576b098 at block 22772202
+2025-09-01 08:04:36,727 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 9576b098 = $0.058030 at block 22772202
+2025-09-01 08:04:36,736 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 200: 9576b098 = $0.058029518157723309264582617330750227656024380000000000 at block 22772202
+2025-09-01 08:04:37,741 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 201: 80CcE5b2 at block 22767311 (type: kick, chain: 1)
+2025-09-01 08:04:37,746 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 80CcE5b2 at block 22767311
+2025-09-01 08:04:41,270 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 80CcE5b2 = $164.266908 at block 22767311
+2025-09-01 08:04:41,270 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 80CcE5b2 at block 22767311: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:41,270 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:41,400 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 201: Failed to fetch price from ypricemagic
+2025-09-01 08:04:42,405 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 202: FEc27fbD at block 22767311 (type: kick, chain: 1)
+2025-09-01 08:04:42,409 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for FEc27fbD at block 22767311
+2025-09-01 08:04:43,002 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: FEc27fbD = $1.056220 at block 22767311
+2025-09-01 08:04:43,002 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for FEc27fbD at block 22767311: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:43,002 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:43,002 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 202: Failed to fetch price from ypricemagic
+2025-09-01 08:04:44,010 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 203: 18802018 at block 22767311 (type: kick, chain: 1)
+2025-09-01 08:04:44,013 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 18802018 at block 22767311
+2025-09-01 08:04:48,188 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 18802018 = $3110.567329 at block 22767311
+2025-09-01 08:04:48,188 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 18802018 at block 22767311: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:48,188 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:48,189 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 203: Failed to fetch price from ypricemagic
+2025-09-01 08:04:49,191 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 205: E9F0a1F4 at block 22767311 (type: kick, chain: 1)
+2025-09-01 08:04:49,194 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for E9F0a1F4 at block 22767311
+2025-09-01 08:04:52,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: E9F0a1F4 = $693.619823 at block 22767311
+2025-09-01 08:04:52,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for E9F0a1F4 at block 22767311: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:52,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:52,370 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 205: Failed to fetch price from ypricemagic
+2025-09-01 08:04:53,380 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 207: 36E319F1 at block 22767311 (type: kick, chain: 1)
+2025-09-01 08:04:53,383 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 36E319F1 at block 22767311
+2025-09-01 08:04:55,495 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 36E319F1 = $1.536638 at block 22767311
+2025-09-01 08:04:55,495 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 36E319F1 at block 22767311: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:55,495 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:55,496 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 207: Failed to fetch price from ypricemagic
+2025-09-01 08:04:56,504 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 209: 3283fA3F at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:04:56,509 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3283fA3F at block 22774819
+2025-09-01 08:04:59,600 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3283fA3F = $1.049267 at block 22774819
+2025-09-01 08:04:59,600 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 3283fA3F at block 22774819: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:04:59,600 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:04:59,600 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 209: Failed to fetch price from ypricemagic
+2025-09-01 08:05:00,605 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 210: 3D831ec7 at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:05:00,610 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3D831ec7 at block 22774819
+2025-09-01 08:05:00,612 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3D831ec7 = $1.000000 at block 22774819
+2025-09-01 08:05:00,616 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 210: 3D831ec7 = $1 at block 22774819
+2025-09-01 08:05:01,621 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 211: 207ab3Ec at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:05:01,624 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 207ab3Ec at block 22774819
+2025-09-01 08:05:17,820 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 207ab3Ec = $2.281503 at block 22774819
+2025-09-01 08:05:17,820 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 207ab3Ec at block 22774819: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:17,820 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:17,954 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 211: Failed to fetch price from ypricemagic
+2025-09-01 08:05:18,963 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 213: Fbc5eaF2 at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:05:18,966 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for Fbc5eaF2 at block 22774819
+2025-09-01 08:05:20,252 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: Fbc5eaF2 = $2562.654411 at block 22774819
+2025-09-01 08:05:20,252 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for Fbc5eaF2 at block 22774819: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:20,252 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:20,252 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 213: Failed to fetch price from ypricemagic
+2025-09-01 08:05:21,260 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 215: 377069d3 at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:05:21,264 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 377069d3 at block 22774819
+2025-09-01 08:05:21,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 377069d3 = $1.038323 at block 22774819
+2025-09-01 08:05:21,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 377069d3 at block 22774819: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:21,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:21,975 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 215: Failed to fetch price from ypricemagic
+2025-09-01 08:05:22,983 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 217: F6257613 at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:05:22,986 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for F6257613 at block 22774819
+2025-09-01 08:05:26,040 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: F6257613 = $8.192937 at block 22774819
+2025-09-01 08:05:26,040 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for F6257613 at block 22774819: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:26,041 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:26,171 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 217: Failed to fetch price from ypricemagic
+2025-09-01 08:05:27,177 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 219: 2b67adC9 at block 22774819 (type: kick, chain: 1)
+2025-09-01 08:05:27,180 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 2b67adC9 at block 22774819
+2025-09-01 08:05:35,370 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 2b67adC9 = $15108.403212 at block 22774819
+2025-09-01 08:05:35,370 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 2b67adC9 at block 22774819: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:35,370 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:35,370 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 219: Failed to fetch price from ypricemagic
+2025-09-01 08:05:36,372 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 221: 6797a275 at block 22765250 (type: take, chain: 1)
+2025-09-01 08:05:36,377 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22765250
+2025-09-01 08:05:37,216 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3274.067916 at block 22765250
+2025-09-01 08:05:37,221 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 221: 6797a275 = $3274.06791585465106864304348540074261109111830592155456542968750 at block 22765250
+2025-09-01 08:05:38,226 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 222: 69c52E37 at block 22765250 (type: take, chain: 1)
+2025-09-01 08:05:38,230 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 69c52E37 at block 22765250
+2025-09-01 08:05:39,214 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 69c52E37 = $3897.458935 at block 22765250
+2025-09-01 08:05:39,219 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 222: 69c52E37 = $3897.458934983654909052190227319274918400863243560000000000 at block 22765250
+2025-09-01 08:05:40,224 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 223: 6797a275 at block 22765736 (type: take, chain: 1)
+2025-09-01 08:05:40,228 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22765736
+2025-09-01 08:05:41,025 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3299.114359 at block 22765736
+2025-09-01 08:05:41,030 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 223: 6797a275 = $3299.114358763402838426596064845125511055812239646911621093750 at block 22765736
+2025-09-01 08:05:42,035 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 224: e407384F at block 22765736 (type: take, chain: 1)
+2025-09-01 08:05:42,039 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for e407384F at block 22765736
+2025-09-01 08:05:42,304 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: e407384F = $0.999796 at block 22765736
+2025-09-01 08:05:42,304 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for e407384F at block 22765736: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:42,304 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:42,305 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 224: Failed to fetch price from ypricemagic
+2025-09-01 08:05:43,313 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 225: 6797a275 at block 22766059 (type: take, chain: 1)
+2025-09-01 08:05:43,316 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22766059
+2025-09-01 08:05:44,135 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3293.086215 at block 22766059
+2025-09-01 08:05:44,140 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 225: 6797a275 = $3293.086215079502238149403663922937994357198476791381835937500 at block 22766059
+2025-09-01 08:05:45,145 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 226: 3C756Cc2 at block 22766059 (type: take, chain: 1)
+2025-09-01 08:05:45,147 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 3C756Cc2 at block 22766059
+2025-09-01 08:05:45,150 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 3C756Cc2 = $2261.002800 at block 22766059
+2025-09-01 08:05:45,152 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 226: 3C756Cc2 = $2261.002800000000000000 at block 22766059
+2025-09-01 08:05:51,164 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📋 Processing 50 pending price requests
+2025-09-01 08:05:51,164 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 227: E9F0a1F4 at block 22770434 (type: take, chain: 1)
+2025-09-01 08:05:51,166 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for E9F0a1F4 at block 22770434
+2025-09-01 08:05:52,298 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: E9F0a1F4 = $735.304735 at block 22770434
+2025-09-01 08:05:52,298 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for E9F0a1F4 at block 22770434: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:52,298 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:52,298 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 227: Failed to fetch price from ypricemagic
+2025-09-01 08:05:53,306 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 228: FEc27fbD at block 22770434 (type: take, chain: 1)
+2025-09-01 08:05:53,310 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for FEc27fbD at block 22770434
+2025-09-01 08:05:53,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: FEc27fbD = $1.056457 at block 22770434
+2025-09-01 08:05:53,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for FEc27fbD at block 22770434: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:53,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:53,841 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 228: Failed to fetch price from ypricemagic
+2025-09-01 08:05:54,848 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 229: 36E319F1 at block 22770439 (type: take, chain: 1)
+2025-09-01 08:05:54,852 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 36E319F1 at block 22770439
+2025-09-01 08:05:56,129 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 36E319F1 = $1.536762 at block 22770439
+2025-09-01 08:05:56,129 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 36E319F1 at block 22770439: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:56,129 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:56,129 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 229: Failed to fetch price from ypricemagic
+2025-09-01 08:05:57,138 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 230: FEc27fbD at block 22770439 (type: take, chain: 1)
+2025-09-01 08:05:57,141 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for FEc27fbD at block 22770439
+2025-09-01 08:05:57,689 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: FEc27fbD = $1.056457 at block 22770439
+2025-09-01 08:05:57,689 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for FEc27fbD at block 22770439: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:57,689 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:57,690 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 230: Failed to fetch price from ypricemagic
+2025-09-01 08:05:58,697 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 231: 18802018 at block 22770522 (type: take, chain: 1)
+2025-09-01 08:05:58,700 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 18802018 at block 22770522
+2025-09-01 08:05:59,719 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 18802018 = $3343.998070 at block 22770522
+2025-09-01 08:05:59,719 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 18802018 at block 22770522: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:05:59,719 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:05:59,719 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 231: Failed to fetch price from ypricemagic
+2025-09-01 08:06:00,730 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 232: FEc27fbD at block 22770522 (type: take, chain: 1)
+2025-09-01 08:06:00,733 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for FEc27fbD at block 22770522
+2025-09-01 08:06:01,287 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: FEc27fbD = $1.056459 at block 22770522
+2025-09-01 08:06:01,287 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for FEc27fbD at block 22770522: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:06:01,287 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:06:01,287 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 232: Failed to fetch price from ypricemagic
+2025-09-01 08:06:02,295 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 233: 80CcE5b2 at block 22770522 (type: take, chain: 1)
+2025-09-01 08:06:02,299 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 80CcE5b2 at block 22770522
+2025-09-01 08:06:03,141 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 80CcE5b2 = $181.437313 at block 22770522
+2025-09-01 08:06:03,141 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - ❌ Failed to fetch price for 80CcE5b2 at block 22770522: [<class 'decimal.ConversionSyntax'>]
+2025-09-01 08:06:03,141 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - ERROR - Exception type: InvalidOperation
+2025-09-01 08:06:03,273 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - WARNING - ❌ Request 233: Failed to fetch price from ypricemagic
+2025-09-01 08:06:04,280 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Processing request 235: 6797a275 at block 22774977 (type: take, chain: 1)
+2025-09-01 08:06:04,286 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔍 Starting price lookup for 6797a275 at block 22774977
+2025-09-01 08:06:05,099 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 💰 Price fetched successfully: 6797a275 = $3495.463970 at block 22774977
+2025-09-01 08:06:05,102 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Completed request 235: 6797a275 = $3495.4639700251177938523863280106979800621047616004943847656250 at block 22774977

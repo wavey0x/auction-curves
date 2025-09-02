@@ -1,0 +1,7 @@
+2025-09-01 14:33:50,718 - __main__ - INFO - ✅ Database connection established
+2025-09-01 14:33:50,718 - __main__ - INFO - 🚀 Starting CowSwap Price Service
+2025-09-01 14:33:50,718 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_blocks=5000
+2025-09-01 14:33:50,718 - __main__ - INFO - 🌐 CowSwap API supports mainnet (chain_id=1) only
+2025-09-01 14:33:50,739 - __main__ - INFO - [COWSWAP] Found 11 recent unprocessed mainnet takes (< 5000 blocks old)
+2025-09-01 14:33:51,125 - __main__ - INFO - [COWSWAP] ✅ Processed 11 takes: stored 0 prices
+2025-09-01 14:33:51,125 - __main__ - INFO - ✅ Single cycle completed (--once mode)

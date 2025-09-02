@@ -5,13 +5,13 @@ import type { ActivityEvent } from '../types/auction'
 import {
   formatAddress,
   formatTokenAmount,
+  formatReadableTokenAmount,
   formatUSD,
   formatTimeAgo,
-  getTxLink,
-  getChainInfo,
-  copyToClipboard,
   cn
 } from '../lib/utils'
+import AddressDisplay from './AddressDisplay'
+import TxHashDisplay from './TxHashDisplay'
 
 interface ActivityTableProps {
   events: ActivityEvent[]
@@ -102,7 +102,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
       <div className={cn("overflow-hidden rounded-lg border border-gray-800", maxHeight)}>
         <div className="overflow-y-auto">
           <table className="table">
-            <thead className="bg-gray-800/50 sticky top-0">
+            <thead className="bg-gray-800 sticky top-0">
               <tr>
                 <th className="text-center">Event</th>
                 <th className="text-center">Auction</th>
@@ -180,7 +180,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
                     {event.price ? (
                       <div className="text-sm">
                         <div className="font-medium text-gray-200 leading-tight">
-                          {formatTokenAmount(event.price, 18, 6)}
+                          {formatReadableTokenAmount(event.price, 6)}
                         </div>
                         <div className="text-xs text-gray-500 leading-tight">
                           {formatUSD(parseFloat(event.price) * 1.5)} {/* Rough USD estimate */}

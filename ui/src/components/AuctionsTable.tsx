@@ -16,11 +16,13 @@ import {
   Home
 } from 'lucide-react'
 import type { AuctionListItem } from '../types/auction'
-import { formatAddress, formatTokenAmount, formatTimeAgo } from '../lib/utils'
+import { formatTokenAmount, formatTimeAgo, formatAddress } from '../lib/utils'
 import { apiClient } from '../lib/api'
 import StackedProgressMeter from './StackedProgressMeter'
 import ChainIcon from './ChainIcon'
 import TokensList from './TokensList'
+import AddressDisplay from './AddressDisplay'
+import AddressLink from './AddressLink'
 
 interface AuctionsTableProps {
   auctions: AuctionListItem[]
@@ -32,18 +34,24 @@ type SortDirection = 'asc' | 'desc'
 const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
   const [search, setSearch] = useState('')
   const [tokenFilter, setTokenFilter] = useState('')
+  const [tokenSearch, setTokenSearch] = useState('')
+  const [tokenDropdownOpen, setTokenDropdownOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [chainFilter, setChainFilter] = useState('')
   const [chainDropdownOpen, setChainDropdownOpen] = useState(false)
-  const [sortField, setSortField] = useState<SortField>('address')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortField, setSortField] = useState<SortField>('last_kicked')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const tokenDropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setChainDropdownOpen(false)
+      }
+      if (tokenDropdownRef.current && !tokenDropdownRef.current.contains(event.target as Node)) {
+        setTokenDropdownOpen(false)
       }
     }
 
@@ -56,23 +64,52 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
   // Extract unique values for filters
 
   const uniqueTokens = useMemo(() => {
-    const tokens = new Set<string>()
+    const tokenMap = new Map<string, { symbol?: string, address: string, display: string }>()
+    
     auctions?.forEach(ah => {
       ah.from_tokens?.forEach(token => {
-        if (token?.symbol) {
-          tokens.add(token.symbol)
-        }
         if (token?.address) {
-          tokens.add(token.address.toLowerCase())
+          const key = token.address.toLowerCase()
+          const display = token.symbol 
+            ? `${token.symbol} (${formatAddress(token.address)})`
+            : formatAddress(token.address)
+          
+          tokenMap.set(key, {
+            symbol: token.symbol,
+            address: token.address,
+            display
+          })
         }
       })
-      if (ah.want_token?.symbol && ah.want_token?.address) {
-        tokens.add(ah.want_token.symbol)
-        tokens.add(ah.want_token.address.toLowerCase())
+      
+      if (ah.want_token?.address) {
+        const key = ah.want_token.address.toLowerCase()
+        const display = ah.want_token.symbol 
+          ? `${ah.want_token.symbol} (${formatAddress(ah.want_token.address)})`
+          : formatAddress(ah.want_token.address)
+        
+        tokenMap.set(key, {
+          symbol: ah.want_token.symbol,
+          address: ah.want_token.address,
+          display
+        })
       }
     })
-    return Array.from(tokens).sort()
+    
+    return Array.from(tokenMap.values()).sort((a, b) => a.display.localeCompare(b.display))
   }, [auctions])
+  
+  // Filter tokens based on search
+  const filteredTokens = useMemo(() => {
+    if (!tokenSearch.trim()) return uniqueTokens
+    
+    const searchLower = tokenSearch.toLowerCase()
+    return uniqueTokens.filter(token => 
+      token.display.toLowerCase().includes(searchLower) ||
+      token.symbol?.toLowerCase().includes(searchLower) ||
+      token.address.toLowerCase().includes(searchLower)
+    )
+  }, [uniqueTokens, tokenSearch])
 
   // Fetch chain data from API  
   const { data: chainData } = useQuery({
@@ -125,14 +162,11 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
 
       // Token filter
       if (tokenFilter) {
-        const tokenLower = tokenFilter.toLowerCase()
+        const filterAddress = tokenFilter.toLowerCase()
         const hasFromToken = ah.from_tokens?.some(token =>
-          token.symbol?.toLowerCase().includes(tokenLower) ||
-          token.address?.toLowerCase().includes(tokenLower)
+          token.address?.toLowerCase() === filterAddress
         ) || false
-        const hasWantToken = 
-          ah.want_token?.symbol?.toLowerCase().includes(tokenLower) ||
-          ah.want_token?.address?.toLowerCase().includes(tokenLower)
+        const hasWantToken = ah.want_token?.address?.toLowerCase() === filterAddress || false
         
         if (!hasFromToken && !hasWantToken) {
           return false
@@ -216,10 +250,15 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
   }
 
   return (
-    <div className="space-y-2">
-      {/* Compact filters with results badge on same line */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="flex flex-wrap gap-2 items-center flex-1">
+    <div className="space-y-4">
+      {/* Results indicator centered above filters */}
+      <div className="flex justify-center">
+        <span className="badge badge-neutral text-xs">Results: {filteredAndSorted.length}</span>
+      </div>
+      
+      {/* Centered filter group */}
+      <div className="flex justify-center">
+        <div className="flex flex-wrap gap-2 items-center justify-center max-w-4xl">
           <div className="relative w-full sm:w-60">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -231,16 +270,64 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
             />
           </div>
           
-          <select
-            className="w-full sm:w-32 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-            value={tokenFilter}
-            onChange={(e) => setTokenFilter(e.target.value)}
-          >
-            <option value="">All Tokens</option>
-            {uniqueTokens.map(token => (
-              <option key={token} value={token}>{token}</option>
-            ))}
-          </select>
+          <div className="relative w-full sm:w-48" ref={tokenDropdownRef}>
+            <div
+              className="flex items-center justify-between w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm cursor-pointer focus-within:ring-1 focus-within:ring-primary-500"
+              onClick={() => setTokenDropdownOpen(!tokenDropdownOpen)}
+            >
+              <span className="truncate">
+                {tokenFilter 
+                  ? uniqueTokens.find(t => t.address.toLowerCase() === tokenFilter.toLowerCase())?.display || 'Unknown Token'
+                  : 'All Tokens'
+                }
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${tokenDropdownOpen ? 'rotate-180' : ''}`} />
+            </div>
+            
+            {tokenDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg z-50 max-h-64 overflow-hidden">
+                <div className="p-2 border-b border-gray-700">
+                  <input
+                    type="text"
+                    placeholder="Search tokens..."
+                    className="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    value={tokenSearch}
+                    onChange={(e) => setTokenSearch(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto">
+                  <div
+                    className="px-2 py-2 text-sm hover:bg-gray-700 cursor-pointer"
+                    onClick={() => {
+                      setTokenFilter('')
+                      setTokenDropdownOpen(false)
+                    }}
+                  >
+                    All Tokens
+                  </div>
+                  {filteredTokens.map(token => (
+                    <div
+                      key={token.address}
+                      className="px-2 py-2 text-sm hover:bg-gray-700 cursor-pointer truncate"
+                      onClick={() => {
+                        setTokenFilter(token.address)
+                        setTokenDropdownOpen(false)
+                      }}
+                      title={token.display}
+                    >
+                      {token.display}
+                    </div>
+                  ))}
+                  {filteredTokens.length === 0 && tokenSearch && (
+                    <div className="px-2 py-2 text-sm text-gray-500">
+                      No tokens found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           
           <select
             className="w-full sm:w-28 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -302,21 +389,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
             )}
           </div>
           
-          <button
-            onClick={() => {
-              setSearch('')
-              setTokenFilter('')
-              setStatusFilter('')
-              setChainFilter('')
-            }}
-            className="w-full sm:w-20 px-2 py-1 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-xs transition-colors flex items-center justify-center space-x-1"
-          >
-            <Filter className="h-3 w-3" />
-            <span>Clear</span>
-          </button>
         </div>
-        
-        <span className="badge badge-neutral text-xs whitespace-nowrap">Results: {filteredAndSorted.length}</span>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-gray-800">
@@ -325,8 +398,9 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
       <div>
         <div className="overflow-x-auto">
           <table className="table">
-            <thead className="bg-gray-800/50">
+            <thead className="bg-gray-800">
               <tr>
+                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0"><span className="sr-only">Chain</span></th>
                 <th 
                   className="cursor-pointer select-none hover:bg-gray-700/50 text-center"
                   onClick={() => handleSort('address')}
@@ -336,7 +410,6 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     <SortIcon field="address" />
                   </div>
                 </th>
-                <th className="text-center w-16">Chain</th>
                 <th className="text-center">Trading</th>
                 <th 
                   className="cursor-pointer select-none hover:bg-gray-700/50 text-center"
@@ -384,23 +457,22 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                 
                 return (
                   <tr key={`${auction?.address}-${auction?.chain_id}-${auction?.current_round?.round_id || 'no-round'}`} className="group">
-                    <td>
-                      <Link
-                        to={`/auction/${auction?.chain_id}/${auction?.address}`}
-                        className="font-mono text-sm text-primary-400 hover:text-primary-300 transition-colors"
-                      >
-                        {formatAddress(auction?.address || '')}
-                      </Link>
-                    </td>
-                    
-                    <td className="w-16 text-center">
+                    <td className="w-[22px] min-w-[22px] max-w-[22px] px-0 text-center">
                       <div className="flex justify-center">
                         <ChainIcon 
                           chainId={auction?.chain_id || 31337} 
-                          size="sm"
+                          size="xs"
                           showName={false}
                         />
                       </div>
+                    </td>
+                    <td>
+                      <AddressLink
+                        address={auction?.address || ''}
+                        chainId={auction?.chain_id || 1}
+                        type="auction"
+                        className="text-primary-400"
+                      />
                     </td>
                     
                     <td>
@@ -450,16 +522,18 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                       <div className="flex items-center space-x-1 text-sm">
                         <TrendingDown className="h-3 w-3 text-gray-400" />
                         <span className="font-medium">
-                          {((auction.decay_rate || 0) * 100).toFixed(1)}%
+                          {auction.decay_rate !== undefined && auction.decay_rate !== null ? 
+                            `${(auction.decay_rate * 100).toFixed(2)}%` : 
+                            'N/A'
+                          }
                         </span>
                       </div>
                     </td>
                     
                     <td>
-                      <div className="flex items-center space-x-1 text-sm">
-                        <Clock className="h-3 w-3 text-gray-400" />
+                      <div className="flex items-center text-sm">
                         <span className="font-medium">
-                          {((auction.update_interval || 0) / 60).toFixed(1)}m
+                          {auction.update_interval || 0}s
                         </span>
                       </div>
                     </td>

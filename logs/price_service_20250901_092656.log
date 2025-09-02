@@ -1,0 +1,774 @@
+2025-09-01 09:27:03,296 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - Database connection established
+2025-09-01 09:27:03,296 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🚀 Starting ypricemagic Price Service
+2025-09-01 09:27:03,296 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🌐 Initializing Brownie network connection...
+2025-09-01 09:27:03,427 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ Already connected to Brownie network: electro
+2025-09-01 09:27:03,687 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📊 Chain info: height=23268577, id=1
+2025-09-01 09:27:03,948 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🌐 Web3 connection test: latest block = 23268577
+2025-09-01 09:27:03,948 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 📦 Importing ypricemagic...
+2025-09-01 09:27:04,480 - dank_mids.envs - INFO - For your information, you can tweak your configuration for optimal performance using any of the envs below:
+2025-09-01 09:27:04,480 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_MULTICALL_SIZE`, default_value=10000, using_default=True)
+2025-09-01 09:27:04,480 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_JSONRPC_BATCH_SIZE`, default_value=500, using_default=True)
+2025-09-01 09:27:04,480 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_REQUESTS_PER_SECOND`, default_value=50, using_default=True)
+2025-09-01 09:27:04,480 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MIN_REQUESTS_PER_SECOND`, default_value=10, using_default=True)
+2025-09-01 09:27:04,480 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_GANACHE_FORK`, default_value=False, using_default=True)
+2025-09-01 09:27:04,480 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_AIOHTTP_TIMEOUT`, default_value=1200, using_default=True)
+2025-09-01 09:27:04,492 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_COLLECT_STATS`, default_value=False, using_default=True)
+2025-09-01 09:27:04,492 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_STUCK_CALL_TIMEOUT`, default_value=120, using_default=True)
+2025-09-01 09:27:04,493 - dank_mids.envs - INFO - More details can be found in dank_mids/ENVIRONMENT_VARIABLES.py
+2025-09-01 09:27:04,493 - dank_mids.envs - INFO - NOTE: You can disable these logs by setting the `TYPEDENVS_SHUTUP` env var to any value.
+2025-09-01 09:27:04,965 - typed_envs - INFO - EnvironmentVariable[int](name=`YPRICEMAGIC_GETLOGS_BATCH_SIZE`, default_value=0, using_default=True)
+2025-09-01 09:27:05,686 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - ✅ ypricemagic imported successfully
+2025-09-01 09:27:05,686 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🧪 Testing ypricemagic functionality...
+2025-09-01 09:27:05,686 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - 🔄 Checking for stale 'processing' requests from previous service instances...
+2025-09-01 09:27:05,702 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [875 remaining] Processing 0xD53..cd52 at block 23184839 (req 2145)
+2025-09-01 09:27:05,728 - y.prices.utils.ypriceapi - INFO - ypriceAPI is now in beta!
+
+Head to ypriceapi-beta.yearn.finance and sign up for access. You get:
+ - access to your desired price data more quickly...
+ - ...from nodes run by yearn-affiliated big brains...
+ - ...on all the networks Yearn supports.
+
+Check out some testimonials from our close frens:
+ - from anon7776, "I can now get prices for all of my useless shitcoins without waiting all day for ypricemagic to load logs."
+ - from anon7198, "I don't need to maintain an archive node anymore and that's saving me money."
+ - from anon8309, "Wow, so fast!"
+
+2025-09-01 09:27:05,730 - dank_mids.controller - INFO - Dank Middleware initializing... Strap on your rocket boots...
+2025-09-01 09:27:06,397 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> is cached thru block 23268552, loading from db
+2025-09-01 09:27:06,397 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf, topic0=0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc)
+2025-09-01 09:27:06,715 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> loaded 261 objects thru block 23268552 from disk
+2025-09-01 09:27:07,653 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for uniswap v2 on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 09:27:07,653 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for sushiswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 09:27:07,653 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for shibaswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-01 09:27:07,654 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> is cached thru block 23268328, loading from db
+2025-09-01 09:27:07,654 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x0000000022D53366457F9d5E68Ec105046FC4383)
+2025-09-01 09:27:08,355 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> is cached thru block 23268575, loading from db
+2025-09-01 09:27:08,355 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'], topic0=0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118)
+2025-09-01 09:27:09,770 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> is cached thru block 23268329, loading from db
+2025-09-01 09:27:09,770 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 09:27:09,771 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> is cached thru block 23268343, loading from db
+2025-09-01 09:27:09,771 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 09:27:09,775 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> is cached thru block 23268328, loading from db
+2025-09-01 09:27:09,775 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x115934131916C8b277DD010Ee02de363c09d037c'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-01 09:27:23,006 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> loaded 37 objects thru block 23268328 from disk
+2025-09-01 09:27:23,404 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> is cached thru block 23268328, loading from db
+2025-09-01 09:27:23,404 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5)
+2025-09-01 09:27:23,404 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> is cached thru block 23268328, loading from db
+2025-09-01 09:27:23,405 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x8F942C20D02bEfc377D41445793068908E2250D0)
+2025-09-01 09:27:23,630 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> loaded 10 objects thru block 23268328 from disk
+2025-09-01 09:27:23,721 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> loaded 57 objects thru block 23268328 from disk
+2025-09-01 09:27:24,854 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> loaded 1021 objects thru block 23268328 from disk
+2025-09-01 09:27:25,461 - y.prices.dex.uniswap.v2 - INFO - Loaded 1022 pools supporting 848 tokens on shibaswap
+2025-09-01 09:27:29,020 - y.prices.stable_swap.curve.startup - INFO - loaded 1836 pools from 2 registries and 7 factories
+2025-09-01 09:27:29,334 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> loaded 4379 objects thru block 23268329 from disk
+2025-09-01 09:27:30,086 - y.prices.dex.uniswap.v2 - INFO - Loaded 4397 pools supporting 3666 tokens on sushiswap
+2025-09-01 09:27:52,931 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> loaded 45324 objects thru block 23268575 from disk
+2025-09-01 09:29:46,641 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> loaded 453531 objects thru block 23268343 from disk
+2025-09-01 09:30:58,350 - y.prices.dex.uniswap.v2 - INFO - Loaded 453832 pools supporting 444893 tokens on uniswap v2
+2025-09-01 09:33:39,153 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [874 remaining] ✅ Completed 0xD53..cd52 = $0.8857836134666626
+2025-09-01 09:33:39,153 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [874 remaining] Processing 0x99f..e1E5 at block 23184839 (req 2146)
+2025-09-01 09:33:40,010 - y.prices.lending.aave - INFO - loaded 37 v2 atokens for <AaveMarketV2 '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9'>
+2025-09-01 09:33:40,010 - y.prices.lending.aave - INFO - loaded 23 v2 atokens for <AaveMarketV2 '0x7937D4799803FbBe595ed57278Bc4cA21f3bFfCB'>
+2025-09-01 09:33:40,010 - y.prices.lending.aave - INFO - loaded 5 v2 atokens for <AaveMarketV2 '0xcE744a9BAf573167B2CF138114BA32ed7De274Fa'>
+2025-09-01 09:33:40,011 - y.prices.lending.aave - INFO - loaded 53 v3 atokens for <AaveMarketV3 '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'>
+2025-09-01 09:33:40,011 - y.prices.lending.aave - INFO - loaded 22 v1 atokens for <AaveMarketV1 '0x398eC7346DcD622eDc5ae82352F02bE94C62d119'>
+loaded 92 markets for 0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258
+2025-09-01 09:33:40,875 - y.prices.lending.compound - INFO - loaded 92 markets for 0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258
+loaded 24 markets for 0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB
+2025-09-01 09:33:40,875 - y.prices.lending.compound - INFO - loaded 24 markets for 0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB
+loaded 24 markets for 0x4dCf7407AE5C07f8681e1659f626E114A7667339
+2025-09-01 09:33:40,876 - y.prices.lending.compound - INFO - loaded 24 markets for 0x4dCf7407AE5C07f8681e1659f626E114A7667339
+loaded 11 markets for 0x3105D328c66d8d55092358cF595d54608178E9B5
+2025-09-01 09:33:40,876 - y.prices.lending.compound - INFO - loaded 11 markets for 0x3105D328c66d8d55092358cF595d54608178E9B5
+loaded 5 markets for 0x95Af143a021DF745bc78e845b54591C53a8B3A51
+2025-09-01 09:33:40,877 - y.prices.lending.compound - INFO - loaded 5 markets for 0x95Af143a021DF745bc78e845b54591C53a8B3A51
+loaded 23 markets for 0x687a01ecF6d3907658f7A7c714749fAC32336D1B
+2025-09-01 09:33:40,877 - y.prices.lending.compound - INFO - loaded 23 markets for 0x687a01ecF6d3907658f7A7c714749fAC32336D1B
+loaded 20 markets for 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
+2025-09-01 09:33:40,878 - y.prices.lending.compound - INFO - loaded 20 markets for 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
+2025-09-01 09:33:42,981 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [873 remaining] ✅ Completed 0x99f..e1E5 = $0.4795884501953509
+2025-09-01 09:33:42,981 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [873 remaining] Processing 0x412..a275 at block 23191027 (req 2147)
+2025-09-01 09:33:46,060 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [872 remaining] ✅ Completed 0x412..a275 = $3451.0795365977788
+2025-09-01 09:33:46,060 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [872 remaining] Processing 0xf93..1b4E at block 23191027 (req 2148)
+2025-09-01 09:33:48,378 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [871 remaining] ✅ Completed 0xf93..1b4E = $0.99984
+2025-09-01 09:33:48,378 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [871 remaining] Processing 0xdC0..384F at block 23191027 (req 2150)
+2025-09-01 09:33:48,781 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [870 remaining] ✅ Completed 0xdC0..384F = $0.99982588
+2025-09-01 09:33:48,781 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [870 remaining] Processing 0x412..a275 at block 23185831 (req 2151)
+2025-09-01 09:33:49,633 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [869 remaining] ✅ Completed 0x412..a275 = $3575.736230131772
+2025-09-01 09:33:49,633 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [869 remaining] Processing 0x979..2E37 at block 23185831 (req 2152)
+2025-09-01 09:33:53,545 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [868 remaining] ✅ Completed 0x979..2E37 = $5232.605693633853
+2025-09-01 09:33:53,545 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [868 remaining] Processing 0xD53..cd52 at block 23186880 (req 2153)
+2025-09-01 09:33:54,583 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [867 remaining] ✅ Completed 0xD53..cd52 = $0.8772908494792301
+2025-09-01 09:33:54,583 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [867 remaining] Processing 0x8b8..f710 at block 23186880 (req 2154)
+2025-09-01 09:33:59,386 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [866 remaining] ✅ Completed 0x8b8..f710 = $1.0192054637258676
+2025-09-01 09:33:59,386 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [866 remaining] Processing 0xD53..cd52 at block 23194076 (req 2155)
+2025-09-01 09:34:00,557 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [865 remaining] ✅ Completed 0xD53..cd52 = $0.865669696969697
+2025-09-01 09:34:00,557 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [865 remaining] Processing 0x8b8..f710 at block 23194076 (req 2156)
+2025-09-01 09:34:02,104 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [864 remaining] ✅ Completed 0x8b8..f710 = $1.019009789146102
+2025-09-01 09:34:02,104 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [864 remaining] Processing 0xD53..cd52 at block 23186079 (req 2157)
+2025-09-01 09:34:02,854 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [863 remaining] ✅ Completed 0xD53..cd52 = $0.8779682481788801
+2025-09-01 09:34:02,854 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [863 remaining] Processing 0x744..92ef at block 23186079 (req 2158)
+2025-09-01 09:34:04,061 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [862 remaining] ✅ Completed 0x744..92ef = $1.026706362241993
+2025-09-01 09:34:04,061 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [862 remaining] Processing 0xD53..cd52 at block 23190817 (req 2159)
+2025-09-01 09:34:04,815 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [861 remaining] ✅ Completed 0xD53..cd52 = $0.8588454545454546
+2025-09-01 09:34:04,815 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [861 remaining] Processing 0x744..92ef at block 23190817 (req 2160)
+2025-09-01 09:34:05,901 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [860 remaining] ✅ Completed 0x744..92ef = $1.026494743213494
+2025-09-01 09:34:05,901 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [860 remaining] Processing 0xD53..cd52 at block 23199504 (req 2161)
+2025-09-01 09:34:07,243 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [859 remaining] ✅ Completed 0xD53..cd52 = $0.9352380109234424
+2025-09-01 09:34:07,243 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [859 remaining] Processing 0x744..92ef at block 23199504 (req 2162)
+2025-09-01 09:34:08,407 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [858 remaining] ✅ Completed 0x744..92ef = $1.0274331060473183
+2025-09-01 09:34:08,408 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [858 remaining] Processing 0xD53..cd52 at block 23185171 (req 2163)
+2025-09-01 09:34:09,160 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [857 remaining] ✅ Completed 0xD53..cd52 = $0.8842861919090605
+2025-09-01 09:34:09,160 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [857 remaining] Processing 0x38D..f76E at block 23185171 (req 2164)
+2025-09-01 09:34:10,292 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [856 remaining] ✅ Completed 0x38D..f76E = $1.0006622986058376
+2025-09-01 09:34:10,292 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [856 remaining] Processing 0xD53..cd52 at block 23189899 (req 2165)
+2025-09-01 09:34:11,052 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [855 remaining] ✅ Completed 0xD53..cd52 = $0.8668074931866306
+2025-09-01 09:34:11,053 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [855 remaining] Processing 0x38D..f76E at block 23189899 (req 2166)
+2025-09-01 09:34:12,447 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [854 remaining] ✅ Completed 0x38D..f76E = $1.0004826350110982
+2025-09-01 09:34:12,447 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [854 remaining] Processing 0xD53..cd52 at block 23197015 (req 2167)
+2025-09-01 09:34:13,195 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [853 remaining] ✅ Completed 0xD53..cd52 = $0.8514776653191899
+2025-09-01 09:34:13,195 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [853 remaining] Processing 0x38D..f76E at block 23197015 (req 2168)
+2025-09-01 09:34:14,554 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [852 remaining] ✅ Completed 0x38D..f76E = $1.0006796679632242
+2025-09-01 09:34:14,554 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [852 remaining] Processing 0xA0b..eB48 at block 23189694 (req 2169)
+2025-09-01 09:34:14,695 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [851 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:34:14,695 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [851 remaining] Processing 0xf93..1b4E at block 23189694 (req 2170)
+2025-09-01 09:34:15,147 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [850 remaining] ✅ Completed 0xf93..1b4E = $0.999828
+2025-09-01 09:34:15,148 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [850 remaining] Processing 0xA0b..eB48 at block 23189796 (req 2171)
+2025-09-01 09:34:15,289 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [849 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:34:15,289 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [849 remaining] Processing 0xf93..1b4E at block 23189796 (req 2172)
+2025-09-01 09:34:15,734 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [848 remaining] ✅ Completed 0xf93..1b4E = $0.999812
+2025-09-01 09:34:15,734 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [848 remaining] Processing 0xA0b..eB48 at block 23189898 (req 2173)
+2025-09-01 09:34:15,876 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [847 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:34:15,876 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [847 remaining] Processing 0xf93..1b4E at block 23189898 (req 2174)
+2025-09-01 09:34:16,306 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [846 remaining] ✅ Completed 0xf93..1b4E = $0.999811
+2025-09-01 09:34:16,306 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [846 remaining] Processing 0xA0b..eB48 at block 23190819 (req 2175)
+2025-09-01 09:34:16,576 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [845 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:34:16,576 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [845 remaining] Processing 0xf93..1b4E at block 23190819 (req 2176)
+2025-09-01 09:34:17,027 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [844 remaining] ✅ Completed 0xf93..1b4E = $0.99984
+2025-09-01 09:34:17,027 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [844 remaining] Processing 0xD53..cd52 at block 23190917 (req 2177)
+2025-09-01 09:34:17,800 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [843 remaining] ✅ Completed 0xD53..cd52 = $0.8588454545454546
+2025-09-01 09:34:17,800 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [843 remaining] Processing 0xf93..1b4E at block 23190917 (req 2178)
+2025-09-01 09:34:18,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [842 remaining] ✅ Completed 0xf93..1b4E = $0.99984
+2025-09-01 09:34:18,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [842 remaining] Processing 0xFa2..CeC2 at block 23191018 (req 2179)
+2025-09-01 09:34:20,656 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [841 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:34:20,656 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [841 remaining] Processing 0xf93..1b4E at block 23191018 (req 2180)
+2025-09-01 09:34:21,101 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [840 remaining] ✅ Completed 0xf93..1b4E = $0.99984
+2025-09-01 09:34:21,101 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [840 remaining] Processing 0xFa2..CeC2 at block 23191118 (req 2181)
+2025-09-01 09:34:21,667 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [839 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:34:21,668 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [839 remaining] Processing 0xf93..1b4E at block 23191118 (req 2182)
+2025-09-01 09:34:22,398 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [838 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:34:22,398 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [838 remaining] Processing 0xFa2..CeC2 at block 23191219 (req 2183)
+2025-09-01 09:34:22,973 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [837 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:34:22,973 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [837 remaining] Processing 0xf93..1b4E at block 23191219 (req 2184)
+2025-09-01 09:34:23,677 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [836 remaining] ✅ Completed 0xf93..1b4E = $0.999837
+2025-09-01 09:34:23,677 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [836 remaining] Processing 0xFa2..CeC2 at block 23191321 (req 2185)
+2025-09-01 09:34:24,231 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [835 remaining] ✅ Completed 0xFa2..CeC2 = $0.999583
+2025-09-01 09:34:24,231 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [835 remaining] Processing 0xf93..1b4E at block 23191321 (req 2186)
+2025-09-01 09:34:24,944 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [834 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:34:24,945 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [834 remaining] Processing 0xFa2..CeC2 at block 23191419 (req 2187)
+2025-09-01 09:34:25,494 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [833 remaining] ✅ Completed 0xFa2..CeC2 = $0.999583
+2025-09-01 09:34:25,494 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [833 remaining] Processing 0xf93..1b4E at block 23191419 (req 2188)
+2025-09-01 09:34:26,222 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [832 remaining] ✅ Completed 0xf93..1b4E = $0.999842
+2025-09-01 09:34:26,222 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [832 remaining] Processing 0xFa2..CeC2 at block 23191520 (req 2189)
+2025-09-01 09:34:26,778 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [831 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:34:26,778 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [831 remaining] Processing 0xf93..1b4E at block 23191520 (req 2190)
+2025-09-01 09:34:27,490 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [830 remaining] ✅ Completed 0xf93..1b4E = $0.999842
+2025-09-01 09:34:27,490 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [830 remaining] Processing 0xA0b..eB48 at block 23191620 (req 2191)
+2025-09-01 09:34:27,632 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [829 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:34:27,632 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [829 remaining] Processing 0xf93..1b4E at block 23191620 (req 2192)
+2025-09-01 09:34:28,341 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [828 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:34:28,341 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [828 remaining] Processing 0x739..DB2F at block 23191721 (req 2193)
+2025-09-01 09:34:31,413 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [827 remaining] ✅ Completed 0x739..DB2F = $0.46171592235221254
+2025-09-01 09:34:31,413 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [827 remaining] Processing 0xf93..1b4E at block 23191721 (req 2194)
+2025-09-01 09:34:31,987 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [826 remaining] ✅ Completed 0xf93..1b4E = $0.999837
+2025-09-01 09:34:31,987 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [826 remaining] Processing 0x343..64D0 at block 23191820 (req 2195)
+2025-09-01 09:34:37,528 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [825 remaining] ✅ Completed 0x343..64D0 = $2.7256165436519098
+2025-09-01 09:34:42,539 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [825 remaining] Processing 0xf93..1b4E at block 23191820 (req 2196)
+2025-09-01 09:34:43,153 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [824 remaining] ✅ Completed 0xf93..1b4E = $0.999835
+2025-09-01 09:34:43,153 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [824 remaining] Processing 0xdBd..c8DF at block 23191920 (req 2197)
+2025-09-01 09:34:45,159 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [823 remaining] ✅ Completed 0xdBd..c8DF = $9.901191662353865
+2025-09-01 09:34:45,159 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [823 remaining] Processing 0xf93..1b4E at block 23191920 (req 2198)
+2025-09-01 09:34:45,752 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [822 remaining] ✅ Completed 0xf93..1b4E = $0.999835
+2025-09-01 09:34:45,752 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [822 remaining] Processing 0x4e3..9D2B at block 23192021 (req 2199)
+2025-09-01 09:34:47,879 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [821 remaining] ✅ Completed 0x4e3..9D2B = $3.9178964784616226
+2025-09-01 09:34:47,879 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [821 remaining] Processing 0xf93..1b4E at block 23192021 (req 2200)
+2025-09-01 09:34:48,475 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [820 remaining] ✅ Completed 0xf93..1b4E = $0.999831
+2025-09-01 09:34:48,475 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [820 remaining] Processing 0x090..e5F6 at block 23192143 (req 2201)
+2025-09-01 09:34:50,451 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [819 remaining] ✅ Completed 0x090..e5F6 = $0.00048497250094050107
+2025-09-01 09:34:50,451 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [819 remaining] Processing 0xf93..1b4E at block 23192143 (req 2202)
+2025-09-01 09:34:51,042 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [818 remaining] ✅ Completed 0xf93..1b4E = $0.999831
+2025-09-01 09:34:51,042 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [818 remaining] Processing 0x090..e5F6 at block 23192569 (req 2203)
+2025-09-01 09:34:52,119 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [817 remaining] ✅ Completed 0x090..e5F6 = $0.0004870412216199633
+2025-09-01 09:34:52,119 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [817 remaining] Processing 0xf93..1b4E at block 23192569 (req 2204)
+2025-09-01 09:34:52,694 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [816 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:34:52,694 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [816 remaining] Processing 0x090..e5F6 at block 23192671 (req 2205)
+2025-09-01 09:34:53,786 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [815 remaining] ✅ Completed 0x090..e5F6 = $0.0004870412216199633
+2025-09-01 09:34:53,786 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [815 remaining] Processing 0xf93..1b4E at block 23192671 (req 2206)
+2025-09-01 09:34:54,362 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [814 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:34:54,362 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [814 remaining] Processing 0x090..e5F6 at block 23192772 (req 2207)
+2025-09-01 09:34:55,448 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [813 remaining] ✅ Completed 0x090..e5F6 = $0.0004845946187452271
+2025-09-01 09:34:55,448 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [813 remaining] Processing 0xf93..1b4E at block 23192772 (req 2208)
+2025-09-01 09:34:56,022 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [812 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:34:56,022 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [812 remaining] Processing 0x090..e5F6 at block 23192871 (req 2209)
+2025-09-01 09:34:57,105 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [811 remaining] ✅ Completed 0x090..e5F6 = $0.0004845946187452271
+2025-09-01 09:34:57,105 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [811 remaining] Processing 0xf93..1b4E at block 23192871 (req 2210)
+2025-09-01 09:34:57,700 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [810 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:34:57,701 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [810 remaining] Processing 0xD53..cd52 at block 23188186 (req 2211)
+2025-09-01 09:34:58,507 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [809 remaining] ✅ Completed 0xD53..cd52 = $0.8768522216599649
+2025-09-01 09:34:58,507 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [809 remaining] Processing 0xc52..4F50 at block 23188186 (req 2212)
+2025-09-01 09:35:01,624 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [808 remaining] ✅ Completed 0xc52..4F50 = $1.00037956550912
+2025-09-01 09:35:01,624 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [808 remaining] Processing 0xD53..cd52 at block 23195887 (req 2213)
+2025-09-01 09:35:02,376 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [807 remaining] ✅ Completed 0xD53..cd52 = $0.8693606070737465
+2025-09-01 09:35:02,377 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [807 remaining] Processing 0xc52..4F50 at block 23195887 (req 2214)
+2025-09-01 09:35:03,541 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [806 remaining] ✅ Completed 0xc52..4F50 = $1.0002269173598997
+2025-09-01 09:35:03,541 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [806 remaining] Processing 0xD53..cd52 at block 23188988 (req 2215)
+2025-09-01 09:35:04,285 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [805 remaining] ✅ Completed 0xD53..cd52 = $0.8725286972027193
+2025-09-01 09:35:04,285 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [805 remaining] Processing 0x99f..e1E5 at block 23188988 (req 2216)
+2025-09-01 09:35:04,957 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [804 remaining] ✅ Completed 0x99f..e1E5 = $0.4796895961808547
+2025-09-01 09:35:04,957 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [804 remaining] Processing 0xD53..cd52 at block 23196612 (req 2217)
+2025-09-01 09:35:05,711 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [803 remaining] ✅ Completed 0xD53..cd52 = $0.8439865049694538
+2025-09-01 09:35:05,711 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [803 remaining] Processing 0xEe3..578d at block 23196612 (req 2218)
+2025-09-01 09:35:08,369 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [802 remaining] ✅ Completed 0xEe3..578d = $131.9334423008657
+2025-09-01 09:35:08,370 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [802 remaining] Processing 0xD53..cd52 at block 23189392 (req 2219)
+2025-09-01 09:35:09,150 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [801 remaining] ✅ Completed 0xD53..cd52 = $0.868408255068235
+2025-09-01 09:35:09,150 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [801 remaining] Processing 0xa4c..08e4 at block 23189392 (req 2220)
+2025-09-01 09:35:12,046 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [800 remaining] ✅ Completed 0xa4c..08e4 = $4540.168891220363
+2025-09-01 09:35:12,046 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [800 remaining] Processing 0xD53..cd52 at block 23187284 (req 2221)
+2025-09-01 09:35:12,821 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [799 remaining] ✅ Completed 0xD53..cd52 = $0.8768303030303031
+2025-09-01 09:35:12,821 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [799 remaining] Processing 0xc3b..51dD at block 23187284 (req 2222)
+2025-09-01 09:35:15,651 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [798 remaining] ✅ Completed 0xc3b..51dD = $1.0798375424431008
+2025-09-01 09:35:15,651 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [798 remaining] Processing 0xD53..cd52 at block 23198654 (req 2223)
+2025-09-01 09:35:16,429 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [797 remaining] ✅ Completed 0xD53..cd52 = $0.9249564138755283
+2025-09-01 09:35:16,429 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [797 remaining] Processing 0x290..e0e5 at block 23198654 (req 2224)
+2025-09-01 09:35:17,950 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [796 remaining] ✅ Completed 0x290..e0e5 = $11084.448607323924
+2025-09-01 09:35:17,950 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [796 remaining] Processing 0xD53..cd52 at block 23188584 (req 2225)
+2025-09-01 09:35:18,715 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [795 remaining] ✅ Completed 0xD53..cd52 = $0.8718343434343434
+2025-09-01 09:35:18,715 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [795 remaining] Processing 0x460..D87f at block 23188584 (req 2226)
+2025-09-01 09:35:22,142 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [794 remaining] ✅ Completed 0x460..D87f = $1.0186771780574653
+2025-09-01 09:35:22,142 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [794 remaining] Processing 0xD53..cd52 at block 23192771 (req 2227)
+2025-09-01 09:35:22,942 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [793 remaining] ✅ Completed 0xD53..cd52 = $0.8618313131313131
+2025-09-01 09:35:22,942 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [793 remaining] Processing 0x08B..4147 at block 23192771 (req 2228)
+2025-09-01 09:35:23,781 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [792 remaining] ✅ Completed 0x08B..4147 = $1.009829006600829
+2025-09-01 09:35:23,781 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [792 remaining] Processing 0xD53..cd52 at block 23185251 (req 2229)
+2025-09-01 09:35:24,554 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [791 remaining] ✅ Completed 0xD53..cd52 = $0.8842861919090605
+2025-09-01 09:35:24,554 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [791 remaining] Processing 0x38D..f76E at block 23185251 (req 2230)
+2025-09-01 09:35:25,272 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [790 remaining] ✅ Completed 0x38D..f76E = $1.0006628281545995
+2025-09-01 09:35:25,272 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [790 remaining] Processing 0xD53..cd52 at block 23186158 (req 2231)
+2025-09-01 09:35:26,161 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [789 remaining] ✅ Completed 0xD53..cd52 = $0.8768303030303031
+2025-09-01 09:35:26,161 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [789 remaining] Processing 0x744..92ef at block 23186158 (req 2232)
+2025-09-01 09:35:27,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [788 remaining] ✅ Completed 0x744..92ef = $1.0267073232657213
+2025-09-01 09:35:27,236 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [788 remaining] Processing 0xD53..cd52 at block 23186965 (req 2233)
+2025-09-01 09:35:27,986 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [787 remaining] ✅ Completed 0xD53..cd52 = $0.8768303030303031
+2025-09-01 09:35:27,986 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [787 remaining] Processing 0x8b8..f710 at block 23186965 (req 2234)
+2025-09-01 09:35:29,363 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [786 remaining] ✅ Completed 0x8b8..f710 = $1.0192058619308306
+2025-09-01 09:35:29,364 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [786 remaining] Processing 0xD53..cd52 at block 23187363 (req 2235)
+2025-09-01 09:35:30,124 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [785 remaining] ✅ Completed 0xD53..cd52 = $0.8768303030303031
+2025-09-01 09:35:30,124 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [785 remaining] Processing 0xc3b..51dD at block 23187363 (req 2236)
+2025-09-01 09:35:31,725 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [784 remaining] ✅ Completed 0xc3b..51dD = $1.079838435731541
+2025-09-01 09:35:31,725 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [784 remaining] Processing 0xD53..cd52 at block 23188268 (req 2237)
+2025-09-01 09:35:32,615 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [783 remaining] ✅ Completed 0xD53..cd52 = $0.8768303030303031
+2025-09-01 09:35:32,615 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [783 remaining] Processing 0xc52..4F50 at block 23188268 (req 2238)
+2025-09-01 09:35:33,537 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [782 remaining] ✅ Completed 0xc52..4F50 = $1.0003109561200998
+2025-09-01 09:35:33,537 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [782 remaining] Processing 0xD53..cd52 at block 23188663 (req 2239)
+2025-09-01 09:35:34,323 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [781 remaining] ✅ Completed 0xD53..cd52 = $0.8718343434343434
+2025-09-01 09:35:34,323 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [781 remaining] Processing 0x460..D87f at block 23188663 (req 2240)
+2025-09-01 09:35:36,674 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [780 remaining] ✅ Completed 0x460..D87f = $1.0186686272277066
+2025-09-01 09:35:36,675 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [780 remaining] Processing 0xD53..cd52 at block 23189068 (req 2241)
+2025-09-01 09:35:37,577 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [779 remaining] ✅ Completed 0xD53..cd52 = $0.8708742388782509
+2025-09-01 09:35:37,577 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [779 remaining] Processing 0x99f..e1E5 at block 23189068 (req 2242)
+2025-09-01 09:35:38,273 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [778 remaining] ✅ Completed 0x99f..e1E5 = $0.4818057442232922
+2025-09-01 09:35:38,273 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [778 remaining] Processing 0xD53..cd52 at block 23189070 (req 2243)
+2025-09-01 09:35:39,016 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [777 remaining] ✅ Completed 0xD53..cd52 = $0.8708742388782509
+2025-09-01 09:35:39,016 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [777 remaining] Processing 0x99f..e1E5 at block 23189070 (req 2244)
+2025-09-01 09:35:39,691 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [776 remaining] ✅ Completed 0x99f..e1E5 = $0.4787629148167238
+2025-09-01 09:35:39,691 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [776 remaining] Processing 0x412..a275 at block 23189501 (req 2245)
+2025-09-01 09:35:40,504 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [775 remaining] ✅ Completed 0x412..a275 = $3542.658108761153
+2025-09-01 09:35:45,518 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [775 remaining] Processing 0x979..2E37 at block 23189501 (req 2246)
+2025-09-01 09:35:46,250 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [774 remaining] ✅ Completed 0x979..2E37 = $5267.253476281819
+2025-09-01 09:35:46,250 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [774 remaining] Processing 0xA0b..eB48 at block 23189775 (req 2247)
+2025-09-01 09:35:46,524 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [773 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:35:46,524 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [773 remaining] Processing 0xf93..1b4E at block 23189775 (req 2248)
+2025-09-01 09:35:46,988 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [772 remaining] ✅ Completed 0xf93..1b4E = $0.999828
+2025-09-01 09:35:46,988 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [772 remaining] Processing 0xA0b..eB48 at block 23189875 (req 2249)
+2025-09-01 09:35:47,127 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [771 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:35:47,127 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [771 remaining] Processing 0xf93..1b4E at block 23189875 (req 2250)
+2025-09-01 09:35:47,581 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [770 remaining] ✅ Completed 0xf93..1b4E = $0.999812
+2025-09-01 09:35:47,581 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [770 remaining] Processing 0xA0b..eB48 at block 23189978 (req 2251)
+2025-09-01 09:35:47,724 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [769 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:35:47,724 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [769 remaining] Processing 0xf93..1b4E at block 23189978 (req 2252)
+2025-09-01 09:35:48,173 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [768 remaining] ✅ Completed 0xf93..1b4E = $0.999812
+2025-09-01 09:35:48,173 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [768 remaining] Processing 0xD53..cd52 at block 23189979 (req 2253)
+2025-09-01 09:35:48,946 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [767 remaining] ✅ Completed 0xD53..cd52 = $0.8685663049755327
+2025-09-01 09:35:48,946 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [767 remaining] Processing 0x38D..f76E at block 23189979 (req 2254)
+2025-09-01 09:35:50,347 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [766 remaining] ✅ Completed 0x38D..f76E = $1.0004491661330814
+2025-09-01 09:35:50,347 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [766 remaining] Processing 0xD53..cd52 at block 23190029 (req 2255)
+2025-09-01 09:35:51,246 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [765 remaining] ✅ Completed 0xD53..cd52 = $0.8749551685359107
+2025-09-01 09:35:51,246 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [765 remaining] Processing 0xa4c..08e4 at block 23190029 (req 2256)
+2025-09-01 09:35:52,067 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [764 remaining] ✅ Completed 0xa4c..08e4 = $4570.5026016678285
+2025-09-01 09:35:52,067 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [764 remaining] Processing 0xD53..cd52 at block 23190896 (req 2257)
+2025-09-01 09:35:52,830 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [763 remaining] ✅ Completed 0xD53..cd52 = $0.8588454545454546
+2025-09-01 09:35:52,830 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [763 remaining] Processing 0x744..92ef at block 23190896 (req 2258)
+2025-09-01 09:35:53,922 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [762 remaining] ✅ Completed 0x744..92ef = $1.0264875549464172
+2025-09-01 09:35:53,922 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [762 remaining] Processing 0xA0b..eB48 at block 23190898 (req 2259)
+2025-09-01 09:35:54,064 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [761 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:35:54,064 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [761 remaining] Processing 0xf93..1b4E at block 23190898 (req 2260)
+2025-09-01 09:35:54,525 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [760 remaining] ✅ Completed 0xf93..1b4E = $0.99984
+2025-09-01 09:35:54,525 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [760 remaining] Processing 0xD53..cd52 at block 23190996 (req 2261)
+2025-09-01 09:35:55,331 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [759 remaining] ✅ Completed 0xD53..cd52 = $0.8588454545454546
+2025-09-01 09:35:55,331 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [759 remaining] Processing 0xf93..1b4E at block 23190996 (req 2262)
+2025-09-01 09:35:55,784 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [758 remaining] ✅ Completed 0xf93..1b4E = $0.99984
+2025-09-01 09:35:55,784 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [758 remaining] Processing 0xFa2..CeC2 at block 23191096 (req 2263)
+2025-09-01 09:35:56,339 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [757 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:35:56,339 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [757 remaining] Processing 0xf93..1b4E at block 23191096 (req 2264)
+2025-09-01 09:35:56,785 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [756 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:35:56,785 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [756 remaining] Processing 0xFa2..CeC2 at block 23191197 (req 2265)
+2025-09-01 09:35:57,333 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [755 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:35:57,333 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [755 remaining] Processing 0xf93..1b4E at block 23191197 (req 2266)
+2025-09-01 09:35:57,783 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [754 remaining] ✅ Completed 0xf93..1b4E = $0.999837
+2025-09-01 09:35:57,783 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [754 remaining] Processing 0xFa2..CeC2 at block 23191299 (req 2267)
+2025-09-01 09:35:58,458 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [753 remaining] ✅ Completed 0xFa2..CeC2 = $0.999583
+2025-09-01 09:35:58,458 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [753 remaining] Processing 0xf93..1b4E at block 23191299 (req 2268)
+2025-09-01 09:35:58,913 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [752 remaining] ✅ Completed 0xf93..1b4E = $0.999837
+2025-09-01 09:35:58,913 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [752 remaining] Processing 0xFa2..CeC2 at block 23191399 (req 2269)
+2025-09-01 09:35:59,462 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [751 remaining] ✅ Completed 0xFa2..CeC2 = $0.999583
+2025-09-01 09:35:59,462 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [751 remaining] Processing 0xf93..1b4E at block 23191399 (req 2270)
+2025-09-01 09:35:59,909 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [750 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:35:59,910 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [750 remaining] Processing 0xFa2..CeC2 at block 23191498 (req 2271)
+2025-09-01 09:36:00,479 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [749 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:36:00,479 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [749 remaining] Processing 0xf93..1b4E at block 23191498 (req 2272)
+2025-09-01 09:36:00,913 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [748 remaining] ✅ Completed 0xf93..1b4E = $0.999842
+2025-09-01 09:36:00,913 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [748 remaining] Processing 0xFa2..CeC2 at block 23191598 (req 2273)
+2025-09-01 09:36:01,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [747 remaining] ✅ Completed 0xFa2..CeC2 = $0.999582
+2025-09-01 09:36:01,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [747 remaining] Processing 0xf93..1b4E at block 23191598 (req 2274)
+2025-09-01 09:36:01,899 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [746 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:36:01,899 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [746 remaining] Processing 0xA0b..eB48 at block 23191699 (req 2275)
+2025-09-01 09:36:02,043 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [745 remaining] ✅ Completed 0xA0b..eB48 = $1.0
+2025-09-01 09:36:02,043 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [745 remaining] Processing 0xf93..1b4E at block 23191699 (req 2276)
+2025-09-01 09:36:02,498 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [744 remaining] ✅ Completed 0xf93..1b4E = $0.999838
+2025-09-01 09:36:02,498 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [744 remaining] Processing 0x739..DB2F at block 23191799 (req 2277)
+2025-09-01 09:36:03,358 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [743 remaining] ✅ Completed 0x739..DB2F = $0.45948963339458154
+2025-09-01 09:36:03,358 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [743 remaining] Processing 0xf93..1b4E at block 23191799 (req 2278)
+2025-09-01 09:36:03,808 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [742 remaining] ✅ Completed 0xf93..1b4E = $0.999835
+2025-09-01 09:36:03,808 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [742 remaining] Processing 0x343..64D0 at block 23191907 (req 2279)
+2025-09-01 09:36:06,017 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [741 remaining] ✅ Completed 0x343..64D0 = $2.7256165436519098
+2025-09-01 09:36:06,017 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [741 remaining] Processing 0xf93..1b4E at block 23191907 (req 2280)
+2025-09-01 09:36:06,662 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [740 remaining] ✅ Completed 0xf93..1b4E = $0.999835
+2025-09-01 09:36:06,662 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [740 remaining] Processing 0xdBd..c8DF at block 23192000 (req 2281)
+2025-09-01 09:36:07,752 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [739 remaining] ✅ Completed 0xdBd..c8DF = $10.00176495321277
+2025-09-01 09:36:07,753 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [739 remaining] Processing 0xf93..1b4E at block 23192000 (req 2282)
+2025-09-01 09:36:08,198 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [738 remaining] ✅ Completed 0xf93..1b4E = $0.999835
+2025-09-01 09:36:08,198 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [738 remaining] Processing 0x4e3..9D2B at block 23192101 (req 2283)
+2025-09-01 09:36:09,331 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [737 remaining] ✅ Completed 0x4e3..9D2B = $3.9206716428021036
+2025-09-01 09:36:09,331 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [737 remaining] Processing 0xf93..1b4E at block 23192101 (req 2284)
+2025-09-01 09:36:09,844 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [736 remaining] ✅ Completed 0xf93..1b4E = $0.999831
+2025-09-01 09:36:09,844 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [736 remaining] Processing 0x090..e5F6 at block 23192227 (req 2285)
+2025-09-01 09:36:10,805 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [735 remaining] ✅ Completed 0x090..e5F6 = $0.00048790945730209226
+2025-09-01 09:36:10,805 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [735 remaining] Processing 0xf93..1b4E at block 23192227 (req 2286)
+2025-09-01 09:36:11,254 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [734 remaining] ✅ Completed 0xf93..1b4E = $0.99983
+2025-09-01 09:36:11,254 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [734 remaining] Processing 0x090..e5F6 at block 23192657 (req 2287)
+2025-09-01 09:36:12,208 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [733 remaining] ✅ Completed 0x090..e5F6 = $0.0004870412216199633
+2025-09-01 09:36:12,208 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [733 remaining] Processing 0xf93..1b4E at block 23192657 (req 2288)
+2025-09-01 09:36:12,644 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [732 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:36:12,644 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [732 remaining] Processing 0x090..e5F6 at block 23192758 (req 2289)
+2025-09-01 09:36:13,607 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [731 remaining] ✅ Completed 0x090..e5F6 = $0.0004845946187452271
+2025-09-01 09:36:13,607 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [731 remaining] Processing 0xf93..1b4E at block 23192758 (req 2290)
+2025-09-01 09:36:14,049 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [730 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:36:14,050 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [730 remaining] Processing 0xD53..cd52 at block 23192849 (req 2291)
+2025-09-01 09:36:14,802 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [729 remaining] ✅ Completed 0xD53..cd52 = $0.8618313131313131
+2025-09-01 09:36:14,802 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [729 remaining] Processing 0x08B..4147 at block 23192849 (req 2292)
+2025-09-01 09:36:15,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [728 remaining] ✅ Completed 0x08B..4147 = $1.0098300481773597
+2025-09-01 09:36:15,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [728 remaining] Processing 0x090..e5F6 at block 23192853 (req 2293)
+2025-09-01 09:36:16,437 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [727 remaining] ✅ Completed 0x090..e5F6 = $0.0004845946187452271
+2025-09-01 09:36:16,437 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [727 remaining] Processing 0xf93..1b4E at block 23192853 (req 2294)
+2025-09-01 09:36:16,881 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [726 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:36:16,881 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [726 remaining] Processing 0x090..e5F6 at block 23192954 (req 2295)
+2025-09-01 09:36:17,953 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [725 remaining] ✅ Completed 0x090..e5F6 = $0.0004845946187452271
+2025-09-01 09:36:22,963 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [725 remaining] Processing 0xf93..1b4E at block 23192954 (req 2296)
+2025-09-01 09:36:23,424 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [724 remaining] ✅ Completed 0xf93..1b4E = $0.999827
+2025-09-01 09:36:23,424 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [724 remaining] Processing 0xD53..cd52 at block 23194156 (req 2297)
+2025-09-01 09:36:24,199 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [723 remaining] ✅ Completed 0xD53..cd52 = $0.8724126240305671
+2025-09-01 09:36:24,199 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [723 remaining] Processing 0x8b8..f710 at block 23194156 (req 2298)
+2025-09-01 09:36:25,626 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [722 remaining] ✅ Completed 0x8b8..f710 = $1.019008441708273
+2025-09-01 09:36:25,626 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [722 remaining] Processing 0x412..a275 at block 23194737 (req 2299)
+2025-09-01 09:36:26,449 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [721 remaining] ✅ Completed 0x412..a275 = $3495.731810133005
+2025-09-01 09:36:26,449 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [721 remaining] Processing 0xdC0..384F at block 23194737 (req 2300)
+2025-09-01 09:36:26,734 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [720 remaining] ✅ Completed 0xdC0..384F = $0.99982588
+2025-09-01 09:36:26,735 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [720 remaining] Processing 0x412..a275 at block 23194963 (req 2301)
+2025-09-01 09:36:27,590 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [719 remaining] ✅ Completed 0x412..a275 = $3495.783736224675
+2025-09-01 09:36:27,590 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [719 remaining] Processing 0xf93..1b4E at block 23194963 (req 2302)
+2025-09-01 09:36:28,056 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [718 remaining] ✅ Completed 0xf93..1b4E = $0.999815
+2025-09-01 09:36:28,056 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [718 remaining] Processing 0xD53..cd52 at block 23195972 (req 2303)
+2025-09-01 09:36:28,869 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [717 remaining] ✅ Completed 0xD53..cd52 = $0.8656281977244866
+2025-09-01 09:36:28,870 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [717 remaining] Processing 0xc52..4F50 at block 23195972 (req 2304)
+2025-09-01 09:36:30,064 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [716 remaining] ✅ Completed 0xc52..4F50 = $1.0002289069562988
+2025-09-01 09:36:30,064 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [716 remaining] Processing 0xD53..cd52 at block 23196706 (req 2305)
+2025-09-01 09:36:30,827 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [715 remaining] ✅ Completed 0xD53..cd52 = $0.84206660385196
+2025-09-01 09:36:30,827 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [715 remaining] Processing 0xEe3..578d at block 23196706 (req 2306)
+2025-09-01 09:36:31,513 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [714 remaining] ✅ Completed 0xEe3..578d = $131.98247189493665
+2025-09-01 09:36:31,513 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [714 remaining] Processing 0xD53..cd52 at block 23197094 (req 2307)
+2025-09-01 09:36:32,264 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [713 remaining] ✅ Completed 0xD53..cd52 = $0.8769034375854837
+2025-09-01 09:36:32,264 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [713 remaining] Processing 0x38D..f76E at block 23197094 (req 2308)
+2025-09-01 09:36:33,672 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [712 remaining] ✅ Completed 0x38D..f76E = $1.0006756509876202
+2025-09-01 09:36:33,672 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [712 remaining] Processing 0xD53..cd52 at block 23199412 (req 2309)
+2025-09-01 09:36:34,439 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [711 remaining] ✅ Completed 0xD53..cd52 = $0.9355166804324709
+2025-09-01 09:36:34,439 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [711 remaining] Processing 0x290..e0e5 at block 23199412 (req 2310)
+2025-09-01 09:36:35,411 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [710 remaining] ✅ Completed 0x290..e0e5 = $11280.75932856014
+2025-09-01 09:36:35,411 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [710 remaining] Processing 0xD53..cd52 at block 23199588 (req 2311)
+2025-09-01 09:36:36,475 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [709 remaining] ✅ Completed 0xD53..cd52 = $0.9302853394687574
+2025-09-01 09:36:36,476 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [709 remaining] Processing 0x744..92ef at block 23199588 (req 2312)
+2025-09-01 09:36:37,647 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [708 remaining] ✅ Completed 0x744..92ef = $1.0274345387826216
+2025-09-01 09:36:37,647 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [708 remaining] Processing 0x412..a275 at block 23206582 (req 2313)
+2025-09-01 09:36:38,493 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [707 remaining] ✅ Completed 0x412..a275 = $3848.4097791973536
+2025-09-01 09:36:38,493 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [707 remaining] Processing 0xdC0..384F at block 23206582 (req 2314)
+2025-09-01 09:36:38,763 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [706 remaining] ✅ Completed 0xdC0..384F = $0.99963743
+2025-09-01 09:36:38,763 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [706 remaining] Processing 0xf93..1b4E at block 23203391 (req 2315)
+2025-09-01 09:36:39,651 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [705 remaining] ✅ Completed 0xf93..1b4E = $0.999809
+2025-09-01 09:36:39,651 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [705 remaining] Processing 0x62B..0Aa7 at block 23203391 (req 2316)
+2025-09-01 09:36:43,025 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [704 remaining] ✅ Completed 0x62B..0Aa7 = $0.33496999792488896
+2025-09-01 09:36:43,025 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [704 remaining] Processing 0xf93..1b4E at block 23214776 (req 2317)
+2025-09-01 09:36:43,922 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [703 remaining] ✅ Completed 0xf93..1b4E = $0.999823
+2025-09-01 09:36:43,922 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [703 remaining] Processing 0x62B..0Aa7 at block 23214776 (req 2318)
+2025-09-01 09:36:45,181 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [702 remaining] ✅ Completed 0x62B..0Aa7 = $0.34347322795945173
+2025-09-01 09:36:45,181 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [702 remaining] Processing 0x412..a275 at block 23202047 (req 2319)
+2025-09-01 09:36:46,021 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [701 remaining] ✅ Completed 0x412..a275 = $3862.8768029225234
+2025-09-01 09:36:46,021 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [701 remaining] Processing 0x979..2E37 at block 23202047 (req 2320)
+2025-09-01 09:36:46,864 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [700 remaining] ✅ Completed 0x979..2E37 = $5669.13183235267
+2025-09-01 09:36:46,864 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [700 remaining] Processing 0x412..a275 at block 23214764 (req 2321)
+2025-09-01 09:36:47,688 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [699 remaining] ✅ Completed 0x412..a275 = $3761.2233223654457
+2025-09-01 09:36:47,688 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [699 remaining] Processing 0x979..2E37 at block 23214764 (req 2322)
+2025-09-01 09:36:48,548 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [698 remaining] ✅ Completed 0x979..2E37 = $5414.212261540118
+2025-09-01 09:36:48,548 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [698 remaining] Processing 0xC02..6Cc2 at block 23206582 (req 2324)
+2025-09-01 09:36:48,550 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [697 remaining] ✅ Completed 0xC02..6Cc2 = $4741.285145
+2025-09-01 09:36:48,550 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [697 remaining] Processing 0x412..a275 at block 23205688 (req 2327)
+2025-09-01 09:36:49,347 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [696 remaining] ✅ Completed 0x412..a275 = $3852.9048919219595
+2025-09-01 09:36:49,347 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [696 remaining] Processing 0x957..b098 at block 23205688 (req 2328)
+2025-09-01 09:36:52,033 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [695 remaining] ✅ Completed 0x957..b098 = $0.07650209286685734
+2025-09-01 09:36:52,033 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [695 remaining] Processing 0x412..a275 at block 23214760 (req 2329)
+2025-09-01 09:36:52,862 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [694 remaining] ✅ Completed 0x412..a275 = $3761.2233223654457
+2025-09-01 09:36:52,862 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [694 remaining] Processing 0x957..b098 at block 23214760 (req 2330)
+2025-09-01 09:36:53,570 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [693 remaining] ✅ Completed 0x957..b098 = $0.07472023190518212
+2025-09-01 09:36:53,570 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [693 remaining] Processing 0x412..a275 at block 23205686 (req 2331)
+2025-09-01 09:36:54,379 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [692 remaining] ✅ Completed 0x412..a275 = $3852.9048919219595
+2025-09-01 09:36:54,379 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [692 remaining] Processing 0x957..b098 at block 23205686 (req 2332)
+2025-09-01 09:36:55,080 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [691 remaining] ✅ Completed 0x957..b098 = $0.07650475935707088
+2025-09-01 09:36:55,080 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [691 remaining] Processing 0x412..a275 at block 23214737 (req 2333)
+2025-09-01 09:36:55,908 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [690 remaining] ✅ Completed 0x412..a275 = $3761.2233223654457
+2025-09-01 09:36:55,908 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [690 remaining] Processing 0x957..b098 at block 23214737 (req 2334)
+2025-09-01 09:36:56,620 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [689 remaining] ✅ Completed 0x957..b098 = $0.07473723676349527
+2025-09-01 09:36:56,620 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [689 remaining] Processing 0xD53..cd52 at block 23213403 (req 2335)
+2025-09-01 09:36:57,393 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [688 remaining] ✅ Completed 0xD53..cd52 = $0.9010421434815983
+2025-09-01 09:36:57,393 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [688 remaining] Processing 0x76A..6637 at block 23213403 (req 2336)
+2025-09-01 09:36:59,650 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [687 remaining] ✅ Completed 0x76A..6637 = $1.071344115735323
+2025-09-01 09:36:59,650 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [687 remaining] Processing 0xD53..cd52 at block 23201318 (req 2337)
+2025-09-01 09:37:00,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [686 remaining] ✅ Completed 0xD53..cd52 = $0.9072333333333333
+2025-09-01 09:37:00,463 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [686 remaining] Processing 0x8b8..f710 at block 23201318 (req 2338)
+2025-09-01 09:37:01,835 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [685 remaining] ✅ Completed 0x8b8..f710 = $1.0194283078086324
+2025-09-01 09:37:01,835 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [685 remaining] Processing 0xD53..cd52 at block 23203931 (req 2339)
+2025-09-01 09:37:02,599 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [684 remaining] ✅ Completed 0xD53..cd52 = $0.8961804605736401
+2025-09-01 09:37:02,599 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [684 remaining] Processing 0x8b8..f710 at block 23203931 (req 2340)
+2025-09-01 09:37:03,999 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [683 remaining] ✅ Completed 0x8b8..f710 = $1.0192479368989258
+2025-09-01 09:37:03,999 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [683 remaining] Processing 0xD53..cd52 at block 23209828 (req 2341)
+2025-09-01 09:37:04,779 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [682 remaining] ✅ Completed 0xD53..cd52 = $0.8850201557531169
+2025-09-01 09:37:04,779 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [682 remaining] Processing 0x8b8..f710 at block 23209828 (req 2342)
+2025-09-01 09:37:06,211 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [681 remaining] ✅ Completed 0x8b8..f710 = $1.0190481954147232
+2025-09-01 09:37:06,211 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [681 remaining] Processing 0xD53..cd52 at block 23206472 (req 2343)
+2025-09-01 09:37:07,014 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [680 remaining] ✅ Completed 0xD53..cd52 = $0.9028479621411879
+2025-09-01 09:37:07,014 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [680 remaining] Processing 0x744..92ef at block 23206472 (req 2344)
+2025-09-01 09:37:08,130 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [679 remaining] ✅ Completed 0x744..92ef = $1.0270465206249786
+2025-09-01 09:37:08,131 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [679 remaining] Processing 0xD53..cd52 at block 23214007 (req 2345)
+2025-09-01 09:37:09,096 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [678 remaining] ✅ Completed 0xD53..cd52 = $0.9057949494949495
+2025-09-01 09:37:09,096 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [678 remaining] Processing 0x744..92ef at block 23214007 (req 2346)
+2025-09-01 09:37:10,508 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [677 remaining] ✅ Completed 0x744..92ef = $1.0272256747797213
+2025-09-01 09:37:10,509 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [677 remaining] Processing 0xD53..cd52 at block 23201217 (req 2347)
+2025-09-01 09:37:11,315 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [676 remaining] ✅ Completed 0xD53..cd52 = $0.9072333333333333
+2025-09-01 09:37:11,315 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [676 remaining] Processing 0x38D..f76E at block 23201217 (req 2348)
+2025-09-01 09:37:12,699 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [675 remaining] ✅ Completed 0x38D..f76E = $1.0008122080786206
+2025-09-01 09:37:17,710 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [675 remaining] Processing 0xD53..cd52 at block 23208321 (req 2349)
+2025-09-01 09:37:18,480 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [674 remaining] ✅ Completed 0xD53..cd52 = $0.8929474747474747
+2025-09-01 09:37:18,480 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [674 remaining] Processing 0x38D..f76E at block 23208321 (req 2350)
+2025-09-01 09:37:19,865 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [673 remaining] ✅ Completed 0x38D..f76E = $1.0005415911738733
+2025-09-01 09:37:19,865 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [673 remaining] Processing 0x090..e5F6 at block 23200107 (req 2351)
+2025-09-01 09:37:20,982 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [672 remaining] ✅ Completed 0x090..e5F6 = $0.0005111329653234129
+2025-09-01 09:37:20,982 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [672 remaining] Processing 0xf93..1b4E at block 23200107 (req 2352)
+2025-09-01 09:37:21,453 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [671 remaining] ✅ Completed 0xf93..1b4E = $0.999883
+2025-09-01 09:37:21,453 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [671 remaining] Processing 0x090..e5F6 at block 23200209 (req 2353)
+2025-09-01 09:37:22,562 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [670 remaining] ✅ Completed 0x090..e5F6 = $0.0005111329653234129
+2025-09-01 09:37:22,562 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [670 remaining] Processing 0xf93..1b4E at block 23200209 (req 2354)
+2025-09-01 09:37:22,992 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [669 remaining] ✅ Completed 0xf93..1b4E = $0.999883
+2025-09-01 09:37:22,992 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [669 remaining] Processing 0xD53..cd52 at block 23202926 (req 2357)
+2025-09-01 09:37:23,866 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [668 remaining] ✅ Completed 0xD53..cd52 = $0.9020161494584764
+2025-09-01 09:37:23,866 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [668 remaining] Processing 0xc52..4F50 at block 23202926 (req 2358)
+2025-09-01 09:37:24,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [667 remaining] ✅ Completed 0xc52..4F50 = $1.000307935321419
+2025-09-01 09:37:24,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [667 remaining] Processing 0xD53..cd52 at block 23210130 (req 2359)
+2025-09-01 09:37:25,526 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [666 remaining] ✅ Completed 0xD53..cd52 = $0.8915583259306505
+2025-09-01 09:37:25,526 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [666 remaining] Processing 0xc52..4F50 at block 23210130 (req 2360)
+2025-09-01 09:37:26,390 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [665 remaining] ✅ Completed 0xc52..4F50 = $1.000445573661757
+2025-09-01 09:37:26,390 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [665 remaining] Processing 0xD53..cd52 at block 23200914 (req 2361)
+2025-09-01 09:37:27,152 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [664 remaining] ✅ Completed 0xD53..cd52 = $0.9072333333333333
+2025-09-01 09:37:27,152 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [664 remaining] Processing 0x7F8..829B at block 23200914 (req 2362)
+2025-09-01 09:37:28,146 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [663 remaining] ✅ Completed 0x7F8..829B = $2502.4403807782865
+2025-09-01 09:37:28,146 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [663 remaining] Processing 0xD53..cd52 at block 23210937 (req 2363)
+2025-09-01 09:37:28,927 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [662 remaining] ✅ Completed 0xD53..cd52 = $0.8853797979797979
+2025-09-01 09:37:28,927 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [662 remaining] Processing 0xCA0..72D0 at block 23210937 (req 2364)
+2025-09-01 09:37:31,916 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [661 remaining] ✅ Completed 0xCA0..72D0 = $0.5556591861303233
+2025-09-01 09:37:31,916 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [661 remaining] Processing 0xD53..cd52 at block 23200511 (req 2365)
+2025-09-01 09:37:32,800 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [660 remaining] ✅ Completed 0xD53..cd52 = $0.9274323232323233
+2025-09-01 09:37:32,800 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [660 remaining] Processing 0xc3b..51dD at block 23200511 (req 2366)
+2025-09-01 09:37:34,955 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [659 remaining] ✅ Completed 0xc3b..51dD = $1.0795731595869065
+2025-09-01 09:37:34,955 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [659 remaining] Processing 0xD53..cd52 at block 23210534 (req 2367)
+2025-09-01 09:37:35,733 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [658 remaining] ✅ Completed 0xD53..cd52 = $0.8882363636363636
+2025-09-01 09:37:35,733 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [658 remaining] Processing 0xc3b..51dD at block 23210534 (req 2368)
+2025-09-01 09:37:37,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [657 remaining] ✅ Completed 0xc3b..51dD = $1.0798426605670657
+2025-09-01 09:37:37,755 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [657 remaining] Processing 0xD53..cd52 at block 23207313 (req 2369)
+2025-09-01 09:37:38,499 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [656 remaining] ✅ Completed 0xD53..cd52 = $0.9037465933152994
+2025-09-01 09:37:38,499 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [656 remaining] Processing 0x3A2..7611 at block 23207313 (req 2370)
+2025-09-01 09:37:39,772 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [655 remaining] ✅ Completed 0x3A2..7611 = $309.5284344116351
+2025-09-01 09:37:39,772 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [655 remaining] Processing 0xD53..cd52 at block 23212986 (req 2371)
+2025-09-01 09:37:40,648 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [654 remaining] ✅ Completed 0xD53..cd52 = $0.9347017984746617
+2025-09-01 09:37:40,648 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [654 remaining] Processing 0xed7..A441 at block 23212986 (req 2372)
+2025-09-01 09:37:44,364 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [653 remaining] ✅ Completed 0xed7..A441 = $1.0007572275007506
+2025-09-01 09:37:44,364 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [653 remaining] Processing 0x090..e5F6 at block 23200192 (req 2373)
+2025-09-01 09:37:45,596 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [652 remaining] ✅ Completed 0x090..e5F6 = $0.0005111329653234129
+2025-09-01 09:37:45,596 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [652 remaining] Processing 0xf93..1b4E at block 23200192 (req 2374)
+2025-09-01 09:37:46,030 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [651 remaining] ✅ Completed 0xf93..1b4E = $0.999883
+2025-09-01 09:37:46,030 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [651 remaining] Processing 0x090..e5F6 at block 23200297 (req 2375)
+2025-09-01 09:37:47,148 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [650 remaining] ✅ Completed 0x090..e5F6 = $0.0005111329653234129
+2025-09-01 09:37:47,148 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [650 remaining] Processing 0xf93..1b4E at block 23200297 (req 2376)
+2025-09-01 09:37:47,592 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [649 remaining] ✅ Completed 0xf93..1b4E = $0.999875
+2025-09-01 09:37:47,592 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [649 remaining] Processing 0xD53..cd52 at block 23200596 (req 2377)
+2025-09-01 09:37:48,505 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [648 remaining] ✅ Completed 0xD53..cd52 = $0.9192090909090909
+2025-09-01 09:37:48,505 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [648 remaining] Processing 0xc3b..51dD at block 23200596 (req 2378)
+2025-09-01 09:37:50,056 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [647 remaining] ✅ Completed 0xc3b..51dD = $1.0795447889340546
+2025-09-01 09:37:50,056 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [647 remaining] Processing 0xD53..cd52 at block 23201096 (req 2379)
+2025-09-01 09:37:50,939 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [646 remaining] ✅ Completed 0xD53..cd52 = $0.9072333333333333
+2025-09-01 09:37:50,939 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [646 remaining] Processing 0x7F8..829B at block 23201096 (req 2380)
+2025-09-01 09:37:51,748 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [645 remaining] ✅ Completed 0x7F8..829B = $2506.216071421765
+2025-09-01 09:37:51,748 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [645 remaining] Processing 0xD53..cd52 at block 23201296 (req 2381)
+2025-09-01 09:37:52,542 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [644 remaining] ✅ Completed 0xD53..cd52 = $0.9072333333333333
+2025-09-01 09:37:52,542 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [644 remaining] Processing 0x38D..f76E at block 23201296 (req 2382)
+2025-09-01 09:37:53,987 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [643 remaining] ✅ Completed 0x38D..f76E = $1.0008122023576576
+2025-09-01 09:37:53,987 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [643 remaining] Processing 0xD53..cd52 at block 23201398 (req 2383)
+2025-09-01 09:37:54,744 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [642 remaining] ✅ Completed 0xD53..cd52 = $0.9072333333333333
+2025-09-01 09:37:54,744 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [642 remaining] Processing 0x8b8..f710 at block 23201398 (req 2384)
+2025-09-01 09:37:56,148 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [641 remaining] ✅ Completed 0x8b8..f710 = $1.0194271236515766
+2025-09-01 09:37:56,149 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [641 remaining] Processing 0xD53..cd52 at block 23203006 (req 2385)
+2025-09-01 09:37:56,937 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [640 remaining] ✅ Completed 0xD53..cd52 = $0.9035064790330588
+2025-09-01 09:37:56,937 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [640 remaining] Processing 0xc52..4F50 at block 23203006 (req 2386)
+2025-09-01 09:37:57,826 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [639 remaining] ✅ Completed 0xc52..4F50 = $1.000304867829693
+2025-09-01 09:37:57,826 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [639 remaining] Processing 0xD53..cd52 at block 23204015 (req 2387)
+2025-09-01 09:37:58,734 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [638 remaining] ✅ Completed 0xD53..cd52 = $0.8946404871179194
+2025-09-01 09:37:58,734 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [638 remaining] Processing 0x8b8..f710 at block 23204015 (req 2388)
+2025-09-01 09:38:00,138 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [637 remaining] ✅ Completed 0x8b8..f710 = $1.0192069328877693
+2025-09-01 09:38:00,139 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [637 remaining] Processing 0x412..a275 at block 23205511 (req 2389)
+2025-09-01 09:38:00,956 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [636 remaining] ✅ Completed 0x412..a275 = $3852.1516801754196
+2025-09-01 09:38:00,956 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [636 remaining] Processing 0x979..2E37 at block 23205511 (req 2390)
+2025-09-01 09:38:01,634 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [635 remaining] ✅ Completed 0x979..2E37 = $5560.496331805117
+2025-09-01 09:38:01,635 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [635 remaining] Processing 0xf93..1b4E at block 23206249 (req 2391)
+2025-09-01 09:38:02,209 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [634 remaining] ✅ Completed 0xf93..1b4E = $0.999833
+2025-09-01 09:38:02,209 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [634 remaining] Processing 0x62B..0Aa7 at block 23206249 (req 2392)
+2025-09-01 09:38:03,211 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [633 remaining] ✅ Completed 0x62B..0Aa7 = $0.3509393993489751
+2025-09-01 09:38:03,211 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [633 remaining] Processing 0xD53..cd52 at block 23206551 (req 2393)
+2025-09-01 09:38:03,985 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [632 remaining] ✅ Completed 0xD53..cd52 = $0.9028469561140795
+2025-09-01 09:38:03,985 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [632 remaining] Processing 0x744..92ef at block 23206551 (req 2394)
+2025-09-01 09:38:05,105 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [631 remaining] ✅ Completed 0x744..92ef = $1.0270479120312908
+2025-09-01 09:38:05,105 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [631 remaining] Processing 0xD53..cd52 at block 23207433 (req 2395)
+2025-09-01 09:38:05,886 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [630 remaining] ✅ Completed 0xD53..cd52 = $0.9063159174493176
+2025-09-01 09:38:05,886 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [630 remaining] Processing 0x3A2..7611 at block 23207433 (req 2396)
+2025-09-01 09:38:06,877 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [629 remaining] ✅ Completed 0x3A2..7611 = $311.4563373067652
+2025-09-01 09:38:06,877 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [629 remaining] Processing 0x412..a275 at block 23207481 (req 2397)
+2025-09-01 09:38:07,973 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [628 remaining] ✅ Completed 0x412..a275 = $3887.886456279022
+2025-09-01 09:38:07,973 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [628 remaining] Processing 0x957..b098 at block 23207481 (req 2398)
+2025-09-01 09:38:08,656 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [627 remaining] ✅ Completed 0x957..b098 = $0.07815841068711339
+2025-09-01 09:38:08,656 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [627 remaining] Processing 0x412..a275 at block 23207934 (req 2399)
+2025-09-01 09:38:09,486 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [626 remaining] ✅ Completed 0x412..a275 = $3865.642043562802
+2025-09-01 09:38:09,487 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [626 remaining] Processing 0x957..b098 at block 23207934 (req 2400)
+2025-09-01 09:38:10,153 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [625 remaining] ✅ Completed 0x957..b098 = $0.07786812470341023
+2025-09-01 09:38:15,164 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [625 remaining] Processing 0xD53..cd52 at block 23208401 (req 2401)
+2025-09-01 09:38:15,939 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [624 remaining] ✅ Completed 0xD53..cd52 = $0.8922606202445721
+2025-09-01 09:38:15,939 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [624 remaining] Processing 0x38D..f76E at block 23208401 (req 2402)
+2025-09-01 09:38:17,339 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [623 remaining] ✅ Completed 0x38D..f76E = $1.0005416808303915
+2025-09-01 09:38:17,339 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [623 remaining] Processing 0xD53..cd52 at block 23209908 (req 2403)
+2025-09-01 09:38:18,090 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [622 remaining] ✅ Completed 0xD53..cd52 = $0.887987935722916
+2025-09-01 09:38:18,090 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [622 remaining] Processing 0x8b8..f710 at block 23209908 (req 2404)
+2025-09-01 09:38:19,445 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [621 remaining] ✅ Completed 0x8b8..f710 = $1.0190475891478248
+2025-09-01 09:38:19,445 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [621 remaining] Processing 0xD53..cd52 at block 23210210 (req 2405)
+2025-09-01 09:38:20,232 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [620 remaining] ✅ Completed 0xD53..cd52 = $0.8939868753703437
+2025-09-01 09:38:20,232 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [620 remaining] Processing 0xc52..4F50 at block 23210210 (req 2406)
+2025-09-01 09:38:21,101 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [619 remaining] ✅ Completed 0xc52..4F50 = $1.0004484764083188
+2025-09-01 09:38:21,101 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [619 remaining] Processing 0x412..a275 at block 23210469 (req 2407)
+2025-09-01 09:38:21,918 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [618 remaining] ✅ Completed 0x412..a275 = $3803.781724462847
+2025-09-01 09:38:21,918 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [618 remaining] Processing 0xdC0..384F at block 23210469 (req 2408)
+2025-09-01 09:38:22,189 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [617 remaining] ✅ Completed 0xdC0..384F = $0.99972229
+2025-09-01 09:38:22,189 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [617 remaining] Processing 0xD53..cd52 at block 23210619 (req 2409)
+2025-09-01 09:38:22,954 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [616 remaining] ✅ Completed 0xD53..cd52 = $0.8853797979797979
+2025-09-01 09:38:22,954 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [616 remaining] Processing 0xc3b..51dD at block 23210619 (req 2410)
+2025-09-01 09:38:24,984 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [615 remaining] ✅ Completed 0xc3b..51dD = $1.0798302872320134
+2025-09-01 09:38:24,985 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [615 remaining] Processing 0xD53..cd52 at block 23211017 (req 2411)
+2025-09-01 09:38:25,733 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [614 remaining] ✅ Completed 0xD53..cd52 = $0.8853797979797979
+2025-09-01 09:38:25,733 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [614 remaining] Processing 0xCA0..72D0 at block 23211017 (req 2412)
+2025-09-01 09:38:26,437 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [613 remaining] ✅ Completed 0xCA0..72D0 = $0.5560580468683411
+2025-09-01 09:38:26,437 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [613 remaining] Processing 0x412..a275 at block 23211218 (req 2413)
+2025-09-01 09:38:27,524 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [612 remaining] ✅ Completed 0x412..a275 = $3814.2313714033826
+2025-09-01 09:38:27,524 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [612 remaining] Processing 0xC02..6Cc2 at block 23211218 (req 2414)
+2025-09-01 09:38:27,527 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [611 remaining] ✅ Completed 0xC02..6Cc2 = $4771.36
+2025-09-01 09:38:27,527 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [611 remaining] Processing 0x412..a275 at block 23211245 (req 2415)
+2025-09-01 09:38:28,355 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [610 remaining] ✅ Completed 0x412..a275 = $3813.321233735216
+2025-09-01 09:38:28,355 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [610 remaining] Processing 0xC02..6Cc2 at block 23211245 (req 2416)
+2025-09-01 09:38:28,359 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [609 remaining] ✅ Completed 0xC02..6Cc2 = $4771.36
+2025-09-01 09:38:28,359 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [609 remaining] Processing 0x412..a275 at block 23211277 (req 2417)
+2025-09-01 09:38:29,164 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [608 remaining] ✅ Completed 0x412..a275 = $3812.483370248897
+2025-09-01 09:38:29,164 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [608 remaining] Processing 0xC02..6Cc2 at block 23211277 (req 2418)
+2025-09-01 09:38:29,167 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [607 remaining] ✅ Completed 0xC02..6Cc2 = $4771.36
+2025-09-01 09:38:29,167 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [607 remaining] Processing 0xD53..cd52 at block 23213078 (req 2419)
+2025-09-01 09:38:29,952 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [606 remaining] ✅ Completed 0xD53..cd52 = $0.9228222222222222
+2025-09-01 09:38:29,952 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [606 remaining] Processing 0xed7..A441 at block 23213078 (req 2420)
+2025-09-01 09:38:31,448 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [605 remaining] ✅ Completed 0xed7..A441 = $1.000756639131491
+2025-09-01 09:38:31,448 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [605 remaining] Processing 0xD53..cd52 at block 23213482 (req 2421)
+2025-09-01 09:38:32,191 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [604 remaining] ✅ Completed 0xD53..cd52 = $0.9016216150960403
+2025-09-01 09:38:32,191 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [604 remaining] Processing 0x76A..6637 at block 23213482 (req 2422)
+2025-09-01 09:38:33,803 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [603 remaining] ✅ Completed 0x76A..6637 = $1.071349099267994
+2025-09-01 09:38:33,803 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [603 remaining] Processing 0xD53..cd52 at block 23214087 (req 2423)
+2025-09-01 09:38:34,582 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [602 remaining] ✅ Completed 0xD53..cd52 = $0.9088871428729518
+2025-09-01 09:38:34,582 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [602 remaining] Processing 0x744..92ef at block 23214087 (req 2424)
+2025-09-01 09:38:35,867 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [601 remaining] ✅ Completed 0x744..92ef = $1.027227294209185
+2025-09-01 09:38:35,867 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [601 remaining] Processing 0x412..a275 at block 23219368 (req 2425)
+2025-09-01 09:38:36,969 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [600 remaining] ✅ Completed 0x412..a275 = $3685.3654531022034
+2025-09-01 09:38:36,969 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [600 remaining] Processing 0xf93..1b4E at block 23219368 (req 2426)
+2025-09-01 09:38:37,562 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [599 remaining] ✅ Completed 0xf93..1b4E = $0.999839
+2025-09-01 09:38:37,562 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [599 remaining] Processing 0xf93..1b4E at block 23223360 (req 2427)
+2025-09-01 09:38:38,816 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [598 remaining] ✅ Completed 0xf93..1b4E = $0.999899
+2025-09-01 09:38:38,816 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [598 remaining] Processing 0x62B..0Aa7 at block 23223360 (req 2428)
+2025-09-01 09:38:40,011 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [597 remaining] ✅ Completed 0x62B..0Aa7 = $0.33012080906843017
+2025-09-01 09:38:40,011 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [597 remaining] Processing 0x412..a275 at block 23223381 (req 2429)
+2025-09-01 09:38:40,851 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [596 remaining] ✅ Completed 0x412..a275 = $3527.0939961165245
+2025-09-01 09:38:40,851 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [596 remaining] Processing 0x979..2E37 at block 23223381 (req 2430)
+2025-09-01 09:38:41,712 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [595 remaining] ✅ Completed 0x979..2E37 = $5145.813571553727
+2025-09-01 09:38:41,712 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [595 remaining] Processing 0x412..a275 at block 23223377 (req 2431)
+2025-09-01 09:38:42,564 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [594 remaining] ✅ Completed 0x412..a275 = $3545.877565605994
+2025-09-01 09:38:42,564 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [594 remaining] Processing 0x957..b098 at block 23223377 (req 2432)
+2025-09-01 09:38:43,300 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [593 remaining] ✅ Completed 0x957..b098 = $0.07142326933925149
+2025-09-01 09:38:43,300 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [593 remaining] Processing 0x412..a275 at block 23223375 (req 2433)
+2025-09-01 09:38:44,124 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [592 remaining] ✅ Completed 0x412..a275 = $3545.877565605994
+2025-09-01 09:38:44,124 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [592 remaining] Processing 0x957..b098 at block 23223375 (req 2434)
+2025-09-01 09:38:44,846 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [591 remaining] ✅ Completed 0x957..b098 = $0.0714265908248107
+2025-09-01 09:38:44,846 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [591 remaining] Processing 0xD53..cd52 at block 23217027 (req 2435)
+2025-09-01 09:38:45,642 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [590 remaining] ✅ Completed 0xD53..cd52 = $0.846019877815264
+2025-09-01 09:38:45,642 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [590 remaining] Processing 0x8b8..f710 at block 23217027 (req 2436)
+2025-09-01 09:38:47,362 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [589 remaining] ✅ Completed 0x8b8..f710 = $1.0189443008586807
+2025-09-01 09:38:47,362 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [589 remaining] Processing 0xD53..cd52 at block 23224208 (req 2437)
+2025-09-01 09:38:48,481 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [588 remaining] ✅ Completed 0xD53..cd52 = $0.783708195801044
+2025-09-01 09:38:48,481 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [588 remaining] Processing 0x8b8..f710 at block 23224208 (req 2438)
+2025-09-01 09:38:50,073 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [587 remaining] ✅ Completed 0x8b8..f710 = $1.0185450803466625
+2025-09-01 09:38:50,073 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [587 remaining] Processing 0xD53..cd52 at block 23229379 (req 2439)
+2025-09-01 09:38:51,128 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [586 remaining] ✅ Completed 0xD53..cd52 = $0.8100232323232324
+2025-09-01 09:38:51,128 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [586 remaining] Processing 0x8b8..f710 at block 23229379 (req 2440)
+2025-09-01 09:38:52,710 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [585 remaining] ✅ Completed 0x8b8..f710 = $1.0183643313427369
+2025-09-01 09:38:52,710 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [585 remaining] Processing 0xD53..cd52 at block 23221286 (req 2441)
+2025-09-01 09:38:53,506 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [584 remaining] ✅ Completed 0xD53..cd52 = $0.7809778382288289
+2025-09-01 09:38:53,506 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [584 remaining] Processing 0x744..92ef at block 23221286 (req 2442)
+2025-09-01 09:38:54,664 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [583 remaining] ✅ Completed 0x744..92ef = $1.0266388864848248
+2025-09-01 09:38:54,664 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [583 remaining] Processing 0xD53..cd52 at block 23228345 (req 2443)
+2025-09-01 09:39:00,461 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [582 remaining] ✅ Completed 0xD53..cd52 = $0.8100232323232324
+2025-09-01 09:39:00,461 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [582 remaining] Processing 0x744..92ef at block 23228345 (req 2444)
+2025-09-01 09:39:01,592 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [581 remaining] ✅ Completed 0x744..92ef = $1.0263732503653413
+2025-09-01 09:39:01,592 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [581 remaining] Processing 0xD53..cd52 at block 23215715 (req 2445)
+2025-09-01 09:39:02,342 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [580 remaining] ✅ Completed 0xD53..cd52 = $0.9025414141414141
+2025-09-01 09:39:02,343 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [580 remaining] Processing 0x38D..f76E at block 23215715 (req 2446)
+2025-09-01 09:39:03,697 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [579 remaining] ✅ Completed 0x38D..f76E = $1.000415825130879
+2025-09-01 09:39:03,697 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [579 remaining] Processing 0xD53..cd52 at block 23221996 (req 2447)
+2025-09-01 09:39:04,452 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [578 remaining] ✅ Completed 0xD53..cd52 = $0.7826357709034828
+2025-09-01 09:39:04,453 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [578 remaining] Processing 0x38D..f76E at block 23221996 (req 2448)
+2025-09-01 09:39:05,861 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [577 remaining] ✅ Completed 0x38D..f76E = $0.9998864348630899
+2025-09-01 09:39:05,861 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [577 remaining] Processing 0xD53..cd52 at block 23229176 (req 2449)
+2025-09-01 09:39:06,680 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [576 remaining] ✅ Completed 0xD53..cd52 = $0.8100232323232324
+2025-09-01 09:39:06,680 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [576 remaining] Processing 0x38D..f76E at block 23229176 (req 2450)
+2025-09-01 09:39:08,103 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [575 remaining] ✅ Completed 0x38D..f76E = $0.9996904543530489
+2025-09-01 09:39:13,114 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [575 remaining] Processing 0xD53..cd52 at block 23217431 (req 2451)
+2025-09-01 09:39:13,899 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [574 remaining] ✅ Completed 0xD53..cd52 = $0.845889182699614
+2025-09-01 09:39:13,899 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [574 remaining] Processing 0xc52..4F50 at block 23217431 (req 2452)
+2025-09-01 09:39:14,925 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [573 remaining] ✅ Completed 0xc52..4F50 = $1.0003505068898153
+2025-09-01 09:39:14,925 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [573 remaining] Processing 0xD53..cd52 at block 23224613 (req 2453)
+2025-09-01 09:39:15,702 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [572 remaining] ✅ Completed 0xD53..cd52 = $0.7813967153987215
+2025-09-01 09:39:15,702 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [572 remaining] Processing 0xc52..4F50 at block 23224613 (req 2454)
+2025-09-01 09:39:16,926 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [571 remaining] ✅ Completed 0xc52..4F50 = $1.0004722046249839
+2025-09-01 09:39:16,927 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [571 remaining] Processing 0xD53..cd52 at block 23216321 (req 2455)
+2025-09-01 09:39:17,718 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [570 remaining] ✅ Completed 0xD53..cd52 = $0.885620497857208
+2025-09-01 09:39:17,718 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [570 remaining] Processing 0x7F8..829B at block 23216321 (req 2456)
+2025-09-01 09:39:18,436 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [569 remaining] ✅ Completed 0x7F8..829B = $2475.1928935420083
+2025-09-01 09:39:18,436 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [569 remaining] Processing 0xD53..cd52 at block 23219654 (req 2457)
+2025-09-01 09:39:19,225 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [568 remaining] ✅ Completed 0xD53..cd52 = $0.8383929292929293
+2025-09-01 09:39:19,225 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [568 remaining] Processing 0x5F6..Da94 at block 23219654 (req 2458)
+2025-09-01 09:39:20,416 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [567 remaining] ✅ Completed 0x5F6..Da94 = $1.005051557768943
+2025-09-01 09:39:20,416 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [567 remaining] Processing 0xD53..cd52 at block 23218238 (req 2459)
+2025-09-01 09:39:21,225 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [566 remaining] ✅ Completed 0xD53..cd52 = $0.8383787726816814
+2025-09-01 09:39:21,225 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [566 remaining] Processing 0xEe3..578d at block 23218238 (req 2460)
+2025-09-01 09:39:22,038 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [565 remaining] ✅ Completed 0xEe3..578d = $139.99171685065267
+2025-09-01 09:39:22,038 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [565 remaining] Processing 0xD53..cd52 at block 23220885 (req 2461)
+2025-09-01 09:39:22,870 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [564 remaining] ✅ Completed 0xD53..cd52 = $0.7721494949494949
+2025-09-01 09:39:22,870 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [564 remaining] Processing 0xa4c..08e4 at block 23220885 (req 2462)
+2025-09-01 09:39:23,699 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [563 remaining] ✅ Completed 0xa4c..08e4 = $4637.647887145441
+2025-09-01 09:39:23,699 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [563 remaining] Processing 0xD53..cd52 at block 23215314 (req 2463)
+2025-09-01 09:39:24,487 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [562 remaining] ✅ Completed 0xD53..cd52 = $0.9075762641459733
+2025-09-01 09:39:24,488 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [562 remaining] Processing 0x723..a976 at block 23215314 (req 2464)
+2025-09-01 09:39:25,475 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [561 remaining] ✅ Completed 0x723..a976 = $1.0032363116101852
+2025-09-01 09:39:25,475 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [561 remaining] Processing 0xD53..cd52 at block 23222904 (req 2465)
+2025-09-01 09:39:26,233 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [560 remaining] ✅ Completed 0xD53..cd52 = $0.7864472204492264
+2025-09-01 09:39:26,233 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [560 remaining] Processing 0xc3b..51dD at block 23222904 (req 2466)
+2025-09-01 09:39:28,253 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [559 remaining] ✅ Completed 0xc3b..51dD = $1.080697816951268
+2025-09-01 09:39:28,253 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [559 remaining] Processing 0xD53..cd52 at block 23217834 (req 2467)
+2025-09-01 09:39:29,066 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [558 remaining] ✅ Completed 0xD53..cd52 = $0.8357344761557399
+2025-09-01 09:39:29,066 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [558 remaining] Processing 0x460..D87f at block 23217834 (req 2468)
+2025-09-01 09:39:31,723 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [557 remaining] ✅ Completed 0x460..D87f = $1.0188041828439083
+2025-09-01 09:39:31,723 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [557 remaining] Processing 0xD53..cd52 at block 23221588 (req 2469)
+2025-09-01 09:39:32,511 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [556 remaining] ✅ Completed 0xD53..cd52 = $0.7817575092378439
+2025-09-01 09:39:32,512 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [556 remaining] Processing 0x08B..4147 at block 23221588 (req 2470)
+2025-09-01 09:39:33,424 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [555 remaining] ✅ Completed 0x08B..4147 = $1.0100262768410488
+2025-09-01 09:39:33,424 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [555 remaining] Processing 0xD53..cd52 at block 23215393 (req 2471)
+2025-09-01 09:39:34,203 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [554 remaining] ✅ Completed 0xD53..cd52 = $0.9080622006440585
+2025-09-01 09:39:34,203 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [554 remaining] Processing 0x723..a976 at block 23215393 (req 2472)
+2025-09-01 09:39:34,958 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [553 remaining] ✅ Completed 0x723..a976 = $1.0032670149756695
+2025-09-01 09:39:34,958 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [553 remaining] Processing 0xD53..cd52 at block 23215800 (req 2473)
+2025-09-01 09:39:35,817 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [552 remaining] ✅ Completed 0xD53..cd52 = $0.8997515151515152
+2025-09-01 09:39:35,817 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [552 remaining] Processing 0x38D..f76E at block 23215800 (req 2474)
+2025-09-01 09:39:37,227 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [551 remaining] ✅ Completed 0x38D..f76E = $1.0004156355291765
+2025-09-01 09:39:37,227 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [551 remaining] Processing 0xD53..cd52 at block 23216786 (req 2475)
+2025-09-01 09:39:38,113 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [550 remaining] ✅ Completed 0xD53..cd52 = $0.8524593983972119
+2025-09-01 09:39:38,113 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [550 remaining] Processing 0x7F8..829B at block 23216786 (req 2476)
+2025-09-01 09:39:38,929 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [549 remaining] ✅ Completed 0x7F8..829B = $2450.852698674448
+2025-09-01 09:39:38,929 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [549 remaining] Processing 0xD53..cd52 at block 23217107 (req 2477)
+2025-09-01 09:39:39,690 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [548 remaining] ✅ Completed 0xD53..cd52 = $0.8462751892039756
+2025-09-01 09:39:39,690 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [548 remaining] Processing 0x8b8..f710 at block 23217107 (req 2478)
+2025-09-01 09:39:41,086 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [547 remaining] ✅ Completed 0x8b8..f710 = $1.0188811129461048
+2025-09-01 09:39:41,086 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [547 remaining] Processing 0x412..a275 at block 23217221 (req 2479)
+2025-09-01 09:39:42,170 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [546 remaining] ✅ Completed 0x412..a275 = $3671.4257763101996
+2025-09-01 09:39:42,170 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [546 remaining] Processing 0x957..b098 at block 23217221 (req 2480)
+2025-09-01 09:39:42,845 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [545 remaining] ✅ Completed 0x957..b098 = $0.07333108181714489
+2025-09-01 09:39:42,845 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [545 remaining] Processing 0xD53..cd52 at block 23217516 (req 2481)
+2025-09-01 09:39:43,645 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [544 remaining] ✅ Completed 0xD53..cd52 = $0.8406451678267125
+2025-09-01 09:39:43,645 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [544 remaining] Processing 0xc52..4F50 at block 23217516 (req 2482)
+2025-09-01 09:39:44,527 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [543 remaining] ✅ Completed 0xc52..4F50 = $1.000353378851467
+2025-09-01 09:39:44,527 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [543 remaining] Processing 0x412..a275 at block 23217697 (req 2483)
+2025-09-01 09:39:45,343 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [542 remaining] ✅ Completed 0x412..a275 = $3627.1866764213587
+2025-09-01 09:39:45,343 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [542 remaining] Processing 0x957..b098 at block 23217697 (req 2484)
+2025-09-01 09:39:46,046 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [541 remaining] ✅ Completed 0x957..b098 = $0.07262924298798702
+2025-09-01 09:39:46,046 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [541 remaining] Processing 0xD53..cd52 at block 23217914 (req 2485)
+2025-09-01 09:39:46,834 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [540 remaining] ✅ Completed 0xD53..cd52 = $0.8354842304691853
+2025-09-01 09:39:46,834 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [540 remaining] Processing 0x460..D87f at block 23217914 (req 2486)
+2025-09-01 09:39:49,106 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [539 remaining] ✅ Completed 0x460..D87f = $1.0188059635965552
+2025-09-01 09:39:49,106 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [539 remaining] Processing 0xf93..1b4E at block 23218127 (req 2487)
+2025-09-01 09:39:49,683 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [538 remaining] ✅ Completed 0xf93..1b4E = $0.999809
+2025-09-01 09:39:49,683 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [538 remaining] Processing 0x62B..0Aa7 at block 23218127 (req 2488)
+2025-09-01 09:39:50,728 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [537 remaining] ✅ Completed 0x62B..0Aa7 = $0.32767826298547764
+2025-09-01 09:39:50,728 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [537 remaining] Processing 0x412..a275 at block 23218300 (req 2489)
+2025-09-01 09:39:51,527 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [536 remaining] ✅ Completed 0x412..a275 = $3702.326013149153
+2025-09-01 09:39:51,527 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [536 remaining] Processing 0x979..2E37 at block 23218300 (req 2490)
+2025-09-01 09:39:52,221 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [535 remaining] ✅ Completed 0x979..2E37 = $5351.06476745557
+2025-09-01 09:39:52,221 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [535 remaining] Processing 0xD53..cd52 at block 23218331 (req 2491)
+2025-09-01 09:39:53,012 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [534 remaining] ✅ Completed 0xD53..cd52 = $0.8410635948248787
+2025-09-01 09:39:53,012 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [534 remaining] Processing 0xEe3..578d at block 23218331 (req 2492)
+2025-09-01 09:39:53,691 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [533 remaining] ✅ Completed 0xEe3..578d = $140.44054834011686
+2025-09-01 09:39:53,691 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [533 remaining] Processing 0xD53..cd52 at block 23219734 (req 2493)
+2025-09-01 09:39:54,448 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [532 remaining] ✅ Completed 0xD53..cd52 = $0.8383929292929293
+2025-09-01 09:39:54,448 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [532 remaining] Processing 0x5F6..Da94 at block 23219734 (req 2494)
+2025-09-01 09:39:55,156 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [531 remaining] ✅ Completed 0x5F6..Da94 = $1.0050515789640353
+2025-09-01 09:39:55,157 - Users.wavey.yearn.auctions_charts.scripts.price_service_ypm - INFO - [531 remaining] Processing 0xD53..cd52 at block 23221241 (req 2495)
