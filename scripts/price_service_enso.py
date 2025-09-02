@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Odos Price Service
-Polls for recent takes and fetches current token prices from Odos API
+ENSO Price Service
+Polls for recent takes and fetches current token prices from ENSO API
 """
 
 import os
@@ -30,10 +30,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class OdosPriceService:
-    """Price service using Odos API to fetch current token prices"""
+class EnsoAPIError(Exception):
+    """Custom exception for ENSO API errors"""
+    pass
+
+class EnsoPriceService:
+    """Price service using ENSO API to fetch current token prices"""
     
-    def __init__(self, poll_interval: int = 6, recency_minutes: int = None, once: bool = False):
+    def __init__(self, poll_interval: int = 10, recency_minutes: int = None, once: bool = False):
         self.db_conn = None
         self.poll_interval = max(1, int(poll_interval))
         
@@ -46,15 +50,37 @@ class OdosPriceService:
             self.recency_minutes = recency_minutes
             
         self.once = once
-        self.api_key = os.getenv('ODOS_API_KEY')
-        self.base_url = "https://api.odos.xyz/pricing/token"
-        self.chain_names = {
-            1: "1",  # Mainnet
-            137: "137",  # Polygon
-            42161: "42161",  # Arbitrum
-            10: "10",  # Optimism
-            8453: "8453",  # Base
+        self.base_url = "https://api.enso.finance/api/v1/shortcuts/route"
+        
+        # Supported chains and their parameters
+        self.chain_configs = {
+            1: {
+                "name": "Mainnet",
+                "usdc": "0x6B175474E89094C44Da98b954EedeAC495271d0F",  # DAI (more liquid)
+                "whale": "0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503"  # Binance hot wallet
+            },
+            137: {
+                "name": "Polygon", 
+                "usdc": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                "whale": "0x1a1ec25DC08e98e5E93F1104B5e5cfD298707d31"  # Binance Polygon
+            },
+            42161: {
+                "name": "Arbitrum",
+                "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                "whale": "0x489ee077994B6658eAfA855C308275EAd8097C4A"  # Binance Arbitrum
+            },
+            10: {
+                "name": "Optimism",
+                "usdc": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+                "whale": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"  # Optimism Gateway
+            },
+            8453: {
+                "name": "Base",
+                "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "whale": "0x4C80E24119CFB836cdF0a6b53dc23F04F7e652CA"  # Coinbase hot wallet
+            }
         }
+        
         # Removed processed_takes tracking - now using database status
         self._init_database()
         
@@ -102,7 +128,7 @@ class OdosPriceService:
                     ORDER BY pr.txn_timestamp DESC
                     LIMIT 100
                 """, (
-                    tuple(self.chain_names.keys()),
+                    tuple(self.chain_configs.keys()),
                     current_time,
                     self.recency_minutes * 60
                 ))
@@ -110,7 +136,7 @@ class OdosPriceService:
                 requests = cursor.fetchall()
                 
                 if requests:
-                    logger.info(f"[ODOS] Found {len(requests)} fresh price requests (< {self.recency_minutes} minutes old)")
+                    logger.info(f"[ENSO] Found {len(requests)} fresh price requests (< {self.recency_minutes} minutes old)")
                 
                 return requests
                 
@@ -118,10 +144,10 @@ class OdosPriceService:
             logger.error(f"Failed to get fresh price requests: {e}")
             return []
     
-    def fetch_token_price(self, token_address: str, chain_id: int) -> Optional[Decimal]:
-        """Fetch current price for a token from Odos API"""
-        if chain_id not in self.chain_names:
-            logger.debug(f"Chain {chain_id} not supported by Odos")
+    def get_token_price_via_route(self, token_address: str, chain_id: int) -> Optional[Decimal]:
+        """Get token price by requesting a route quote against stablecoin (DAI/USDC)"""
+        if chain_id not in self.chain_configs:
+            logger.debug(f"Chain {chain_id} not supported by ENSO")
             return None
             
         # Skip ETH - only ypricemagic should handle ETH pricing
@@ -129,51 +155,97 @@ class OdosPriceService:
             logger.debug(f"Skipping ETH price request - handled by ypricemagic only")
             return None
             
-        try:
-            # Odos API endpoint
-            url = f"{self.base_url}/{self.chain_names[chain_id]}/{token_address}"
-            
-            headers = {}
-            if self.api_key:
-                headers['X-API-KEY'] = self.api_key
-            
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
+        config = self.chain_configs[chain_id]
+        usdc_address = config["usdc"]
+        whale_address = config["whale"]
+        
+        # Try different sell amounts to account for different token decimals and liquidity
+        sell_amounts = [
+            "100000000000000000",    # 0.1 token (18 decimals)
+            "1000000000000000000",   # 1 token (18 decimals) 
+            "10000000000000000000",  # 10 tokens (18 decimals)
+            "1000000",               # 1 token (6 decimals) for USDC-like tokens
+        ]
+        
+        for sell_amount in sell_amounts:
+            try:
+                params = {
+                    "fromAddress": whale_address,
+                    "amountIn": sell_amount,
+                    "tokenIn": token_address,
+                    "tokenOut": usdc_address,
+                    "chainId": str(chain_id),
+                    "routingStrategy": "router"
+                }
                 
-                # Parse response - adjust based on actual Odos API format
-                if 'tokenPrices' in data and token_address.lower() in data['tokenPrices']:
-                    price_data = data['tokenPrices'][token_address.lower()]
-                    price = price_data.get('price')
-                    if price:
-                        return Decimal(str(price))
-                elif 'price' in data:
-                    return Decimal(str(data['price']))
+                headers = {
+                    'Accept': 'application/json',
+                    'User-Agent': 'auction-price-service/1.0'
+                }
+                
+                logger.debug(f"[ENSO] 📤 Requesting route for {token_address[:6]}..{token_address[-4:]} on {config['name']} (amount: {sell_amount})")
+                
+                response = requests.get(self.base_url, params=params, headers=headers, timeout=15)
+                logger.debug(f"[ENSO] 📥 Response: {response.status_code}")
+                
+                if response.status_code == 200:
+                    route_data = response.json()
                     
-            elif response.status_code == 429:
-                logger.warning(f"Rate limit hit for Odos API")
-                time.sleep(1)  # Brief pause on rate limit
-            else:
-                logger.debug(f"Odos API returned status {response.status_code} for {token_address}")
-                
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Odos API request failed for {token_address}: {e}")
-        except Exception as e:
-            logger.error(f"Failed to parse Odos response for {token_address}: {e}")
-            
+                    # Extract price from route response
+                    amount_out = route_data.get("amountOut")
+                    if amount_out:
+                        amount_out_int = int(amount_out)
+                        amount_in_int = int(sell_amount)
+                        
+                        if amount_out_int > 0 and amount_in_int > 0:
+                            # Calculate price: amountOut (DAI, 18 decimals) / amountIn (token, assume 18 decimals)
+                            # Normalize: (amountOut / 1e18) / (amountIn / 1e18) = amountOut / amountIn
+                            price_usd = amount_out_int / amount_in_int
+                            logger.info(f"[ENSO] 💰 Route price for {token_address[:6]}..{token_address[-4:]} on {config['name']}: ${price_usd:.6f}")
+                            return Decimal(str(price_usd))
+                        else:
+                            logger.debug(f"[ENSO] ⚠️ Invalid route amounts for {token_address[:6]}..{token_address[-4:]}")
+                            continue  # Try next sell amount
+                            
+                elif response.status_code == 400:
+                    try:
+                        error_detail = response.text
+                        logger.debug(f"[ENSO] ⚠️ 400 Bad Request for {token_address[:6]}..{token_address[-4:]} (amount: {sell_amount}): {error_detail}")
+                    except:
+                        logger.debug(f"[ENSO] ⚠️ 400 Bad Request for {token_address[:6]}..{token_address[-4:]} with amount {sell_amount}")
+                    continue  # Try next sell amount
+                    
+                elif response.status_code == 429:
+                    logger.warning(f"[ENSO] ⚠️ Rate limit hit for {token_address[:6]}..{token_address[-4:]}, waiting 5 seconds...")
+                    time.sleep(5)
+                    continue  # Try next sell amount after delay
+                    
+                else:
+                    try:
+                        error_detail = response.text
+                        logger.error(f"[ENSO] ❌ Route API error {response.status_code} for {token_address[:6]}..{token_address[-4:]}: {error_detail}")
+                    except:
+                        logger.error(f"[ENSO] ❌ Route API error {response.status_code} for {token_address[:6]}..{token_address[-4:]}")
+                    continue  # Try next sell amount
+                    
+            except Exception as e:
+                logger.error(f"[ENSO] ❌ Route request failed for {token_address[:6]}..{token_address[-4:]}: {e}")
+                continue  # Try next sell amount
+        
+        # If we get here, none of the sell amounts worked
+        logger.debug(f"[ENSO] ❌ All route attempts failed for {token_address[:6]}..{token_address[-4:]}")
         return None
     
     def store_price(self, chain_id: int, token_address: str, price_usd: Decimal, block_number: int, txn_timestamp: int = None) -> None:
         """Store token price in database with transaction timestamp"""
         try:
             with self.db_conn.cursor() as cursor:
-                # Store with current timestamp since Odos provides current prices
+                # Store with current timestamp since ENSO provides current prices
                 cursor.execute("""
                     INSERT INTO token_prices (
                         chain_id, block_number, token_address, 
                         price_usd, timestamp, txn_timestamp, source, created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, 'odos', NOW())
+                    ) VALUES (%s, %s, %s, %s, %s, %s, 'enso', NOW())
                 """, (
                     chain_id, 
                     block_number,  # Store the block from the price request
@@ -184,7 +256,8 @@ class OdosPriceService:
                 ))
                 
                 if cursor.rowcount > 0:
-                    logger.info(f"[ODOS] 💰 Stored price: {token_address[:6]}..{token_address[-4:]} = ${price_usd:.4f}")
+                    chain_name = self.chain_configs.get(chain_id, {}).get("name", f"Chain{chain_id}")
+                    logger.info(f"[ENSO] 💰 Stored price: {token_address[:6]}..{token_address[-4:]} on {chain_name} = ${price_usd:.4f}")
                     
         except Exception as e:
             logger.error(f"Failed to store price for {token_address}: {e}")
@@ -223,21 +296,25 @@ class OdosPriceService:
             block_number = request['block_number']
             txn_timestamp = request['txn_timestamp']
             
-            logger.debug(f"Processing request {request_id} for token {token_address[:6]}..{token_address[-4:]} on chain {chain_id}")
+            chain_name = self.chain_configs.get(chain_id, {}).get("name", f"Chain{chain_id}")
+            logger.debug(f"Processing request {request_id} for token {token_address[:6]}..{token_address[-4:]} on {chain_name}")
             
             # Fetch price for the token
-            price = self.fetch_token_price(token_address, chain_id)
+            price = self.get_token_price_via_route(token_address, chain_id)
             
             if price is not None:
                 # Store price with transaction timestamp
                 self.store_price(chain_id, token_address, price, block_number, txn_timestamp)
                 # Mark request as completed
                 self.mark_request_completed(request_id)
-                logger.info(f"[ODOS] ✅ Completed request {request_id}: {token_address[:6]}..{token_address[-4:]} = ${price:.4f}")
+                logger.info(f"[ENSO] ✅ Completed request {request_id}: {token_address[:6]}..{token_address[-4:]} = ${price:.4f}")
             else:
                 # Mark request as failed
-                self.mark_request_failed(request_id, "Failed to fetch price from ODOS API")
-                logger.warning(f"[ODOS] ❌ Failed request {request_id}: No price available for {token_address[:6]}..{token_address[-4:]}")
+                self.mark_request_failed(request_id, "Failed to fetch price from ENSO API")
+                logger.warning(f"[ENSO] ❌ Failed request {request_id}: No price available for {token_address[:6]}..{token_address[-4:]}")
+            
+            # Add delay to avoid rate limiting
+            time.sleep(1)
                 
         except Exception as e:
             logger.error(f"Failed to process price request {request.get('id', 'unknown')}: {e}")
@@ -247,13 +324,10 @@ class OdosPriceService:
     
     def run_polling_loop(self) -> None:
         """Main polling loop"""
-        logger.info("🚀 Starting Odos Price Service")
+        logger.info("🚀 Starting ENSO Price Service")
         logger.info(f"📊 Settings: poll_interval={self.poll_interval}s, recency_minutes={self.recency_minutes}")
-        
-        if self.api_key:
-            logger.info("🔑 Odos API key configured")
-        else:
-            logger.warning("⚠️  No Odos API key configured - may hit rate limits")
+        chain_list = [f'{cfg["name"]} (chain {cid})' for cid, cfg in self.chain_configs.items()]
+        logger.info(f"🌐 ENSO API supports: {', '.join(chain_list)}")
         
         while True:
             try:
@@ -264,20 +338,20 @@ class OdosPriceService:
                     for request in fresh_requests:
                         self.process_price_request(request)
                         # Small delay between requests to avoid rate limits
-                        time.sleep(0.1)
+                        time.sleep(0.5)
                 else:
-                    logger.debug(f"[ODOS] No fresh price requests found (within {self.recency_minutes} minutes)")
+                    logger.debug(f"[ENSO] No fresh price requests found (within {self.recency_minutes} minutes)")
                 
                 if self.once:
                     logger.info("✅ Single cycle completed (--once mode)")
                     break
                 
                 # Wait before next poll
-                logger.debug(f"[ODOS] Sleeping for {self.poll_interval} seconds...")
+                logger.debug(f"[ENSO] Sleeping for {self.poll_interval} seconds...")
                 time.sleep(self.poll_interval)
                 
             except KeyboardInterrupt:
-                logger.info("\n🛑 Stopping Odos price service...")
+                logger.info("\n🛑 Stopping ENSO price service...")
                 break
             except Exception as e:
                 logger.error(f"Error in polling loop: {e}")
@@ -287,9 +361,9 @@ class OdosPriceService:
                     break
 
 def main():
-    parser = argparse.ArgumentParser(description='Odos Price Service')
-    parser.add_argument('--poll-interval', type=int, default=6, 
-                       help='Poll interval in seconds (default: 6)')
+    parser = argparse.ArgumentParser(description='ENSO Price Service')
+    parser.add_argument('--poll-interval', type=int, default=10, 
+                       help='Poll interval in seconds (default: 10)')
     parser.add_argument('--recency-minutes', type=int, default=10,
                        help='How recent takes must be in minutes (default: 10)')
     parser.add_argument('--once', action='store_true',
@@ -304,7 +378,7 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         logger.setLevel(logging.DEBUG)
     
-    service = OdosPriceService(
+    service = EnsoPriceService(
         poll_interval=args.poll_interval,
         recency_minutes=args.recency_minutes,
         once=args.once

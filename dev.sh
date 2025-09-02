@@ -46,7 +46,7 @@ SERVICES MANAGED:
   🖥️  API Server   FastAPI backend on port 8000
   📊 Indexer      Custom Web3.py blockchain indexer
   ⚛️  React UI     Vite dev server on port 3000
-  💰 Price Services All pricing services (ypm, odos, cowswap)
+  💰 Price Services All pricing services (ypm, odos, enso)
 
 EXAMPLES:
   ./dev.sh                    # Start all services with tmux
@@ -195,6 +195,46 @@ load_environment() {
     log "Networks: $NETWORKS_ENABLED"
 }
 
+# Setup unified virtual environment
+setup_venv() {
+    step "Setting up unified Python virtual environment..."
+    
+    # Check if virtual environment exists
+    if [ ! -d "$SCRIPT_DIR/venv" ]; then
+        log "Creating virtual environment..."
+        python3 -m venv "$SCRIPT_DIR/venv"
+    fi
+    
+    # Activate virtual environment and install dependencies
+    source "$SCRIPT_DIR/venv/bin/activate"
+    
+    # Check if dependencies are installed by testing for key packages
+    if ! python3 -c "import web3, psycopg2, fastapi" 2>/dev/null; then
+        log "Installing Python dependencies..."
+        pip install -q --upgrade pip
+        
+        # Try the working requirements file first, fallback to main requirements
+        if [ -f "$SCRIPT_DIR/requirements-working.txt" ]; then
+            pip install -q -r "$SCRIPT_DIR/requirements-working.txt"
+        else
+            # Install core dependencies manually to avoid conflicts
+            pip install -q web3 psycopg2-binary pyyaml fastapi uvicorn asyncpg sqlalchemy httpx
+        fi
+        
+        success "Dependencies installed"
+    else
+        log "Dependencies already installed"
+    fi
+    
+    # Test that we can import required modules
+    if python3 -c "import web3, psycopg2; print('✅ Core dependencies verified')" 2>/dev/null; then
+        success "Virtual environment ready"
+    else
+        error "Virtual environment setup failed - dependencies not working"
+        exit 1
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     log "Checking prerequisites..."
@@ -314,10 +354,10 @@ setup_tmux() {
 start_api() {
     if [ "$USE_MOCK_DATA" = true ]; then
         step "Starting API service (mock mode)..."
-        local cmd="cd '$SCRIPT_DIR/monitoring/api' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 app.py --mock"
+        local cmd="source '$SCRIPT_DIR/venv/bin/activate' && cd '$SCRIPT_DIR/monitoring/api' && python3 app.py --mock"
     else
         step "Starting API service (database mode)..."
-        local cmd="cd '$SCRIPT_DIR/monitoring/api' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 app.py"
+        local cmd="source '$SCRIPT_DIR/venv/bin/activate' && cd '$SCRIPT_DIR/monitoring/api' && python3 app.py"
     fi
     local log_file="$LOG_DIR/api_$(date +%Y%m%d_%H%M%S).log"
     
@@ -346,7 +386,7 @@ start_indexer() {
     
     step "Starting indexer service..."
     
-    local cmd="cd '$SCRIPT_DIR/indexer' && python3 -m venv venv && source venv/bin/activate && pip install -q -r requirements.txt && python3 indexer.py --network \${DEV_INDEXER_NETWORKS:-ethereum,local}"
+    local cmd="source '$SCRIPT_DIR/venv/bin/activate' && cd '$SCRIPT_DIR/indexer' && python3 indexer.py --network \${DEV_INDEXER_NETWORKS:-ethereum,local}"
     local log_file="$LOG_DIR/indexer_$(date +%Y%m%d_%H%M%S).log"
     
     if [ "$USE_TMUX" = true ]; then
@@ -485,6 +525,9 @@ main() {
     
     step "Checking prerequisites..."
     check_prerequisites
+    
+    step "Setting up unified virtual environment..."
+    setup_venv
     
     if [ "$USE_MOCK_DATA" = false ]; then
         step "Verifying database connection..."

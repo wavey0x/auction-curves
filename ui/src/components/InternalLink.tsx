@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ExternalLink, Copy, Check } from 'lucide-react';
 import { cn, copyToClipboard, getChainInfo } from '../lib/utils';
@@ -28,6 +29,10 @@ const InternalLink: React.FC<InternalLinkProps> = ({
   showCopy = false,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const linkRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const baseClasses = "internal-link group relative";
   
@@ -77,27 +82,107 @@ const InternalLink: React.FC<InternalLinkProps> = ({
     }
   };
 
-  return (
-    <div className="relative inline-flex flex-col items-center internal-link-group">
-      {/* Main internal link button */}
-      <Link
-        to={to}
-        className={cn(
-          baseClasses,
-          variantClasses[variant],
-          className
-        )}
-      >
-        <span>{children}</span>
-        {showArrow && (
-          <ChevronRight className="internal-link-icon h-3 w-3" />
-        )}
-      </Link>
+  const updateTooltipPosition = () => {
+    if (linkRef.current) {
+      const rect = linkRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.bottom + 4
+      });
+    }
+  };
 
-      {/* Contextual actions that appear on hover with minimal space allocation */}
-      {showContextActions && (
-        <div className="h-0 transition-all duration-200 overflow-hidden internal-link-hover-container">
-          <div className="opacity-0 transition-opacity duration-200 flex items-center justify-center space-x-0.5 internal-link-hover-actions">
+  const handleMouseEnter = () => {
+    if (showContextActions) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      setIsHovered(true);
+      updateTooltipPosition();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    // Add a small delay before hiding to allow cursor movement to tooltip
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 100);
+  };
+
+  const handleTooltipMouseEnter = () => {
+    // Cancel the hide timeout if cursor enters tooltip
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
+
+  const handleTooltipMouseLeave = () => {
+    // Hide immediately when leaving tooltip
+    setIsHovered(false);
+  };
+
+  useEffect(() => {
+    if (isHovered) {
+      const handleScroll = () => updateTooltipPosition();
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleScroll);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleScroll);
+      };
+    }
+  }, [isHovered]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <>
+      <div 
+        ref={linkRef}
+        className="relative inline-block internal-link-group"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {/* Main internal link button */}
+        <Link
+          to={to}
+          className={cn(
+            baseClasses,
+            variantClasses[variant],
+            className
+          )}
+        >
+          <span>{children}</span>
+          {showArrow && (
+            <ChevronRight className="internal-link-icon h-3 w-3" />
+          )}
+        </Link>
+      </div>
+
+      {/* Portal-based tooltip that renders at document level */}
+      {showContextActions && isHovered && createPortal(
+        <div 
+          className="fixed pointer-events-none z-50 transition-opacity duration-200"
+          style={{
+            left: tooltipPosition.x,
+            top: tooltipPosition.y,
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div 
+            className="flex items-center justify-center space-x-0.5 bg-gray-800 border border-gray-700 rounded-md p-1 shadow-lg pointer-events-auto"
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
+          >
             {/* Copy icon first */}
             {((variant === 'address' && address) || (showCopy && address)) && (
               <button
@@ -124,9 +209,10 @@ const InternalLink: React.FC<InternalLinkProps> = ({
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
 

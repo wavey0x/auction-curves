@@ -57,10 +57,6 @@
   }
 
   /* Custom InternalLink Hover Effects */
-  .internal-link-group:hover .internal-link-hover-container {
-    height: 1rem; /* h-4 equivalent */
-  }
-
   .internal-link-group:hover .internal-link-hover-actions {
     opacity: 1;
   }

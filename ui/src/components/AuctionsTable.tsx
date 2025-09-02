@@ -532,7 +532,10 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     
                     <td>
                       {auction?.last_kicked ? (
-                        <span className="text-sm text-gray-400">
+                        <span 
+                          className="text-sm text-gray-400"
+                          title={new Date(auction.last_kicked).toLocaleString()}
+                        >
                           {formatTimeAgo(new Date(auction.last_kicked!).getTime() / 1000)}
                         </span>
                       ) : (

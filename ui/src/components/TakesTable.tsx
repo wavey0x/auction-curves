@@ -4,7 +4,7 @@ import type { AuctionTake, Token } from "../types/auction";
 import ChainIcon from "./ChainIcon";
 import AddressDisplay from "./AddressDisplay";
 import TxHashDisplay from "./TxHashDisplay";
-import TxHashLink from "./TxHashLink";
+import StandardTxHashLink from "./StandardTxHashLink";
 import AddressLink from "./AddressLink";
 import InternalLink from "./InternalLink";
 import {
@@ -50,12 +50,19 @@ const TakesTable: React.FC<TakesTableProps> = ({
   onPrevPage,
   totalPages,
 }) => {
-  const { defaultValueDisplay } = useUserSettings();
+  const { defaultValueDisplay, setDefaultValueDisplay } = useUserSettings();
   const [showUSD, setShowUSD] = useState(defaultValueDisplay === 'usd');
   useEffect(() => {
     // Reflect updated default; user can still toggle per-table
     setShowUSD(defaultValueDisplay === 'usd');
   }, [defaultValueDisplay]);
+
+  // Function to toggle both local and global setting
+  const toggleValueDisplay = () => {
+    const newValueDisplay = defaultValueDisplay === 'usd' ? 'token' : 'usd';
+    setDefaultValueDisplay(newValueDisplay);
+    // setShowUSD will be updated automatically via the useEffect above
+  };
 
   if (takes.length === 0) {
     return (
@@ -92,18 +99,17 @@ const TakesTable: React.FC<TakesTableProps> = ({
               <tr>
                 <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0 py-2"><span className="sr-only">Chain</span></th>
                 {!hideAuctionColumn && <th className="text-center w-24 px-0.5 py-2">Auction</th>}
-                <th className="text-center w-16 px-0.5 py-2">Take ID</th>
-                {showRoundInfo && <th className="text-center w-16 px-0.5 py-2">Round</th>}
+                <th className="text-center w-16 px-0.5 py-2">Round</th>
                 <th 
                   className="text-center w-32 px-0.5 py-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                  onClick={() => setShowUSD(!showUSD)}
+                  onClick={toggleValueDisplay}
                   title="Click to toggle between token and USD values"
                 >
                   Amount {showUSD ? '($)' : '(T)'}
                 </th>
                 <th 
                   className="text-center w-28 px-0.5 py-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                  onClick={() => setShowUSD(!showUSD)}
+                  onClick={toggleValueDisplay}
                   title="Click to toggle between token and USD values"
                 >
                   Price {showUSD ? '($)' : '(T)'}
@@ -139,34 +145,21 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   )}
 
                   <td className="px-0.5 py-1">
-                    <div className="text-sm text-center">
-                      <div className="font-mono text-xs text-gray-500 leading-tight">
-                        T{take.take_seq}
-                      </div>
-                      <div className="font-medium text-primary-400 text-xs leading-tight">
-                        {take.take_id ? take.take_id.split("-").slice(-2).join("-") : 'N/A'}
-                      </div>
+                    <div className="flex justify-center">
+                      {take.auction ? (
+                        <InternalLink
+                          to={`/round/${take.chain_id}/${take.auction}/${take.round_id}`}
+                          variant="round"
+                        >
+                          R{take.round_id}
+                        </InternalLink>
+                      ) : (
+                        <span className="font-mono text-sm text-gray-300">
+                          R{take.round_id}
+                        </span>
+                      )}
                     </div>
                   </td>
-
-                  {showRoundInfo && (
-                    <td className="px-0.5 py-1">
-                      <div className="flex justify-center">
-                        {auctionAddress ? (
-                          <InternalLink
-                            to={`/round/${take.chain_id}/${auctionAddress}/${take.round_id}`}
-                            variant="round"
-                          >
-                            R{take.round_id}
-                          </InternalLink>
-                        ) : (
-                          <span className="font-mono text-sm text-gray-300">
-                            R{take.round_id}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  )}
 
                   <td className="px-0.5 py-1">
                     <div className="text-sm">
@@ -262,7 +255,7 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   </td>
 
                   <td className="px-0.5 py-1">
-                    <TxHashLink
+                    <StandardTxHashLink
                       txHash={take.tx_hash}
                       chainId={take.chain_id}
                     />

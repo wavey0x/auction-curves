@@ -97,7 +97,11 @@
       "WebFetch(domain:etherscan.io)",
       "Bash(/dev/null)",
       "Bash(tmux list-sessions:*)",
-      "Bash(tmux send-keys:*)"
+      "Bash(tmux send-keys:*)",
+      "WebFetch(domain:docs.enso.build)",
+      "Bash(brownie networks:*)",
+      "Bash(pip3 show:*)",
+      "Bash(env)"
     ],
     "deny": [],
     "ask": []

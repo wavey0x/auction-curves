@@ -105,16 +105,37 @@ PROD_ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/YOUR_KEY
 
 ### Development Mode
 
+#### Unified Virtual Environment Setup
+
+The project now uses a **unified Python virtual environment** at the project root for all Python services:
+
+```bash
+# One-time setup
+./setup_venv.sh
+
+# Or manually
+python3 -m venv venv
+source venv/bin/activate  
+pip install -r requirements-working.txt
+```
+
+**Benefits:**
+- ✅ **No dependency conflicts** - single resolved dependency tree
+- ✅ **Consistent environment** - all services use same Python packages
+- ✅ **Faster startup** - no individual venv creation per service
+- ✅ **Easier maintenance** - single requirements file to manage
+- ✅ **Better reproducibility** - exact same environment for all developers
+
 #### Modern Development Orchestration (`./dev.sh`)
 
-The development environment has been simplified with a modern orchestration script that replaces the complex `run.sh`:
+The development environment has been simplified with a modern orchestration script:
 
 **Core Services:**
 - PostgreSQL database (via Docker if needed)
-- Custom Web3.py indexer for blockchain event processing
-- FastAPI backend with database integration
+- Custom Web3.py indexer for blockchain event processing (uses unified venv)
+- FastAPI backend with database integration (uses unified venv)
 - React dev server with hot reload
-- All pricing services (ypm, odos, cowswap) running in parallel
+- All pricing services (ypm, odos, cowswap) running in parallel (uses unified venv)
 
 **Key Features:**
 - **Unified Command**: Single `./dev.sh` command starts all services
@@ -475,10 +496,13 @@ event AuctionSale(address indexed auction, uint256 indexed roundId, uint256 sale
 ```
 
 **Quick Start Guide:**
-1. Ensure `.env` file is configured (copy from `.env.example`)
-2. Start PostgreSQL (Docker: `docker-compose up -d postgres`)
-3. Run `./dev.sh` to start all services
-4. Access UI at http://localhost:3000, API at http://localhost:8000
+1. **Setup virtual environment**: Run `./setup_venv.sh` (one-time setup)
+2. **Configure environment**: Ensure `.env` file exists (copy from `.env.example`)  
+3. **Start database**: `docker-compose up -d postgres` (if using Docker)
+4. **Start all services**: `./dev.sh` (automatically uses unified venv)
+5. **Access applications**: 
+   - UI: http://localhost:3000
+   - API: http://localhost:8000
 
 **Session Management:**
 - Use `tmux attach -t auction_dev` to connect to running session

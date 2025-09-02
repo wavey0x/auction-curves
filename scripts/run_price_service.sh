@@ -11,11 +11,11 @@ usage() {
 Usage: $(basename "$0") [options]
 
 Options:
-  --pricer <name>        Price service to run: ypm|odos|cowswap|all (default: ymp)
+  --pricer <name>        Price service to run: ypm|odos|enso|all (default: ypm)
   --network <name>       Brownie network to connect (for ypm only, default: electro)
   --retry-failed         Prioritize previously failed requests first (ypm only)
   --poll-interval <sec>  Poll interval in seconds (default: 5 for ypm, 10 for others)
-  --recency-blocks <n>   How recent takes must be in blocks (odos/cowswap only, default: 40)
+  --recency-minutes <n>  How recent takes must be in minutes (odos/enso only, default: 10)
   --once                 Run a single cycle and exit (useful for testing)
   --parallel             Run all pricers in parallel (when --pricer all)
   --debug                Enable debug logging
@@ -25,7 +25,7 @@ Options:
 Examples:
   $(basename "$0") --pricer ypm --network mainnet
   $(basename "$0") --pricer odos --poll-interval 10
-  $(basename "$0") --pricer cowswap --once
+  $(basename "$0") --pricer enso --once
   $(basename "$0") --pricer all --parallel
 EOF
 }
@@ -35,7 +35,7 @@ PRICER="ypm"
 NETWORK="electro"
 RETRY_FAILED=false
 POLL_INTERVAL=""  # Will be set based on pricer
-RECENCY_BLOCKS=40
+RECENCY_MINUTES=10
 ONCE=false
 PARALLEL=false
 DEBUG=false
@@ -54,8 +54,8 @@ while [[ $# -gt 0 ]]; do
       RETRY_FAILED=true; shift;;
     --poll-interval)
       POLL_INTERVAL="$2"; shift 2;;
-    --recency-blocks)
-      RECENCY_BLOCKS="$2"; shift 2;;
+    --recency-minutes)
+      RECENCY_MINUTES="$2"; shift 2;;
     --once)
       ONCE=true; shift;;
     --parallel)
@@ -117,7 +117,7 @@ if [ -z "$POLL_INTERVAL" ]; then
   case "$PRICER" in
     ypm)
       POLL_INTERVAL=5;;
-    odos|cowswap)
+    odos|enso)
       POLL_INTERVAL=10;;
     all)
       POLL_INTERVAL=10;;
@@ -128,10 +128,10 @@ fi
 
 # Validate pricer choice
 case "$PRICER" in
-  ypm|odos|cowswap|all)
+  ypm|odos|enso|all)
     ;;
   *)
-    echo "❌ Invalid pricer: $PRICER. Must be one of: ypm, odos, cowswap, all"
+    echo "❌ Invalid pricer: $PRICER. Must be one of: ypm, odos, enso, all"
     exit 1;;
 esac
 
@@ -155,14 +155,14 @@ case "$PRICER" in
     ;;
   odos)
     echo "🌐 Chains: Mainnet, Polygon, Arbitrum, Optimism, Base"
-    PY_ARGS=("scripts/price_service_odos.py" "--poll-interval" "$POLL_INTERVAL" "--recency-blocks" "$RECENCY_BLOCKS")
+    PY_ARGS=("scripts/price_service_odos.py" "--poll-interval" "$POLL_INTERVAL" "--recency-minutes" "$RECENCY_MINUTES")
     if [ "$ONCE" = true ]; then PY_ARGS+=("--once"); fi
     if [ "$DEBUG" = true ]; then PY_ARGS+=("--debug"); fi
     python "${PY_ARGS[@]}" 2>&1 | tee "$LOG_FILE"
     ;;
-  cowswap)
-    echo "🌐 Chains: Mainnet only"
-    PY_ARGS=("scripts/price_service_cowswap.py" "--poll-interval" "$POLL_INTERVAL" "--recency-blocks" "$RECENCY_BLOCKS")
+  enso)
+    echo "🌐 Chains: Mainnet, Polygon, Arbitrum, Optimism, Base"
+    PY_ARGS=("scripts/price_service_enso.py" "--poll-interval" "$POLL_INTERVAL" "--recency-minutes" "$RECENCY_MINUTES")
     if [ "$ONCE" = true ]; then PY_ARGS+=("--once"); fi
     if [ "$DEBUG" = true ]; then PY_ARGS+=("--debug"); fi
     python "${PY_ARGS[@]}" 2>&1 | tee "$LOG_FILE"
@@ -175,17 +175,17 @@ case "$PRICER" in
       # Run all pricers in background with separate log files
       YMP_LOG="$LOG_DIR/price_service_ymp_$(date +%Y%m%d_%H%M%S).log"
       ODOS_LOG="$LOG_DIR/price_service_odos_$(date +%Y%m%d_%H%M%S).log"
-      COWSWAP_LOG="$LOG_DIR/price_service_cowswap_$(date +%Y%m%d_%H%M%S).log"
+      ENSO_LOG="$LOG_DIR/price_service_enso_$(date +%Y%m%d_%H%M%S).log"
       
       YMP_ARGS=("scripts/price_service_ypm.py" "--network" "$NETWORK" "--poll-interval" "$POLL_INTERVAL")
       if [ "$RETRY_FAILED" = true ]; then YMP_ARGS+=("--retry-failed"); fi
       if [ "$ONCE" = true ]; then YMP_ARGS+=("--once"); fi
       
-      ODOS_ARGS=("scripts/price_service_odos.py" "--poll-interval" "$POLL_INTERVAL" "--recency-blocks" "$RECENCY_BLOCKS")
+      ODOS_ARGS=("scripts/price_service_odos.py" "--poll-interval" "$POLL_INTERVAL" "--recency-minutes" "$RECENCY_MINUTES")
       if [ "$ONCE" = true ]; then ODOS_ARGS+=("--once"); fi
       
-      COWSWAP_ARGS=("scripts/price_service_cowswap.py" "--poll-interval" "$POLL_INTERVAL" "--recency-blocks" "$RECENCY_BLOCKS")
-      if [ "$ONCE" = true ]; then COWSWAP_ARGS+=("--once"); fi
+      ENSO_ARGS=("scripts/price_service_enso.py" "--poll-interval" "$POLL_INTERVAL" "--recency-minutes" "$RECENCY_MINUTES")
+      if [ "$ONCE" = true ]; then ENSO_ARGS+=("--once"); fi
       
       # Start all services in background
       python "${YMP_ARGS[@]}" 2>&1 | tee "$YMP_LOG" &
@@ -194,14 +194,14 @@ case "$PRICER" in
       python "${ODOS_ARGS[@]}" 2>&1 | tee "$ODOS_LOG" &
       ODOS_PID=$!
       
-      python "${COWSWAP_ARGS[@]}" 2>&1 | tee "$COWSWAP_LOG" &
-      COWSWAP_PID=$!
+      python "${ENSO_ARGS[@]}" 2>&1 | tee "$ENSO_LOG" &
+      ENSO_PID=$!
       
       # Wait for all processes
-      echo "Started YPM (PID: $YMP_PID), Odos (PID: $ODOS_PID), CowSwap (PID: $COWSWAP_PID)"
-      echo "Use 'tail -f $YMP_LOG' (or odos/cowswap) to follow individual logs"
+      echo "Started YPM (PID: $YMP_PID), Odos (PID: $ODOS_PID), ENSO (PID: $ENSO_PID)"
+      echo "Use 'tail -f $YMP_LOG' (or odos/enso) to follow individual logs"
       
-      wait $YMP_PID $ODOS_PID $COWSWAP_PID
+      wait $YMP_PID $ODOS_PID $ENSO_PID
     else
       echo "🌐 Running all pricers sequentially (use --parallel for parallel execution)"
       
@@ -215,20 +215,20 @@ case "$PRICER" in
       
       # Run odos second
       echo "\n--- Starting Odos ---"
-      ODOS_ARGS=("scripts/price_service_odos.py" "--poll-interval" "$POLL_INTERVAL" "--recency-blocks" "$RECENCY_BLOCKS")
+      ODOS_ARGS=("scripts/price_service_odos.py" "--poll-interval" "$POLL_INTERVAL" "--recency-minutes" "$RECENCY_MINUTES")
       if [ "$ONCE" = true ]; then ODOS_ARGS+=("--once"); fi
       python "${ODOS_ARGS[@]}" &
       ODOS_PID=$!
       
-      # Run cowswap third
-      echo "\n--- Starting CowSwap ---"
-      COWSWAP_ARGS=("scripts/price_service_cowswap.py" "--poll-interval" "$POLL_INTERVAL" "--recency-blocks" "$RECENCY_BLOCKS")
-      if [ "$ONCE" = true ]; then COWSWAP_ARGS+=("--once"); fi
-      python "${COWSWAP_ARGS[@]}" &
-      COWSWAP_PID=$!
+      # Run enso third
+      echo "\n--- Starting ENSO ---"
+      ENSO_ARGS=("scripts/price_service_enso.py" "--poll-interval" "$POLL_INTERVAL" "--recency-minutes" "$RECENCY_MINUTES")
+      if [ "$ONCE" = true ]; then ENSO_ARGS+=("--once"); fi
+      python "${ENSO_ARGS[@]}" &
+      ENSO_PID=$!
       
       # Wait for all
-      wait $YMP_PID $ODOS_PID $COWSWAP_PID
+      wait $YMP_PID $ODOS_PID $ENSO_PID
     fi
     ;;
 esac

@@ -12,20 +12,21 @@ const UserSettingsContext = createContext<UserSettings | undefined>(undefined);
 const STORAGE_KEY = 'userSettings';
 
 export const UserSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [defaultValueDisplay, setDefaultValueDisplay] = useState<ValueDisplay>('token');
-
-  // Load from localStorage once
-  useEffect(() => {
+  const [defaultValueDisplay, setDefaultValueDisplay] = useState<ValueDisplay>(() => {
+    // Initialize from localStorage immediately
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.defaultValueDisplay === 'usd' || parsed.defaultValueDisplay === 'token') {
-          setDefaultValueDisplay(parsed.defaultValueDisplay);
+          return parsed.defaultValueDisplay;
         }
       }
     } catch {}
-  }, []);
+    return 'token'; // fallback
+  });
+
+  // No need for loading effect anymore since we initialize directly
 
   // Persist on change
   useEffect(() => {

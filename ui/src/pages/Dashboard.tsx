@@ -38,6 +38,7 @@ import {
 } from "../lib/utils";
 import ChainIcon from "../components/ChainIcon";
 import type { AuctionTake } from "../types/auction";
+import { useUserSettings } from "../context/UserSettingsContext";
 
 type ViewType = 'active-rounds' | 'takes' | 'all-auctions';
 
@@ -50,12 +51,25 @@ const PulsingDot: React.FC = () => (
 );
 
 const Dashboard: React.FC = () => {
+  const { defaultValueDisplay, setDefaultValueDisplay } = useUserSettings();
   const [activeView, setActiveView] = useState<ViewType>('active-rounds');
   const [takesPage, setTakesPage] = useState(1);
   const [takesPerPage] = useState(15);
   const [auctionsPage, setAuctionsPage] = useState(1);
   const [auctionsPerPage] = useState(25);
-  const [showUSD, setShowUSD] = useState(false);
+  const [showUSD, setShowUSD] = useState(defaultValueDisplay === 'usd');
+
+  // Update showUSD when global setting changes
+  useEffect(() => {
+    setShowUSD(defaultValueDisplay === 'usd');
+  }, [defaultValueDisplay]);
+
+  // Function to toggle both local and global setting
+  const toggleValueDisplay = () => {
+    const newValueDisplay = defaultValueDisplay === 'usd' ? 'token' : 'usd';
+    setDefaultValueDisplay(newValueDisplay);
+    // setShowUSD will be updated automatically via the useEffect above
+  };
 
   // Fetch data with React Query using new API
   const { data: systemStats, isLoading: statsLoading } = useQuery({
@@ -481,18 +495,18 @@ const Dashboard: React.FC = () => {
                         <tr>
                           <th className="border-b border-gray-700 px-0 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-[22px] min-w-[22px] max-w-[22px]"><span className="sr-only">Chain</span></th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Auction</th>
-                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Take</th>
+                          <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Round</th>
                           <th className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-28 md:w-36">Tokens</th>
                           <th 
                             className="border-b border-gray-700 px-2 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors w-24 md:w-28"
-                            onClick={() => setShowUSD(!showUSD)}
+                            onClick={toggleValueDisplay}
                             title="Click to toggle between token and USD values"
                           >
                             Amount {showUSD ? '($)' : '(T)'}
                           </th>
                           <th 
                             className="border-b border-gray-700 px-3 py-1.5 text-center text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-700/50 transition-colors"
-                            onClick={() => setShowUSD(!showUSD)}
+                            onClick={toggleValueDisplay}
                             title="Click to toggle between token and USD values"
                           >
                             Price {showUSD ? '($)' : '(T)'}
@@ -526,13 +540,13 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <div className="flex items-center space-x-2">
-                                <TrendingDown className="h-4 w-4 text-primary-500" />
-                                <div className="text-sm">
-                                  <div className="font-mono text-xs text-gray-500">
-                                    R{take.round_id}T{take.take_seq}
-                                  </div>
-                                </div>
+                              <div className="flex justify-center">
+                                <InternalLink
+                                  to={`/round/${take.chain_id}/${take.auction}/${take.round_id}`}
+                                  variant="round"
+                                >
+                                  R{take.round_id}
+                                </InternalLink>
                               </div>
                             </td>
 

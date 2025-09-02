@@ -5,6 +5,11 @@ __pycache__
 build/
 reports/
 
+# Virtual environment
+venv/
+*.venv/
+env/
+
 # Generated files
 deployment_info.json
 indexer/rindexer/rindexer-dev.yaml

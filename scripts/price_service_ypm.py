@@ -43,13 +43,22 @@ class YPriceMagicService:
         self.block_timestamp_cache = {}  # Cache for block number -> timestamp
         self._init_database()
         
+    def _checksum_address(self, address: str) -> str:
+        """Convert address to proper checksum format"""
+        try:
+            from eth_utils import to_checksum_address
+            return to_checksum_address(address)
+        except ImportError:
+            from brownie import web3
+            return web3.toChecksumAddress(address)
+        
     def _init_database(self) -> None:
         """Initialize database connection"""
         try:
             # Use the same database URL as the indexer
             app_mode = os.getenv('APP_MODE', 'dev').lower()
             if app_mode == 'dev':
-                db_url = os.getenv('DEV_DATABASE_URL', 'postgresql://postgres:password@localhost:5432/auction_dev')
+                db_url = os.getenv('DEV_DATABASE_URL', 'postgresql://postgres:password@localhost:5433/auction_dev')
             elif app_mode == 'prod':
                 db_url = os.getenv('PROD_DATABASE_URL')
             else:
@@ -127,7 +136,7 @@ class YPriceMagicService:
             with self.db_conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT id, chain_id, block_number, token_address, 
-                           request_type, auction_address, round_id, retry_count
+                           request_type, auction_address, round_id, retry_count, txn_timestamp
                     FROM price_requests 
                     WHERE status = 'pending' 
                       AND retry_count < 3
@@ -161,7 +170,7 @@ class YPriceMagicService:
                 cursor.execute(
                     """
                     SELECT id, chain_id, block_number, token_address,
-                           request_type, auction_address, round_id, retry_count
+                           request_type, auction_address, round_id, retry_count, txn_timestamp
                     FROM price_requests
                     WHERE status = 'failed' AND retry_count < 3
                     ORDER BY processed_at ASC NULLS FIRST, id ASC
@@ -300,29 +309,61 @@ class YPriceMagicService:
             return None, None, error_msg
     
     def store_token_price(self, chain_id: int, block_number: int, token_address: str, 
-                         price_usd: Decimal, timestamp: int) -> bool:
-        """Store token price in database"""
+                         price_usd: Decimal, timestamp: int, txn_timestamp: int = None) -> bool:
+        """Store token price in database with transaction timestamp"""
         try:
             with self.db_conn.cursor() as cursor:
                 cursor.execute("""
                     INSERT INTO token_prices (
                         chain_id, block_number, token_address, 
-                        price_usd, timestamp, source, created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                        price_usd, timestamp, txn_timestamp, source, created_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
                     ON CONFLICT (chain_id, block_number, token_address, source) 
                     DO UPDATE SET 
                         price_usd = EXCLUDED.price_usd,
                         timestamp = EXCLUDED.timestamp,
+                        txn_timestamp = EXCLUDED.txn_timestamp,
                         created_at = NOW()
                 """, (
-                    chain_id, block_number, token_address.lower(),
-                    price_usd, timestamp, 'ypricemagic'
+                    chain_id, block_number, self._checksum_address(token_address),
+                    price_usd, timestamp, txn_timestamp, 'ypricemagic'
                 ))
                 return True
                 
         except Exception as e:
             logger.error(f"Failed to store price for {token_address}: {e}")
             return False
+    
+    def _fetch_and_store_eth_price(self, chain_id: int, block_number: int, timestamp: int, txn_timestamp: int = None) -> None:
+        """Automatically fetch and store ETH price for this block (ypricemagic only)"""
+        eth_address = self._checksum_address("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+        
+        try:
+            # Check if ETH price already exists for this block
+            with self.db_conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1 FROM token_prices 
+                    WHERE chain_id = %s AND block_number = %s AND token_address = %s AND source = 'ypricemagic'
+                """, (chain_id, block_number, eth_address))
+                
+                if cursor.fetchone():
+                    logger.debug(f"ETH price already exists for chain {chain_id} block {block_number}")
+                    return
+            
+            # Fetch ETH price using ypricemagic
+            eth_price_usd, _, error_msg = self.fetch_token_price(eth_address, block_number)
+            
+            if eth_price_usd is not None:
+                # Store ETH price with transaction timestamp
+                if self.store_token_price(chain_id, block_number, eth_address, eth_price_usd, timestamp, txn_timestamp):
+                    logger.debug(f"✅ Auto-fetched ETH price for block {block_number}: ${eth_price_usd}")
+                else:
+                    logger.debug(f"❌ Failed to store ETH price for block {block_number}")
+            else:
+                logger.debug(f"❌ Failed to fetch ETH price for block {block_number}: {error_msg}")
+                
+        except Exception as e:
+            logger.debug(f"Error auto-fetching ETH price for block {block_number}: {e}")
     
     def mark_request_completed(self, request_id: int) -> None:
         """Mark request as completed"""
@@ -410,6 +451,7 @@ class YPriceMagicService:
         block_number = request['block_number']
         token_address = request['token_address']
         request_type = request.get('request_type', 'unknown')
+        txn_timestamp = request.get('txn_timestamp')  # Extract transaction timestamp
         
         # Get token symbol for better logging
         token_symbol = self.get_token_symbol(chain_id, token_address)
@@ -436,10 +478,14 @@ class YPriceMagicService:
                 self.mark_request_failed(request_id, error_msg or "Failed to fetch price from ypricemagic")
                 return
             
-            # Store price
-            if self.store_token_price(chain_id, block_number, token_address, price_usd, timestamp):
+            # Store price with transaction timestamp
+            if self.store_token_price(chain_id, block_number, token_address, price_usd, timestamp, txn_timestamp):
                 self.mark_request_completed(request_id)
                 logger.info(f"[{remaining_count-1} remaining] ✅ Completed {token_address} = ${price_usd}")
+                
+                # Always fetch ETH price for this block (ypricemagic only)
+                self._fetch_and_store_eth_price(chain_id, block_number, timestamp, txn_timestamp)
+                
             else:
                 logger.info(f"[{remaining_count-1} remaining] ❌ Failed {token_address} - database store failed")
                 self.mark_request_failed(request_id, "Failed to store price in database")

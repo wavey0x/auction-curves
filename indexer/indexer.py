@@ -182,6 +182,84 @@ class AuctionIndexer:
         self.normalized_addresses[cache_key] = checksummed
         return checksummed
     
+    def _get_gas_metrics(self, w3: Web3, tx_hash: str, block_number: int = None) -> Dict:
+        """Extract gas metrics from transaction and receipt (human readable format)"""
+        # Normalize transaction hash (ensure 0x prefix)
+        tx_hash = self._normalize_transaction_hash(tx_hash)
+        
+        try:
+            # Fetch transaction and receipt
+            tx = w3.eth.get_transaction(tx_hash)
+            receipt = w3.eth.get_transaction_receipt(tx_hash)
+            
+            # Get gas used from receipt
+            gas_used = receipt.get('gasUsed', 0)
+            
+            # Initialize gas metrics
+            gas_price_gwei = 0
+            base_fee_gwei = 0
+            priority_fee_gwei = 0
+            transaction_fee_eth = 0
+            
+            # Handle EIP-1559 transactions (type 2)
+            if tx.get('type') == 2 or tx.get('type') == '0x2':
+                # Get block to extract base fee
+                if block_number:
+                    block = self._get_block_cached(w3, block_number)
+                else:
+                    block = w3.eth.get_block(tx['blockNumber'])
+                
+                base_fee_wei = block.get('baseFeePerGas', 0)
+                base_fee_gwei = base_fee_wei / 1e9 if base_fee_wei else 0
+                
+                # Calculate effective priority fee
+                max_priority_fee_wei = tx.get('maxPriorityFeePerGas', 0)
+                max_fee_wei = tx.get('maxFeePerGas', 0)
+                
+                if base_fee_wei and max_fee_wei:
+                    # Actual priority fee is min of max priority fee and (max fee - base fee)
+                    effective_priority_fee_wei = min(max_priority_fee_wei, max_fee_wei - base_fee_wei)
+                    effective_priority_fee_wei = max(0, effective_priority_fee_wei)  # Can't be negative
+                    priority_fee_gwei = effective_priority_fee_wei / 1e9
+                    
+                    # Total gas price is base fee + priority fee
+                    gas_price_gwei = base_fee_gwei + priority_fee_gwei
+                    
+                    # Calculate transaction fee
+                    transaction_fee_wei = gas_used * (base_fee_wei + effective_priority_fee_wei)
+                    transaction_fee_eth = transaction_fee_wei / 1e18
+                else:
+                    logger.warning(f"Missing EIP-1559 fields in tx {tx_hash}")
+            
+            else:
+                # Legacy transaction (type 0 or 1)
+                gas_price_wei = tx.get('gasPrice', 0)
+                gas_price_gwei = gas_price_wei / 1e9 if gas_price_wei else 0
+                base_fee_gwei = gas_price_gwei  # For legacy txns, gasPrice = base + priority
+                priority_fee_gwei = 0  # No separate priority fee in legacy txns
+                
+                # Calculate transaction fee
+                transaction_fee_wei = gas_used * gas_price_wei if gas_price_wei else 0
+                transaction_fee_eth = transaction_fee_wei / 1e18
+            
+            return {
+                'gas_price': gas_price_gwei,
+                'base_fee': base_fee_gwei,
+                'priority_fee': priority_fee_gwei,
+                'gas_used': gas_used,
+                'transaction_fee_eth': transaction_fee_eth
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get gas metrics for tx {tx_hash}: {e}")
+            return {
+                'gas_price': 0,
+                'base_fee': 0,
+                'priority_fee': 0,
+                'gas_used': 0,
+                'transaction_fee_eth': 0
+            }
+    
     def _get_block_cached(self, w3: Web3, block_number: int):
         """Get block data with caching to reduce Web3 calls"""
         chain_id = w3.eth.chain_id
@@ -225,8 +303,9 @@ class AuctionIndexer:
                         take_id, auction_address, chain_id, round_id, take_seq,
                         taker, from_token, to_token, amount_taken, amount_paid, price,
                         timestamp, seconds_from_round_start,
-                        block_number, transaction_hash, log_index
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        block_number, transaction_hash, log_index,
+                        gas_price, base_fee, priority_fee, gas_used, transaction_fee_eth
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (chain_id, transaction_hash, log_index, timestamp) DO NOTHING
                 """, self.takes_buffer)
                 
@@ -254,8 +333,9 @@ class AuctionIndexer:
                         take_id, auction_address, chain_id, round_id, take_seq,
                         taker, from_token, to_token, amount_taken, amount_paid, price,
                         timestamp, seconds_from_round_start,
-                        block_number, transaction_hash, log_index
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        block_number, transaction_hash, log_index,
+                        gas_price, base_fee, priority_fee, gas_used, transaction_fee_eth
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (chain_id, transaction_hash, log_index, timestamp) DO NOTHING
                 """, take_data)
         except Exception as e:
@@ -417,6 +497,14 @@ class AuctionIndexer:
                 except:
                     starting_price = 0.0  # Default if not available
                 
+                # Get governance address
+                try:
+                    governance_address = auction_contract.functions.governance().call()
+                    governance_address = self._normalize_address(governance_address)
+                except:
+                    logger.warning(f"Could not get governance address for auction {auction_address}")
+                    governance_address = None
+                
                 # Discover and store want_token metadata
                 self._discover_and_store_token(want_token, chain_id)
                 
@@ -434,9 +522,9 @@ class AuctionIndexer:
                             auction_address, chain_id, update_interval, 
                             step_decay, decay_rate, auction_length, want_token,
                             deployer, timestamp, factory_address, 
-                            version, starting_price
+                            version, starting_price, governance
                         ) VALUES (
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                         ) ON CONFLICT (auction_address, chain_id) DO UPDATE SET
                             update_interval = EXCLUDED.update_interval,
                             step_decay = EXCLUDED.step_decay,
@@ -447,13 +535,14 @@ class AuctionIndexer:
                             timestamp = EXCLUDED.timestamp,
                             factory_address = EXCLUDED.factory_address,
                             version = EXCLUDED.version,
-                            starting_price = EXCLUDED.starting_price
+                            starting_price = EXCLUDED.starting_price,
+                            governance = EXCLUDED.governance
                     """, (
                         auction_address, chain_id, price_update_interval,
                         step_decay_rate_wei, decay_rate, auction_length, want_token,
                         deployer, timestamp, factory_address,
                         '0.1.0' if factory_type == 'modern' else '0.0.1',
-                        starting_price
+                        starting_price, governance_address
                     ))
                 
                 # Add to tracked auctions
@@ -574,11 +663,11 @@ class AuctionIndexer:
                         # Queue price requests for both from_token and want_token
                         self._queue_price_request(
                             chain_id, event['blockNumber'], from_token, 'kick',
-                            auction_address, next_round_id
+                            auction_address, next_round_id, timestamp
                         )
                         self._queue_price_request(
                             chain_id, event['blockNumber'], want_token, 'kick',
-                            auction_address, next_round_id
+                            auction_address, next_round_id, timestamp
                         )
                         
             except Exception as price_error:
@@ -732,12 +821,18 @@ class AuctionIndexer:
                     logger.debug(f"Duplicate take skipped: tx={txn_hash} log_index={event['logIndex']}")
                     return
 
+                # Get gas metrics for this transaction
+                w3 = self.web3_connections[chain_id]
+                gas_metrics = self._get_gas_metrics(w3, txn_hash, event['blockNumber'])
+
                 # Add take to buffer instead of immediate insertion
                 take_data = (
                     take_id, auction_address, chain_id, round_id, take_seq,
                     taker, from_token, want_token, amount_taken, amount_paid, price,
                     timestamp, seconds_from_start,
-                    event['blockNumber'], txn_hash, event['logIndex']
+                    event['blockNumber'], txn_hash, event['logIndex'],
+                    gas_metrics['gas_price'], gas_metrics['base_fee'], gas_metrics['priority_fee'],
+                    gas_metrics['gas_used'], gas_metrics['transaction_fee_eth']
                 )
                 
                 self.takes_buffer.append(take_data)
@@ -794,15 +889,18 @@ class AuctionIndexer:
                 # Queue price requests for both from_token and want_token (to_token)
                 self._queue_price_request(
                     chain_id, event['blockNumber'], from_token, 'take',
-                    auction_address, round_id
+                    auction_address, round_id, timestamp_unix
                 )
                 
                 # want_token should already be in the variable from earlier in the method
                 if 'want_token' in locals():
                     self._queue_price_request(
                         chain_id, event['blockNumber'], want_token, 'take', 
-                        auction_address, round_id
+                        auction_address, round_id, timestamp_unix
                     )
+                
+                # ETH price will be automatically fetched by ypricemagic service
+                # No need to explicitly queue ETH price requests
                 
             except Exception as price_error:
                 logger.warning(f"Failed to queue price requests for take: {price_error}")
@@ -1043,6 +1141,37 @@ class AuctionIndexer:
         except Exception as e:
             logger.error(f"Failed to process auction enabled event: {e}")
     
+    def _process_governance_transferred(self, event, chain_id: int, auction_address: str) -> None:
+        """Process governance transferred event to update governance address"""
+        try:
+            previous_governance = event['args']['previousGovernance']
+            new_governance = event['args']['newGovernance']
+            
+            # Normalize addresses
+            auction_address = self._normalize_address(auction_address)
+            previous_governance = self._normalize_address(previous_governance)
+            new_governance = self._normalize_address(new_governance)
+            
+            # Get block info for metadata
+            block = self._get_block_cached(self.web3_connections[chain_id], event['blockNumber'])
+            timestamp = block['timestamp']
+            
+            # Update governance address in auctions table
+            with self.db_conn.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE auctions 
+                    SET governance = %s
+                    WHERE LOWER(auction_address) = LOWER(%s) AND chain_id = %s
+                """, (new_governance, auction_address, chain_id))
+                
+                if cursor.rowcount > 0:
+                    logger.info(f"🔄 Updated governance for auction {auction_address[:5]}..{auction_address[-4:]} on chain {chain_id}: {previous_governance[:5]}..{previous_governance[-4:]} → {new_governance[:5]}..{new_governance[-4:]}")
+                else:
+                    logger.warning(f"No auction found to update governance for {auction_address} on chain {chain_id}")
+                    
+        except Exception as e:
+            logger.error(f"Failed to process governance transferred event: {e}")
+    
     def _detect_takes_from_transfers(self, w3: Web3, chain_id: int, from_block: int, to_block: int) -> None:
         """Detect takes by monitoring Transfer events from auction contracts"""
         if chain_id not in self.tracked_auctions:
@@ -1217,8 +1346,9 @@ class AuctionIndexer:
             logger.error(f"Log data: block={log.get('blockNumber')}, tx={tx_hash_str}")
     
     def _queue_price_request(self, chain_id: int, block_number: int, token_address: str, 
-                           request_type: str, auction_address: str = None, round_id: int = None) -> None:
-        """Queue a price request for ypricemagic processing (skip spam tokens)"""
+                           request_type: str, auction_address: str = None, round_id: int = None, 
+                           txn_timestamp: int = None) -> None:
+        """Queue a price request with transaction timestamp (skip spam tokens)"""
         try:
             # Only queue requests for mainnet (chain_id = 1) for now
             if chain_id != 1:
@@ -1255,12 +1385,12 @@ class AuctionIndexer:
                 cursor.execute("""
                     INSERT INTO price_requests (
                         chain_id, block_number, token_address, request_type,
-                        auction_address, round_id, status, created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, 'pending', NOW())
+                        auction_address, round_id, txn_timestamp, status, created_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending', NOW())
                     ON CONFLICT (chain_id, block_number, token_address) DO NOTHING
                 """, (
                     chain_id, block_number, token_address, request_type,
-                    auction_address, round_id
+                    auction_address, round_id, txn_timestamp
                 ))
                 
                 if cursor.rowcount > 0:
@@ -1489,6 +1619,15 @@ class AuctionIndexer:
                     enabled_event = auction_contract.events.AuctionEnabled
                     for event in self._get_event_logs_with_split(enabled_event, from_block, to_block):
                         self._process_auction_enabled(event, chain_id, auction_address)
+            except Exception:
+                pass  # Event might not exist in this contract version
+            
+            # Process GovernanceTransferred events using eth_getLogs
+            try:
+                if hasattr(auction_contract.events, 'GovernanceTransferred'):
+                    governance_event = auction_contract.events.GovernanceTransferred
+                    for event in self._get_event_logs_with_split(governance_event, from_block, to_block):
+                        self._process_governance_transferred(event, chain_id, auction_address)
             except Exception:
                 pass  # Event might not exist in this contract version
 

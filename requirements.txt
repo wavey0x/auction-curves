@@ -1,5 +1,51 @@
-eth-brownie>=1.20.0
-matplotlib>=3.5.0
-numpy>=1.21.0
-rich>=13.0.0
-ypricemagic>=1.1.0
+# ============================================================================
+# UNIFIED PYTHON DEPENDENCIES FOR AUCTION SYSTEM
+# ============================================================================
+# This file consolidates all Python dependencies for the entire project
+# Install with: pip install -r requirements.txt
+
+# ============================================================================
+# BLOCKCHAIN & WEB3 DEPENDENCIES
+# ============================================================================
+eth-brownie>=1.20.0         # Smart contract development framework
+web3>=6.0.0                 # Web3 Python library for blockchain interaction
+ypricemagic>=1.1.0          # Price discovery service
+
+# ============================================================================
+# DATABASE DEPENDENCIES  
+# ============================================================================
+psycopg2-binary>=2.9.0      # PostgreSQL adapter
+asyncpg>=0.29.0             # Async PostgreSQL driver for FastAPI
+sqlalchemy[asyncio]>=2.0.0  # SQL toolkit with async support
+
+# ============================================================================
+# WEB API DEPENDENCIES (FastAPI Backend)
+# ============================================================================
+fastapi>=0.104.0            # Modern web framework
+uvicorn[standard]>=0.24.0   # ASGI server  
+pydantic>=1.7.4             # Data validation (compatible with brownie)
+pydantic-settings>=2.0.0    # Settings management for Pydantic
+python-multipart>=0.0.6     # Form data parsing
+websockets>=10.0.0          # WebSocket support
+
+# ============================================================================
+# DATA PROCESSING & UTILITIES
+# ============================================================================
+pyyaml>=6.0.0               # YAML configuration file support
+python-dotenv==0.16.0       # Environment variable loading (brownie constraint)
+matplotlib>=3.5.0           # Plotting library
+numpy>=1.21.0               # Numerical computing
+rich>=13.0.0                # Rich text and beautiful formatting
+
+# ============================================================================
+# CACHING & REDIS (Optional - for production)
+# ============================================================================
+redis[hiredis]>=5.0.0       # Redis client with fast hiredis parser
+aioredis>=2.0.0             # Async Redis client
+
+# ============================================================================
+# DEVELOPMENT & TESTING DEPENDENCIES
+# ============================================================================
+pytest>=6.2.0              # Testing framework (compatible with brownie)
+pytest-asyncio>=0.21.0     # Async testing support
+httpx>=0.25.0               # HTTP client for testing APIs
