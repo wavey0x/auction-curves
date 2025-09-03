@@ -7,6 +7,7 @@ import TxHashDisplay from "./TxHashDisplay";
 import StandardTxHashLink from "./StandardTxHashLink";
 import AddressLink from "./AddressLink";
 import InternalLink from "./InternalLink";
+import RoundLink from "./RoundLink";
 import {
   formatTokenAmount,
   formatReadableTokenAmount,
@@ -147,12 +148,11 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   <td className="px-0.5 py-1">
                     <div className="flex justify-center">
                       {take.auction ? (
-                        <InternalLink
-                          to={`/round/${take.chain_id}/${take.auction}/${take.round_id}`}
-                          variant="round"
-                        >
-                          R{take.round_id}
-                        </InternalLink>
+                        <RoundLink
+                          chainId={take.chain_id}
+                          auctionAddress={take.auction}
+                          roundId={take.round_id}
+                        />
                       ) : (
                         <span className="font-mono text-sm text-gray-300">
                           R{take.round_id}

@@ -78,22 +78,28 @@ class DatabaseQueries:
     @staticmethod
     async def get_auctions(db: AsyncSession, active_only: bool = False, chain_id: int = None):
         """Get auctions with optional active filter"""
-        chain_filter = "AND chain_id = :chain_id" if chain_id else ""
+        chain_filter = "AND vw.chain_id = :chain_id" if chain_id else ""
         
         if active_only:
             query = text(f"""
-                SELECT vw.*, a.decay_rate
+                SELECT vw.*, a.decay_rate, r.from_token as current_round_from_token
                 FROM vw_auctions vw
                 JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
+                LEFT JOIN rounds r ON vw.auction_address = r.auction_address 
+                    AND vw.chain_id = r.chain_id 
+                    AND vw.current_round_id = r.round_id
                 WHERE vw.has_active_round = TRUE
                 {chain_filter}
                 ORDER BY vw.last_kicked DESC NULLS LAST
             """)
         else:
             query = text(f"""
-                SELECT vw.*, a.decay_rate
+                SELECT vw.*, a.decay_rate, r.from_token as current_round_from_token
                 FROM vw_auctions vw
                 JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
+                LEFT JOIN rounds r ON vw.auction_address = r.auction_address 
+                    AND vw.chain_id = r.chain_id 
+                    AND vw.current_round_id = r.round_id
                 WHERE 1=1
                 {chain_filter}
                 ORDER BY vw.last_kicked DESC NULLS LAST
@@ -733,7 +739,8 @@ class DatabaseDataProvider(DataProvider):
                                 "round_start": getattr(auction_row, 'round_start', None),
                                 "round_end": getattr(auction_row, 'round_end', None),
                                 "is_active": getattr(auction_row, 'has_active_round', False),
-                                "total_takes": getattr(auction_row, 'current_round_takes', 0) if hasattr(auction_row, 'current_round_takes') else 0
+                                "total_takes": getattr(auction_row, 'current_round_takes', 0) if hasattr(auction_row, 'current_round_takes') else 0,
+                                "from_token": getattr(auction_row, 'current_round_from_token', None)
                             }
                             if getattr(auction_row, 'current_round_id', None) else None
                         ),

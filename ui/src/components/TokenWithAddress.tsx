@@ -8,6 +8,7 @@ interface TokenWithAddressProps {
   chainId: number;
   className?: string;
   showFullAddress?: boolean;
+  textColor?: string; // Allow explicit text color override
 }
 
 const TokenWithAddress: React.FC<TokenWithAddressProps> = ({
@@ -15,6 +16,7 @@ const TokenWithAddress: React.FC<TokenWithAddressProps> = ({
   chainId,
   className = '',
   showFullAddress = false,
+  textColor = 'text-white', // Default to white
 }) => {
   const [copied, setCopied] = useState(false);
   
@@ -48,7 +50,7 @@ const TokenWithAddress: React.FC<TokenWithAddressProps> = ({
       )}
     >
       {/* Token symbol */}
-      <span className="text-white font-medium">
+      <span className={`${textColor} font-medium`}>
         {token.symbol}
       </span>
 

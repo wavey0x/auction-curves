@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import InternalLink from "../components/InternalLink";
+import RoundLink from "../components/RoundLink";
 import { useQuery } from "@tanstack/react-query";
 import {
   Home,
@@ -40,6 +41,7 @@ import {
 import ChainIcon from "../components/ChainIcon";
 import type { AuctionTake } from "../types/auction";
 import { useUserSettings } from "../context/UserSettingsContext";
+import { getAuctionLiveData, type AuctionCall } from "../lib/multicall";
 
 type ViewType = 'active-rounds' | 'takes' | 'all-auctions';
 
@@ -95,6 +97,86 @@ const Dashboard: React.FC = () => {
     queryKey: ["tokens"],
     queryFn: apiClient.getTokens,
     staleTime: 300000, // Cache for 5 minutes - tokens rarely change
+  });
+
+  // Stabilize activeAuctions array to prevent hook violations
+  const activeAuctions = useMemo(() => {
+    return activeAuctionsResponse?.auctions || [];
+  }, [activeAuctionsResponse?.auctions]);
+
+  // Get live multicall data for active auctions - using direct hook to avoid filtering issues
+  const { data: liveData } = useQuery({
+    queryKey: ['active-auctions-live-data', activeAuctions.map(a => a?.address).filter(Boolean).sort()],
+    queryFn: async () => {
+      if (activeAuctions.length === 0) {
+        return {};
+      }
+
+      // Skip local Anvil network
+      const realNetworkAuctions = activeAuctions.filter(auction => 
+        auction && auction.chain_id !== 31337
+      );
+      
+      if (realNetworkAuctions.length === 0) {
+        return {};
+      }
+
+      // Group auctions by chain for efficient multicall batching
+      const auctionsByChain: Record<number, AuctionCall[]> = {};
+      
+      for (const auction of realNetworkAuctions) {
+        if (!auction || !auction.chain_id || !auction.address) {
+          continue;
+        }
+        
+        if (!auctionsByChain[auction.chain_id]) {
+          auctionsByChain[auction.chain_id] = [];
+        }
+        
+        // Get the specific from_token from the current round (not the first enabled token!)
+        const currentRound = auction.current_round;
+        const fromTokenAddress = currentRound?.from_token || auction.from_tokens?.[0]?.address;
+        
+        if (fromTokenAddress) {
+          auctionsByChain[auction.chain_id].push(
+            {
+              auctionAddress: auction.address as any,
+              fromToken: fromTokenAddress as any,
+              call: 'available'
+            },
+            {
+              auctionAddress: auction.address as any,
+              fromToken: fromTokenAddress as any,
+              call: 'getAmountNeeded'
+            }
+          );
+        }
+      }
+
+      // Execute multicalls for each chain in parallel
+      const chainResults = await Promise.all(
+        Object.entries(auctionsByChain).map(async ([chainId, calls]) => {
+          try {
+            const results = await getAuctionLiveData(parseInt(chainId), calls);
+            return results;
+          } catch (error) {
+            console.error(`Failed to fetch live data for chain ${chainId}:`, error);
+            return {};
+          }
+        })
+      );
+
+      // Merge results from all chains
+      const combinedResults: Record<string, any> = {};
+      for (const chainResult of chainResults) {
+        Object.assign(combinedResults, chainResult);
+      }
+      
+      return combinedResults;
+    },
+    enabled: activeAuctions.length > 0,
+    refetchInterval: 30000,
+    staleTime: 25000,
   });
 
   // Get takes count for badge (from unified recent takes endpoint)
@@ -160,7 +242,6 @@ const Dashboard: React.FC = () => {
   }
 
   const auctions = auctionsResponse?.auctions || [];
-  const activeAuctions = activeAuctionsResponse?.auctions || [];
   const auctionsTotal = auctionsResponse?.total || 0;
 
   // Get active rounds from server-filtered active auctions
@@ -183,12 +264,6 @@ const Dashboard: React.FC = () => {
     <div className="space-y-10">
       {/* Stats Overview */}
       <div className="flex flex-wrap justify-center gap-3">
-        <StatsCard
-          title="Active Rounds"
-          value={activeRounds.length}
-          icon={Activity}
-        />
-
         <StatsCard
           title="Auctions"
           value={systemStats?.total_auctions || 0}
@@ -364,61 +439,129 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td>
-                              <InternalLink
-                                to={`/round/${round.chain_id}/${round.auction}/${round.round_id}`}
-                                variant="round"
-                                className="font-mono text-base font-semibold"
-                              >
-                                R{round.round_id}
-                              </InternalLink>
+                              <div className="flex justify-center">
+                                <RoundLink
+                                  chainId={round.chain_id}
+                                  auctionAddress={round.auction}
+                                  roundId={round.round_id}
+                                />
+                              </div>
                             </td>
 
                             <td>
                               <TokenPairDisplay
-                                fromToken={
-                                  <TokensList 
-                                    tokens={round.from_tokens}
-                                    maxDisplay={2}
-                                    tokenClassName="font-medium text-gray-300 text-sm"
-                                  />
-                                }
+                                fromToken={(() => {
+                                  // Find the specific token for this round if from_token field exists
+                                  if (round.from_token && round.from_tokens) {
+                                    const specificToken = round.from_tokens.find(t => 
+                                      t.address.toLowerCase() === round.from_token.toLowerCase()
+                                    );
+                                    return specificToken?.symbol || round.from_token.slice(0,6) + "…" + round.from_token.slice(-4);
+                                  }
+                                  // Fallback to first token if no specific from_token field
+                                  return round.from_tokens?.[0]?.symbol || "Token";
+                                })()}
                                 toToken={wantSymbol}
                               />
                             </td>
 
                             <td>
-                              {round.current_price ? (
-                                <div className="text-sm">
-                                  <div className="font-mono text-gray-200">
-                                    {formatReadableTokenAmount(round.current_price, 3)}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {formatUSD(parseFloat(round.current_price) * 1.5)}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-gray-500 text-sm">—</span>
-                              )}
+                              {(() => {
+                                const auctionLiveData = liveData?.[round.auction];
+                                const currentPrice = auctionLiveData?.amountNeeded;
+                                
+                                if (currentPrice !== undefined && currentPrice !== null) {
+                                  // Format the live price data (including 0 values)
+                                  const priceValue = Number(currentPrice) / Math.pow(10, 18);
+                                  return (
+                                    <div className="text-sm">
+                                      <div className="font-mono text-gray-200">
+                                        {formatReadableTokenAmount(priceValue.toString(), 3)}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {formatUSD(priceValue * 1.5)}
+                                      </div>
+                                    </div>
+                                  );
+                                } else if (round.current_price) {
+                                  // Fallback to database price if available
+                                  return (
+                                    <div className="text-sm">
+                                      <div className="font-mono text-gray-200">
+                                        {formatReadableTokenAmount(round.current_price, 3)}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {formatUSD(parseFloat(round.current_price) * 1.5)}
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  console.log(`❌ No price data for ${round.auction}`);
+                                  return <span className="text-gray-500 text-sm">—</span>;
+                                }
+                              })()}
                             </td>
 
                             <td>
-                              {round.available_amount ? (
-                                <div className="text-sm">
-                                  <div className="font-mono text-gray-200">
-                                    {formatTokenAmount(round.available_amount, 18, 2)}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    of{" "}
-                                    {formatTokenAmount(
-                                      round.initial_available,
-                                      18,
-                                      2
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-gray-500 text-sm">—</span>
-                              )}
+                              {(() => {
+                                const auctionLiveData = liveData?.[round.auction];
+                                const availableAmount = auctionLiveData?.available;
+                                
+                                // Debug logging
+                                console.log(`📦 Available data for auction ${round.auction}:`, {
+                                  hasLiveData: !!auctionLiveData,
+                                  availableAmount,
+                                  availableAmountType: typeof availableAmount,
+                                  availableAmountString: availableAmount?.toString(),
+                                  fallbackAmount: round.available_amount
+                                });
+                                
+                                if (availableAmount !== undefined && availableAmount !== null) {
+                                  // Format the live available data (including 0 values)
+                                  const availableValue = Number(availableAmount) / Math.pow(10, 18);
+                                  console.log(`✅ Using live available for ${round.auction}: ${availableValue}`);
+                                  
+                                  // Get the correct token symbol for this round
+                                  const specificToken = round.from_tokens?.find(t => 
+                                    t.address.toLowerCase() === round.from_token?.toLowerCase()
+                                  );
+                                  const tokenSymbol = specificToken?.symbol || "Token";
+                                  
+                                  return (
+                                    <div className="text-sm">
+                                      <div className="font-mono text-gray-200">
+                                        {formatTokenAmount(availableValue.toString(), 0, 2)}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {tokenSymbol}
+                                      </div>
+                                    </div>
+                                  );
+                                } else if (round.available_amount) {
+                                  // Fallback to database amount if available
+                                  console.log(`📊 Using database available for ${round.auction}: ${round.available_amount}`);
+                                  
+                                  // Get the correct token symbol for this round
+                                  const specificToken = round.from_tokens?.find(t => 
+                                    t.address.toLowerCase() === round.from_token?.toLowerCase()
+                                  );
+                                  const tokenSymbol = specificToken?.symbol || "Token";
+                                  
+                                  return (
+                                    <div className="text-sm">
+                                      <div className="font-mono text-gray-200">
+                                        {formatTokenAmount(round.available_amount, 18, 2)}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {tokenSymbol}
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  console.log(`❌ No available data for ${round.auction}`);
+                                  return <span className="text-gray-500 text-sm">—</span>;
+                                }
+                              })()}
                             </td>
 
                             <td>
@@ -542,12 +685,11 @@ const Dashboard: React.FC = () => {
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
                               <div className="flex justify-center">
-                                <InternalLink
-                                  to={`/round/${take.chain_id}/${take.auction}/${take.round_id}`}
-                                  variant="round"
-                                >
-                                  R{take.round_id}
-                                </InternalLink>
+                                <RoundLink
+                                  chainId={take.chain_id}
+                                  auctionAddress={take.auction}
+                                  roundId={take.round_id}
+                                />
                               </div>
                             </td>
 

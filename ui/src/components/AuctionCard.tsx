@@ -51,12 +51,8 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
           </div>
           
           <div className="flex items-center space-x-2">
-            <div className={`h-2 w-2 rounded-full ${
-              isActive ? 'bg-success-500 animate-pulse' : 'bg-gray-600'
-            }`}></div>
-            <span className={`text-xs font-medium uppercase ${
-              isActive ? 'text-success-400' : 'text-gray-500'
-            }`}>
+            <div className={`h-2 w-2 rounded-full ${isActive ? 'bg-success-500 animate-pulse' : 'bg-gray-600'}`}></div>
+            <span className={`text-sm font-medium ${isActive ? 'text-success-400' : 'text-gray-500'}`}>
               {isActive ? 'Active' : 'Inactive'}
             </span>
           </div>

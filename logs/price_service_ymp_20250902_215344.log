@@ -1,0 +1,158 @@
+2025-09-02 21:53:44,486 - __main__ - INFO - Database connection established
+2025-09-02 21:53:44,486 - __main__ - INFO - 🚀 Starting ypricemagic Price Service
+2025-09-02 21:53:45,382 - __main__ - INFO - 🌐 Initializing Brownie network connection...
+2025-09-02 21:53:45,382 - __main__ - INFO - Connecting to 'electro' network...
+2025-09-02 21:53:47,667 - __main__ - INFO - ✅ Connected to Brownie network: electro
+2025-09-02 21:53:47,933 - __main__ - INFO - 📊 Chain info: height=23279423, id=1
+2025-09-02 21:53:48,074 - __main__ - INFO - 🌐 Web3 connection test: latest block = 23279423
+2025-09-02 21:53:48,074 - __main__ - INFO - 📦 Importing ypricemagic...
+2025-09-02 21:53:48,928 - dank_mids.envs - INFO - For your information, you can tweak your configuration for optimal performance using any of the envs below:
+2025-09-02 21:53:48,928 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_MULTICALL_SIZE`, default_value=10000, using_default=True)
+2025-09-02 21:53:48,928 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MAX_JSONRPC_BATCH_SIZE`, default_value=500, using_default=True)
+2025-09-02 21:53:48,928 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_REQUESTS_PER_SECOND`, default_value=50, using_default=True)
+2025-09-02 21:53:48,928 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_MIN_REQUESTS_PER_SECOND`, default_value=10, using_default=True)
+2025-09-02 21:53:48,928 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_GANACHE_FORK`, default_value=False, using_default=True)
+2025-09-02 21:53:48,928 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_AIOHTTP_TIMEOUT`, default_value=1200, using_default=True)
+2025-09-02 21:53:48,939 - typed_envs - INFO - EnvironmentVariable[bool](name=`DANKMIDS_COLLECT_STATS`, default_value=False, using_default=True)
+2025-09-02 21:53:48,939 - typed_envs - INFO - EnvironmentVariable[int](name=`DANKMIDS_STUCK_CALL_TIMEOUT`, default_value=120, using_default=True)
+2025-09-02 21:53:48,940 - dank_mids.envs - INFO - More details can be found in dank_mids/ENVIRONMENT_VARIABLES.py
+2025-09-02 21:53:48,940 - dank_mids.envs - INFO - NOTE: You can disable these logs by setting the `TYPEDENVS_SHUTUP` env var to any value.
+2025-09-02 21:53:49,486 - typed_envs - INFO - EnvironmentVariable[int](name=`YPRICEMAGIC_GETLOGS_BATCH_SIZE`, default_value=0, using_default=True)
+2025-09-02 21:53:50,540 - __main__ - INFO - ✅ ypricemagic imported successfully
+2025-09-02 21:53:50,541 - __main__ - INFO - 🧪 Testing ypricemagic functionality...
+2025-09-02 21:53:50,541 - __main__ - INFO - 🔄 Checking for stale 'processing' requests from previous service instances...
+2025-09-02 21:54:10,568 - __main__ - INFO - [4 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277912 (req 6546)
+2025-09-02 21:54:10,598 - y.prices.utils.ypriceapi - INFO - ypriceAPI is now in beta!
+
+Head to ypriceapi-beta.yearn.finance and sign up for access. You get:
+ - access to your desired price data more quickly...
+ - ...from nodes run by yearn-affiliated big brains...
+ - ...on all the networks Yearn supports.
+
+Check out some testimonials from our close frens:
+ - from anon1028, "I can now get prices for all of my useless shitcoins without waiting all day for ypricemagic to load logs."
+ - from anon5774, "I don't need to maintain an archive node anymore and that's saving me money."
+ - from anon3490, "Wow, so fast!"
+
+2025-09-02 21:54:10,599 - dank_mids.controller - INFO - Dank Middleware initializing... Strap on your rocket boots...
+2025-09-02 21:54:11,411 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> is cached thru block 23276409, loading from db
+2025-09-02 21:54:11,411 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf, topic0=0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc)
+2025-09-02 21:54:11,915 - y._db.common - INFO - <FeedsFromEvents addresses=0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf topics=['0x27a180c70f2642f63d1694eb252b7df52e7ab2565e3f67adf7748acb7d82b9bc']> loaded 261 objects thru block 23276409 from disk
+2025-09-02 21:54:12,947 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for uniswap v2 on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-02 21:54:12,947 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for sushiswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-02 21:54:12,948 - y.prices.dex.uniswap.v2 - INFO - Fetching pools for shibaswap on Mainnet. If this is your first time using ypricemagic, this can take a while. Please wait patiently...
+2025-09-02 21:54:12,948 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> is cached thru block 23275283, loading from db
+2025-09-02 21:54:12,948 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x0000000022D53366457F9d5E68Ec105046FC4383)
+2025-09-02 21:54:14,138 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> is cached thru block 23276593, loading from db
+2025-09-02 21:54:14,138 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'], topic0=0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118)
+2025-09-02 21:54:15,590 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> is cached thru block 23275298, loading from db
+2025-09-02 21:54:15,590 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-02 21:54:15,596 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> is cached thru block 23275284, loading from db
+2025-09-02 21:54:15,596 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-02 21:54:15,597 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> is cached thru block 23275283, loading from db
+2025-09-02 21:54:15,597 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=['0x115934131916C8b277DD010Ee02de363c09d037c'], topic0=['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'])
+2025-09-02 21:54:30,039 - y._db.common - INFO - <AddressProviderEvents addresses=0x0000000022D53366457F9d5E68Ec105046FC4383 topics=[]> loaded 37 objects thru block 23275283 from disk
+2025-09-02 21:54:31,077 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> is cached thru block 23275283, loading from db
+2025-09-02 21:54:31,077 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5)
+2025-09-02 21:54:31,077 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> is cached thru block 23275283, loading from db
+2025-09-02 21:54:31,077 - y._db.utils.logs - INFO - executing select query for LogCache(addresses=0x8F942C20D02bEfc377D41445793068908E2250D0)
+2025-09-02 21:54:31,386 - y._db.common - INFO - <RegistryEvents addresses=0x8F942C20D02bEfc377D41445793068908E2250D0 topics=[]> loaded 10 objects thru block 23275283 from disk
+2025-09-02 21:54:31,484 - y._db.common - INFO - <RegistryEvents addresses=0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5 topics=[]> loaded 57 objects thru block 23275283 from disk
+2025-09-02 21:54:31,872 - y._db.common - INFO - <PoolsFromEvents label=shibaswap> loaded 1021 objects thru block 23275283 from disk
+2025-09-02 21:54:32,606 - y.prices.dex.uniswap.v2 - INFO - Loaded 1022 pools supporting 848 tokens on shibaswap
+2025-09-02 21:54:36,565 - y._db.common - INFO - <PoolsFromEvents label=sushiswap> loaded 4379 objects thru block 23275284 from disk
+2025-09-02 21:54:37,098 - y.prices.stable_swap.curve.startup - INFO - loaded 1839 pools from 2 registries and 7 factories
+2025-09-02 21:54:37,366 - y.prices.dex.uniswap.v2 - INFO - Loaded 4397 pools supporting 3666 tokens on sushiswap
+2025-09-02 21:55:05,506 - y._db.common - INFO - <UniV3Pools addresses=['0x1F98431c8aD98523631AE4a59f267346ea31F984'] topics=['0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118']> loaded 45376 objects thru block 23276593 from disk
+2025-09-02 21:57:21,991 - y._db.common - INFO - <PoolsFromEvents label=uniswap v2> loaded 453667 objects thru block 23275298 from disk
+2025-09-02 21:58:40,312 - y.prices.dex.uniswap.v2 - INFO - Loaded 454148 pools supporting 445210 tokens on uniswap v2
+2025-09-02 22:00:53,426 - __main__ - INFO - [3 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7611520620034627
+2025-09-02 22:00:53,978 - __main__ - INFO - [3 remaining] Processing 0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef (DOLA-sUSDe) at block 23277912 (req 6547)
+2025-09-02 22:00:55,170 - y.prices.lending.aave - INFO - loaded 37 v2 atokens for <AaveMarketV2 '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9'>
+2025-09-02 22:00:55,170 - y.prices.lending.aave - INFO - loaded 23 v2 atokens for <AaveMarketV2 '0x7937D4799803FbBe595ed57278Bc4cA21f3bFfCB'>
+2025-09-02 22:00:55,170 - y.prices.lending.aave - INFO - loaded 5 v2 atokens for <AaveMarketV2 '0xcE744a9BAf573167B2CF138114BA32ed7De274Fa'>
+2025-09-02 22:00:55,171 - y.prices.lending.aave - INFO - loaded 53 v3 atokens for <AaveMarketV3 '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'>
+2025-09-02 22:00:55,247 - y.prices.lending.aave - INFO - loaded 22 v1 atokens for <AaveMarketV1 '0x398eC7346DcD622eDc5ae82352F02bE94C62d119'>
+loaded 92 markets for 0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258
+2025-09-02 22:00:56,519 - y.prices.lending.compound - INFO - loaded 92 markets for 0x3d5BC3c8d13dcB8bF317092d84783c2697AE9258
+loaded 24 markets for 0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB
+2025-09-02 22:00:56,520 - y.prices.lending.compound - INFO - loaded 24 markets for 0xAB1c342C7bf5Ec5F02ADEA1c2270670bCa144CbB
+loaded 24 markets for 0x4dCf7407AE5C07f8681e1659f626E114A7667339
+2025-09-02 22:00:56,520 - y.prices.lending.compound - INFO - loaded 24 markets for 0x4dCf7407AE5C07f8681e1659f626E114A7667339
+loaded 11 markets for 0x3105D328c66d8d55092358cF595d54608178E9B5
+2025-09-02 22:00:56,521 - y.prices.lending.compound - INFO - loaded 11 markets for 0x3105D328c66d8d55092358cF595d54608178E9B5
+loaded 5 markets for 0x95Af143a021DF745bc78e845b54591C53a8B3A51
+2025-09-02 22:00:56,521 - y.prices.lending.compound - INFO - loaded 5 markets for 0x95Af143a021DF745bc78e845b54591C53a8B3A51
+loaded 23 markets for 0x687a01ecF6d3907658f7A7c714749fAC32336D1B
+2025-09-02 22:00:56,521 - y.prices.lending.compound - INFO - loaded 23 markets for 0x687a01ecF6d3907658f7A7c714749fAC32336D1B
+loaded 20 markets for 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
+2025-09-02 22:00:56,522 - y.prices.lending.compound - INFO - loaded 20 markets for 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
+2025-09-02 22:00:59,019 - __main__ - INFO - [2 remaining] ✅ Completed 0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef = $1.024053650874913
+2025-09-02 22:00:59,020 - __main__ - INFO - [2 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277910 (req 6548)
+2025-09-02 22:00:59,814 - __main__ - INFO - [1 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7613985386450224
+2025-09-02 22:01:00,222 - __main__ - INFO - [1 remaining] Processing 0x8b83c4aA949254895507D09365229BC3a8c7f710 (DOLA-sUSDS) at block 23277910 (req 6549)
+2025-09-02 22:01:01,766 - __main__ - INFO - [0 remaining] ✅ Completed 0x8b83c4aA949254895507D09365229BC3a8c7f710 = $1.0160020899553683
+2025-09-02 22:01:11,779 - __main__ - INFO - [32 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277911 (req 6550)
+2025-09-02 22:01:12,780 - __main__ - INFO - [31 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7613985386450224
+2025-09-02 22:01:13,324 - __main__ - INFO - [31 remaining] Processing 0x38De22a3175708D45E7c7c64CD78479C8B56f76E (DOLA/USR) at block 23277911 (req 6551)
+2025-09-02 22:01:14,956 - __main__ - INFO - [30 remaining] ✅ Completed 0x38De22a3175708D45E7c7c64CD78479C8B56f76E = $0.9971805598862736
+2025-09-02 22:01:14,958 - __main__ - INFO - [30 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23278815 (req 6552)
+2025-09-02 22:01:16,100 - __main__ - INFO - [29 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7672837972292001
+2025-09-02 22:01:16,394 - __main__ - INFO - [29 remaining] Processing 0xc3b19502F8c02be75F3f77fd673503520DEB51dD (msUSDFRAX3CRV-f) at block 23278815 (req 6553)
+2025-09-02 22:01:21,893 - __main__ - INFO - [28 remaining] ✅ Completed 0xc3b19502F8c02be75F3f77fd673503520DEB51dD = $1.0801515349899726
+2025-09-02 22:01:21,894 - __main__ - INFO - [28 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23279116 (req 6554)
+2025-09-02 22:01:23,034 - __main__ - INFO - [27 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7652767731479292
+2025-09-02 22:01:23,310 - __main__ - INFO - [27 remaining] Processing 0x08BfA22bB3e024CDfEB3eca53c0cb93bF59c4147 (eUSDUSDC) at block 23279116 (req 6555)
+2025-09-02 22:01:24,239 - __main__ - INFO - [26 remaining] ✅ Completed 0x08BfA22bB3e024CDfEB3eca53c0cb93bF59c4147 = $1.0098884442466989
+2025-09-02 22:01:24,240 - __main__ - INFO - [26 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23279218 (req 6556)
+2025-09-02 22:01:25,346 - __main__ - INFO - [25 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7629226697142582
+2025-09-02 22:01:25,630 - __main__ - INFO - [25 remaining] Processing 0x3A283D9c08E8b55966afb64C515f5143cf907611 (crvCVXETH) at block 23279218 (req 6557)
+2025-09-02 22:01:27,788 - __main__ - INFO - [24 remaining] ✅ Completed 0x3A283D9c08E8b55966afb64C515f5143cf907611 = $269.72960907779793
+2025-09-02 22:01:27,790 - __main__ - INFO - [24 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23278714 (req 6558)
+2025-09-02 22:01:28,741 - __main__ - INFO - [23 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7658210338135771
+2025-09-02 22:01:29,280 - __main__ - INFO - [23 remaining] Processing 0x72310DAAed61321b02B08A547150c07522c6a976 (USDC/USDf) at block 23278714 (req 6559)
+2025-09-02 22:01:32,119 - __main__ - INFO - [22 remaining] ✅ Completed 0x72310DAAed61321b02B08A547150c07522c6a976 = $1.0034625518982982
+2025-09-02 22:01:32,120 - __main__ - INFO - [22 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277808 (req 6560)
+2025-09-02 22:01:32,978 - __main__ - INFO - [21 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7597064010486827
+2025-09-02 22:01:33,403 - __main__ - INFO - [21 remaining] Processing 0xa4c567c662349BeC3D0fB94C4e7f85bA95E208e4 (msETHWETH-f) at block 23277808 (req 6561)
+2025-09-02 22:01:36,370 - __main__ - INFO - [20 remaining] ✅ Completed 0xa4c567c662349BeC3D0fB94C4e7f85bA95E208e4 = $4558.476586280933
+2025-09-02 22:01:36,373 - __main__ - INFO - [20 remaining] Processing 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E (crvUSD) at block 23276938 (req 6562)
+2025-09-02 22:01:39,269 - __main__ - INFO - [19 remaining] ✅ Completed 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E = $1.000031
+2025-09-02 22:01:39,550 - __main__ - INFO - [19 remaining] Processing 0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7 (cvxCRV) at block 23276938 (req 6563)
+2025-09-02 22:01:42,648 - __main__ - INFO - [18 remaining] ✅ Completed 0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7 = $0.2960129334448775
+2025-09-02 22:01:42,649 - __main__ - INFO - [18 remaining] Processing 0x41252E8691e964f7DE35156B68493bAb6797a275 (dYFI) at block 23277381 (req 6564)
+2025-09-02 22:01:45,600 - __main__ - INFO - [17 remaining] ✅ Completed 0x41252E8691e964f7DE35156B68493bAb6797a275 = $3309.613660857428
+2025-09-02 22:01:45,603 - __main__ - INFO - [17 remaining] Processing 0x97983236bE88107Cc8998733Ef73D8d969c52E37 (sdYFI) at block 23277381 (req 6565)
+2025-09-02 22:01:49,746 - __main__ - INFO - [16 remaining] ✅ Completed 0x97983236bE88107Cc8998733Ef73D8d969c52E37 = $4999.869834247296
+2025-09-02 22:01:49,747 - __main__ - INFO - [16 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277990 (req 6566)
+2025-09-02 22:01:50,541 - __main__ - INFO - [15 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7622395773076501
+2025-09-02 22:01:50,957 - __main__ - INFO - [15 remaining] Processing 0x8b83c4aA949254895507D09365229BC3a8c7f710 (DOLA-sUSDS) at block 23277990 (req 6567)
+2025-09-02 22:01:52,575 - __main__ - INFO - [14 remaining] ✅ Completed 0x8b83c4aA949254895507D09365229BC3a8c7f710 = $1.0160023396411815
+2025-09-02 22:01:52,577 - __main__ - INFO - [14 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277991 (req 6568)
+2025-09-02 22:01:53,376 - __main__ - INFO - [13 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7622395773076501
+2025-09-02 22:01:53,793 - __main__ - INFO - [13 remaining] Processing 0x38De22a3175708D45E7c7c64CD78479C8B56f76E (DOLA/USR) at block 23277991 (req 6569)
+2025-09-02 22:01:55,377 - __main__ - INFO - [12 remaining] ✅ Completed 0x38De22a3175708D45E7c7c64CD78479C8B56f76E = $0.9971805774654502
+2025-09-02 22:01:55,379 - __main__ - INFO - [12 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23277993 (req 6570)
+2025-09-02 22:01:56,195 - __main__ - INFO - [11 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7622395773076501
+2025-09-02 22:01:56,604 - __main__ - INFO - [11 remaining] Processing 0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef (DOLA-sUSDe) at block 23277993 (req 6571)
+2025-09-02 22:01:57,841 - __main__ - INFO - [10 remaining] ✅ Completed 0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef = $1.0240565301902291
+2025-09-02 22:01:57,844 - __main__ - INFO - [10 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23278210 (req 6572)
+2025-09-02 22:01:58,713 - __main__ - INFO - [9 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7653592673708186
+2025-09-02 22:01:59,135 - __main__ - INFO - [9 remaining] Processing 0xa4c567c662349BeC3D0fB94C4e7f85bA95E208e4 (msETHWETH-f) at block 23278210 (req 6573)
+2025-09-02 22:01:59,733 - __main__ - INFO - [8 remaining] ✅ Completed 0xa4c567c662349BeC3D0fB94C4e7f85bA95E208e4 = $4593.705019707474
+2025-09-02 22:01:59,734 - __main__ - INFO - [8 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23278793 (req 6574)
+2025-09-02 22:02:00,540 - __main__ - INFO - [7 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7658341121659864
+2025-09-02 22:02:00,972 - __main__ - INFO - [7 remaining] Processing 0x72310DAAed61321b02B08A547150c07522c6a976 (USDC/USDf) at block 23278793 (req 6575)
+2025-09-02 22:02:01,720 - __main__ - INFO - [6 remaining] ✅ Completed 0x72310DAAed61321b02B08A547150c07522c6a976 = $1.0034625554266203
+2025-09-02 22:02:01,722 - __main__ - INFO - [6 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23278894 (req 6576)
+2025-09-02 22:02:02,517 - __main__ - INFO - [5 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7661258600274243
+2025-09-02 22:02:02,923 - __main__ - INFO - [5 remaining] Processing 0xc3b19502F8c02be75F3f77fd673503520DEB51dD (msUSDFRAX3CRV-f) at block 23278894 (req 6577)
+2025-09-02 22:02:04,883 - __main__ - INFO - [4 remaining] ✅ Completed 0xc3b19502F8c02be75F3f77fd673503520DEB51dD = $1.0801521811848724
+2025-09-02 22:02:04,894 - __main__ - INFO - [4 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23279196 (req 6578)
+2025-09-02 22:02:05,750 - __main__ - INFO - [3 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7634407736750874
+2025-09-02 22:02:06,168 - __main__ - INFO - [3 remaining] Processing 0x08BfA22bB3e024CDfEB3eca53c0cb93bF59c4147 (eUSDUSDC) at block 23279196 (req 6579)
+2025-09-02 22:02:06,884 - __main__ - INFO - [2 remaining] ✅ Completed 0x08BfA22bB3e024CDfEB3eca53c0cb93bF59c4147 = $1.009889145747084
+2025-09-02 22:02:06,886 - __main__ - INFO - [2 remaining] Processing 0xD533a949740bb3306d119CC777fa900bA034cd52 (CRV) at block 23279338 (req 6580)
+2025-09-02 22:02:07,979 - __main__ - INFO - [1 remaining] ✅ Completed 0xD533a949740bb3306d119CC777fa900bA034cd52 = $0.7612474747474748
+2025-09-02 22:02:08,271 - __main__ - INFO - [1 remaining] Processing 0x3A283D9c08E8b55966afb64C515f5143cf907611 (crvCVXETH) at block 23279338 (req 6581)
+2025-09-02 22:02:09,144 - __main__ - INFO - [0 remaining] ✅ Completed 0x3A283D9c08E8b55966afb64C515f5143cf907611 = $269.6342278612116

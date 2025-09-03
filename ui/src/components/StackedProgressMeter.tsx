@@ -1,5 +1,6 @@
 import React from 'react'
 import { Clock, TrendingDown } from 'lucide-react'
+import { CleanProgressBar } from './CleanProgressBar'
 
 interface StackedProgressMeterProps {
   timeProgress: number // 0-100, percentage of time elapsed
@@ -18,57 +19,25 @@ const StackedProgressMeter: React.FC<StackedProgressMeterProps> = ({
   className = '',
   size = 'md'
 }) => {
-  const heights = {
-    sm: 'h-1',
-    md: 'h-1.5',
-    lg: 'h-2'
-  }
-  
-  const spacing = {
-    sm: 'space-y-1',
-    md: 'space-y-1.5',
-    lg: 'space-y-2'
-  }
-
-  const height = heights[size]
-  const gap = spacing[size]
-
   return (
-    <div className={`text-sm ${gap} ${className}`}>
-      {/* Time Progress Bar */}
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-blue-400 font-medium">Time</span>
-          <span className="text-xs text-blue-400 font-medium">{timeProgress.toFixed(0)}%</span>
-        </div>
-        <div className={`w-full bg-gray-700 rounded-full ${height}`}>
-          <div 
-            className="bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500 ease-out"
-            style={{ 
-              width: `${Math.min(timeProgress, 100)}%`,
-              height: '100%'
-            }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Amount Sold Progress Bar */}
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-green-400 font-medium">Takes ({totalTakes})</span>
-          <span className="text-xs text-green-400 font-medium">{amountProgress.toFixed(0)}%</span>
-        </div>
-        <div className={`w-full bg-gray-700 rounded-full ${height}`}>
-          <div 
-            className="bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-500 ease-out"
-            style={{ 
-              width: `${Math.min(amountProgress, 100)}%`,
-              height: '100%'
-            }}
-          ></div>
-        </div>
-      </div>
-
+    <div className={`space-y-2 ${className}`}>
+      {/* Time Progress */}
+      <CleanProgressBar
+        progress={timeProgress}
+        label="Time"
+        showPercentage={true}
+        color="blue"
+        size={size}
+      />
+      
+      {/* Volume Progress with Take Count */}  
+      <CleanProgressBar
+        progress={amountProgress}
+        label={`Takes (${totalTakes})`}
+        showPercentage={true}
+        color="green"
+        size={size}
+      />
     </div>
   )
 }

@@ -74,7 +74,7 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
           <table className="table w-full">
             <thead className="bg-gray-800/50">
               <tr>
-                <th className="text-center w-[22px] min-w-[22px] max-w-[22px] pl-2 pr-1 py-2"><span className="sr-only">Chain</span></th>
+                <th className="text-center w-[32px] min-w-[32px] max-w-[32px] pl-4 pr-2 py-2"><span className="sr-only">Chain</span></th>
                 <th className="text-center py-2">Round</th>
                 <th className="text-center py-2">Tokens</th>
                 <th className="text-center py-2">Kicked</th>
@@ -93,7 +93,7 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
                 const isActive = r.is_active;
                 return (
                   <tr key={`${r.round_id}-${r.from_token}-${idx}`} className="group">
-                    <td className="w-[22px] min-w-[22px] max-w-[22px] pl-2 pr-1 text-center">
+                    <td className="w-[32px] min-w-[32px] max-w-[32px] pl-4 pr-2 text-center">
                       <div className="flex justify-center">
                         <ChainIcon chainId={chainId} size="xs" showName={false} />
                       </div>
@@ -118,9 +118,13 @@ const RoundsTable: React.FC<RoundsTableProps> = ({
                       </span>
                     </td>
                     <td className="text-center">
-                      <div className="inline-flex items-center space-x-2">
-                        <span className={cn("h-2 w-2 rounded-full", isActive ? "bg-success-500" : "bg-gray-600")} />
-                        <span className={cn("text-sm font-medium", isActive ? "text-success-400" : "text-gray-500")}>{isActive ? "Active" : "Completed"}</span>
+                      <div className="flex justify-center">
+                        <div className="flex items-center space-x-2">
+                          <div className={`h-2 w-2 rounded-full ${isActive ? 'bg-success-500 animate-pulse' : 'bg-gray-600'}`}></div>
+                          <span className={`text-sm font-medium ${isActive ? 'text-success-400' : 'text-gray-500'}`}>
+                            {isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="text-center">

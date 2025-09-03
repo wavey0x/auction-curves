@@ -10,7 +10,8 @@ import {
   Activity,
   Target,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Package
 } from 'lucide-react'
 import { apiClient } from '../lib/api'
 import TakesTable from '../components/TakesTable'
@@ -20,6 +21,9 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import AddressDisplay from '../components/AddressDisplay'
 import BackButton from '../components/BackButton'
 import InternalLink from '../components/InternalLink'
+import RoundLink from '../components/RoundLink'
+import { LiveDataBadge } from '../components/LiveDataBadge'
+import { useAuctionLiveData } from '../hooks/useAuctionLiveData'
 import { formatAddress, formatTokenAmount, formatReadableTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
 
 const RoundDetails: React.FC = () => {
@@ -99,6 +103,16 @@ const RoundDetails: React.FC = () => {
   // Find the specific round data from the rounds API
   const specificRound = roundsData?.rounds?.find(r => r.round_id.toString() === roundId)
   
+  // Get live data for the current round if it's active
+  // Use the specific from_token from the round data, fallback to first take
+  const fromTokenAddress = specificRound?.from_token || takes?.[0]?.from_token || ''
+  const { data: liveData, isLoading: liveDataLoading } = useAuctionLiveData(
+    auctionAddress || '',
+    fromTokenAddress,
+    parseInt(chainId || '0'),
+    30000 // 30 second refresh
+  )
+  
   const roundInfo = isCurrentRound ? currentRound : specificRound ? {
     round_id: specificRound.round_id,
     kicked_at: specificRound.kicked_at,
@@ -146,6 +160,11 @@ const RoundDetails: React.FC = () => {
 
   const fromTokens = auctionDetails.from_tokens
   const wantToken = auctionDetails.want_token
+  
+  // Get the correct token symbol for this specific round
+  const fromTokenSymbol = fromTokens.find(t => 
+    t.address.toLowerCase() === fromTokenAddress.toLowerCase()
+  )?.symbol || fromTokenAddress.slice(0,6) + "…" + fromTokenAddress.slice(-4)
 
   // Calculate round statistics
   const totalAmountSold = takes.reduce((sum, sale) => sum + parseFloat(sale.amount_taken), 0)
@@ -221,7 +240,7 @@ const RoundDetails: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <span className="text-sm text-gray-500">Round ID</span>
-                  <div className="font-mono text-lg font-medium text-primary-400">
+                  <div className="font-mono text-sm text-white">
                     R{roundInfo.round_id}
                   </div>
                 </div>
@@ -259,10 +278,7 @@ const RoundDetails: React.FC = () => {
                   <span className="text-sm text-gray-500">Token Pair</span>
                   <div className="text-sm text-gray-200">
                     <span className="text-gray-300 font-medium">
-                      {takes.length > 0 && takes[0].from_token_symbol ? 
-                        takes[0].from_token_symbol : 
-                        fromTokens[0]?.symbol || '?'
-                      }
+                      {fromTokenSymbol}
                     </span>
                     <span className="text-gray-500 mx-2">→</span>
                     <span className="text-white font-medium">
@@ -274,9 +290,67 @@ const RoundDetails: React.FC = () => {
                 <div>
                   <span className="text-sm text-gray-500">Initial Available</span>
                   <div className="font-mono text-gray-200">
-                    {formatReadableTokenAmount(roundInfo.initial_available, 4)} {fromTokens[0]?.symbol || ''}
+                    {formatReadableTokenAmount(roundInfo.initial_available, 4)} {fromTokenSymbol}
                   </div>
                 </div>
+
+                {/* Live Current Price */}
+                {roundInfo.is_active && (
+                  <div>
+                    <span className="text-sm text-gray-500 flex items-center space-x-1">
+                      <Zap className="h-3 w-3 text-primary-400" />
+                      <span>Current Price</span>
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      {liveDataLoading ? (
+                        <div className="flex items-center space-x-1">
+                          <div className="animate-pulse h-2 w-2 bg-primary-400 rounded-full"></div>
+                          <span className="text-xs text-gray-400">Loading...</span>
+                        </div>
+                      ) : liveData?.error ? (
+                        <span className="text-red-400 text-xs">Error fetching live data</span>
+                      ) : liveData?.amountNeeded !== undefined ? (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono text-gray-200">
+                            {formatTokenAmount(Number(liveData.amountNeeded), 18, 4)} {wantToken.symbol}
+                          </span>
+                          <LiveDataBadge isLive={true} variant="small" />
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">—</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Live Available Amount */}
+                {roundInfo.is_active && (
+                  <div>
+                    <span className="text-sm text-gray-500 flex items-center space-x-1">
+                      <Package className="h-3 w-3 text-primary-400" />
+                      <span>Available Now</span>
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      {liveDataLoading ? (
+                        <div className="flex items-center space-x-1">
+                          <div className="animate-pulse h-2 w-2 bg-primary-400 rounded-full"></div>
+                          <span className="text-xs text-gray-400">Loading...</span>
+                        </div>
+                      ) : liveData?.error ? (
+                        <span className="text-red-400 text-xs">Error fetching live data</span>
+                      ) : liveData?.available !== undefined ? (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono text-gray-200">
+                            {formatTokenAmount(Number(liveData.available), 18, 4)} {fromTokenSymbol}
+                          </span>
+                          <LiveDataBadge isLive={true} variant="small" />
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">—</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {roundInfo.is_active && timeRemaining > 0 && (
                   <div>
@@ -310,7 +384,7 @@ const RoundDetails: React.FC = () => {
                       {avgPrice.toFixed(6)} {auctionDetails.want_token.symbol}
                     </div>
                     <div className="text-xs text-gray-500">
-                      per {auctionDetails.from_tokens[0]?.symbol || 'token'}
+                      per {fromTokenSymbol}
                     </div>
                   </div>
                 )}

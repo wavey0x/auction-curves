@@ -101,7 +101,8 @@
       "WebFetch(domain:docs.enso.build)",
       "Bash(brownie networks:*)",
       "Bash(pip3 show:*)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

@@ -42,6 +42,7 @@ import {
   getAddressLink,
 } from "../lib/utils";
 import InternalLink from "../components/InternalLink";
+import { useAuctionKickableStatus } from "../hooks/useKickableStatus";
 
 const AuctionDetails: React.FC = () => {
   const { chainId, address } = useParams<{ chainId: string; address: string }>();
@@ -88,6 +89,24 @@ const AuctionDetails: React.FC = () => {
     queryFn: () => apiClient.getAuction(address!, parseInt(chainId!)),
     enabled: !!chainId && !!address,
   });
+
+  // Fetch kickable status for this auction - only when auction data is available
+  const { data: kickableStatus } = useAuctionKickableStatus(
+    auction ? {
+      address: auction.address,
+      chain_id: auction.chain_id,
+      from_tokens: auction.from_tokens || [],
+      current_round: auction.current_round || null,
+      want_token: auction.want_token || null,
+      factory_address: auction.factory_address || '',
+      version: auction.version || '',
+      created_at: auction.created_at || '',
+      deployed_at: auction.deployed_at || '',
+      decay_rate: auction.decay_rate || 0,
+      update_interval: auction.update_interval || 0
+    } : null,
+    30000 // Refresh every 30 seconds
+  );
 
   // Fetch takes with pagination
   const { data: takesResponse } = useQuery({
@@ -289,6 +308,7 @@ const AuctionDetails: React.FC = () => {
                     <ExpandedTokensList
                       tokens={auction.from_tokens}
                       chainId={auction.chain_id}
+                      kickableTokens={kickableStatus?.kickableTokens || []}
                     />
                   ) : null,
                 },
@@ -301,6 +321,15 @@ const AuctionDetails: React.FC = () => {
             <MetaBadges
               items={[
                 { label: 'Deployed', value: formatTimeAgo(new Date(auction.deployed_at).getTime()/1000), icon: Clock },
+                ...(kickableStatus?.isKickable ? [{
+                  label: 'Kickable',
+                  value: (
+                    <span className="text-purple-400">
+                      {kickableStatus.totalKickableCount} token{kickableStatus.totalKickableCount !== 1 ? 's' : ''}
+                    </span>
+                  ),
+                  icon: Gavel
+                }] : []),
                 ...(auction.governance ? [{
                   label: 'Governance',
                   value: (

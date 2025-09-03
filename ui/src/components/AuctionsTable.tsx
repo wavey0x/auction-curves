@@ -1,29 +1,48 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { 
-  Activity, 
   ArrowUpDown, 
   ArrowUp, 
   ArrowDown,
   Search,
-  Filter,
-  Clock,
   TrendingDown,
-  ExternalLink,
   ChevronDown,
-  ChevronRight,
-  Home
+  Check
 } from 'lucide-react'
 import type { AuctionListItem } from '../types/auction'
-import { formatTokenAmount, formatTimeAgo, formatAddress } from '../lib/utils'
+import { formatTimeAgo, formatAddress } from '../lib/utils'
 import { apiClient } from '../lib/api'
-import StackedProgressMeter from './StackedProgressMeter'
 import ChainIcon from './ChainIcon'
 import TokensList from './TokensList'
-import AddressDisplay from './AddressDisplay'
 import AddressLink from './AddressLink'
 import InternalLink from './InternalLink'
 import TokenPairDisplay from './TokenPairDisplay'
+import { useKickableStatus } from '../hooks/useKickableStatus'
+import { getChainDisplay } from '../lib/chainData'
+
+// Status configuration with colors and labels
+const statusConfig = {
+  kickable: {
+    label: 'Kickable',
+    textColor: 'text-purple-400',
+    dotColor: 'bg-purple-500',
+    animated: true,
+  },
+  active: {
+    label: 'Active',
+    textColor: 'text-success-400',
+    dotColor: 'bg-success-500',
+    animated: true,
+  },
+  inactive: {
+    label: 'Inactive',
+    textColor: 'text-gray-500',
+    dotColor: 'bg-gray-600',
+    animated: false,
+  },
+} as const
+
+export type AuctionStatus = 'active' | 'inactive' | 'kickable'
 
 interface AuctionsTableProps {
   auctions: AuctionListItem[]
@@ -37,13 +56,18 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
   const [tokenFilter, setTokenFilter] = useState('')
   const [tokenSearch, setTokenSearch] = useState('')
   const [tokenDropdownOpen, setTokenDropdownOpen] = useState(false)
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false)
   const [chainFilter, setChainFilter] = useState('')
   const [chainDropdownOpen, setChainDropdownOpen] = useState(false)
   const [sortField, setSortField] = useState<SortField>('last_kicked')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const dropdownRef = useRef<HTMLDivElement>(null)
   const tokenDropdownRef = useRef<HTMLDivElement>(null)
+  const statusDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Fetch kickable status for all auctions (only triggers on auction list changes)
+  const { data: kickableData = {} } = useKickableStatus(auctions)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -53,6 +77,9 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
       }
       if (tokenDropdownRef.current && !tokenDropdownRef.current.contains(event.target as Node)) {
         setTokenDropdownOpen(false)
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setStatusDropdownOpen(false)
       }
     }
 
@@ -176,9 +203,28 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
 
 
       // Status filter
-      if (statusFilter) {
+      if (statusFilter.length > 0) {
         const isActive = ah.current_round?.is_active || false
-        if ((statusFilter === 'active' && !isActive) || (statusFilter === 'inactive' && isActive)) {
+        const isKickable = kickableData[ah.address]?.isKickable || false
+        
+        let matchesStatus = false
+        
+        for (const filter of statusFilter) {
+          if (filter === 'active' && isActive) {
+            matchesStatus = true
+            break
+          }
+          if (filter === 'inactive' && !isActive) {
+            matchesStatus = true
+            break
+          }
+          if (filter === 'kickable' && isKickable) {
+            matchesStatus = true
+            break
+          }
+        }
+        
+        if (!matchesStatus) {
           return false
         }
       }
@@ -325,15 +371,63 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
             )}
           </div>
           
-          <select
-            className="w-full sm:w-28 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+          {/* Status Filter Dropdown */}
+          <div className="relative w-full sm:w-40" ref={statusDropdownRef}>
+            <div
+              className="flex items-center justify-between w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm cursor-pointer focus-within:ring-1 focus-within:ring-primary-500"
+              onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+            >
+              <span className="truncate">
+                {statusFilter.length === 0 
+                  ? 'All Status'
+                  : statusFilter.length === 1 
+                    ? statusConfig[statusFilter[0] as AuctionStatus]?.label || statusFilter[0]
+                    : `${statusFilter.length} Selected`
+                }
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+            </div>
+            
+            {statusDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg z-50">
+                <div
+                  className="px-2 py-2 text-sm hover:bg-gray-700 cursor-pointer flex items-center justify-between"
+                  onClick={() => {
+                    setStatusFilter([])
+                    setStatusDropdownOpen(false)
+                  }}
+                >
+                  <span>All Status</span>
+                  {statusFilter.length === 0 && <Check className="h-4 w-4 text-primary-400" />}
+                </div>
+                
+                {(['active', 'kickable', 'inactive'] as const)
+                  .map(statusKey => {
+                  const config = statusConfig[statusKey]
+                  const isSelected = statusFilter.includes(statusKey)
+                  return (
+                    <div
+                      key={statusKey}
+                      className="px-2 py-2 text-sm hover:bg-gray-700 cursor-pointer flex items-center justify-between"
+                      onClick={() => {
+                        if (isSelected) {
+                          setStatusFilter(prev => prev.filter(s => s !== statusKey))
+                        } else {
+                          setStatusFilter(prev => [...prev, statusKey])
+                        }
+                      }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className={`h-2 w-2 rounded-full ${config.dotColor} ${config.animated ? 'animate-pulse' : ''}`}></div>
+                        <span className={config.textColor}>{config.label}</span>
+                      </div>
+                      {isSelected && <Check className="h-4 w-4 text-primary-400" />}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           
           {/* Custom Chain Filter Dropdown */}
           <div className="relative" ref={dropdownRef}>
@@ -498,16 +592,32 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                     </td>
                     
                     <td>
-                      <div className="flex items-center space-x-2">
-                        <div className={`h-2 w-2 rounded-full ${
-                          isActive ? 'bg-success-500 animate-pulse' : 'bg-gray-600'
-                        }`}></div>
-                        <span className={`text-sm font-medium ${
-                          isActive ? 'text-success-400' : 'text-gray-500'
-                        }`}>
-                          {isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
+                      {(() => {
+                        const isActive = auction.current_round?.is_active || false
+                        const isKickable = kickableData[auction.address]?.isKickable || false
+                        const kickableCount = kickableData[auction.address]?.totalKickableCount || 0
+                        
+                        let status: AuctionStatus = 'inactive'
+                        if (isKickable) {
+                          status = 'kickable'
+                        } else if (isActive) {
+                          status = 'active'
+                        }
+                        
+                        const config = statusConfig[status]
+                          
+                        return (
+                          <div className="flex items-center space-x-2">
+                            <div className={`h-2 w-2 rounded-full ${config.dotColor} ${config.animated ? 'animate-pulse' : ''}`}></div>
+                            <span className={`text-sm font-medium ${config.textColor}`}>
+                              {config.label}
+                              {status === 'kickable' && kickableCount > 0 && (
+                                <span className="text-xs ml-1">({kickableCount})</span>
+                              )}
+                            </span>
+                          </div>
+                        )
+                      })()}
                     </td>
                     
                     <td>

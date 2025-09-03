@@ -24,6 +24,7 @@ ATTACH_SESSION=false
 SKIP_UI=false
 USE_TMUX=true
 USE_MOCK_DATA=false
+DEBUG_MODE=false
 
 # Create logs directory
 mkdir -p "$LOG_DIR"
@@ -39,6 +40,7 @@ OPTIONS:
   --no-ui         Skip starting the React UI
   --attach        Attach to tmux session after starting services
   --no-tmux       Use background processes instead of tmux
+  --debug         Enable debug mode with detailed error logging
   --help, -h      Show this help message
 
 SERVICES MANAGED:
@@ -54,6 +56,7 @@ EXAMPLES:
   ./dev.sh --no-ui            # Start without React UI
   ./dev.sh --attach           # Start and attach to session
   ./dev.sh --no-tmux          # Use background processes
+  ./dev.sh --debug            # Enable detailed error output
 
 CONTROL:
   • Use 'tmux attach -t $SESSION_NAME' to connect to session
@@ -79,6 +82,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-tmux)
             USE_TMUX=false
+            shift
+            ;;
+        --debug)
+            DEBUG_MODE=true
             shift
             ;;
         --help|-h)
@@ -134,6 +141,12 @@ warn() {
     echo -e "${YELLOW}[$(date +'%H:%M:%S')] ⚠️  $1${NC}"
 }
 
+debug() {
+    if [ "$DEBUG_MODE" = true ]; then
+        echo -e "${BLUE}[$(date +'%H:%M:%S')] 🔍 DEBUG: $1${NC}"
+    fi
+}
+
 # Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -151,9 +164,19 @@ wait_for_service() {
     local max_attempts=${3:-30}
     local attempt=1
     
+    debug "Waiting for $name at $url"
+    
     while [ $attempt -le $max_attempts ]; do
-        if curl -s "$url" >/dev/null 2>&1; then
+        local response=$(curl -s "$url" 2>&1)
+        local exit_code=$?
+        
+        if [ $exit_code -eq 0 ]; then
+            debug "$name responded successfully: $response"
             return 0
+        fi
+        
+        if [ "$DEBUG_MODE" = true ]; then
+            debug "Attempt $attempt/$max_attempts failed for $name: $response"
         fi
         
         sleep 2
@@ -161,6 +184,9 @@ wait_for_service() {
     done
     
     error "$name failed to start after $max_attempts attempts"
+    if [ "$DEBUG_MODE" = true ]; then
+        debug "Final response from $url: $response"
+    fi
     return 1
 }
 
@@ -209,16 +235,32 @@ setup_venv() {
     source "$SCRIPT_DIR/venv/bin/activate"
     
     # Check if dependencies are installed by testing for key packages
-    if ! python3 -c "import web3, psycopg2, fastapi" 2>/dev/null; then
+    debug "Testing for key dependencies: web3, psycopg2, fastapi, pydantic_settings"
+    if ! python3 -c "import web3, psycopg2, fastapi, pydantic_settings" 2>/dev/null; then
         log "Installing Python dependencies..."
-        pip install -q --upgrade pip
+        
+        if [ "$DEBUG_MODE" = true ]; then
+            pip install --upgrade pip
+        else
+            pip install -q --upgrade pip
+        fi
         
         # Try the working requirements file first, fallback to main requirements
         if [ -f "$SCRIPT_DIR/requirements-working.txt" ]; then
-            pip install -q -r "$SCRIPT_DIR/requirements-working.txt"
+            debug "Installing from requirements-working.txt"
+            if [ "$DEBUG_MODE" = true ]; then
+                pip install -r "$SCRIPT_DIR/requirements-working.txt"
+            else
+                pip install -q -r "$SCRIPT_DIR/requirements-working.txt"
+            fi
         else
+            debug "Requirements file not found, installing core dependencies manually"
             # Install core dependencies manually to avoid conflicts
-            pip install -q web3 psycopg2-binary pyyaml fastapi uvicorn asyncpg sqlalchemy httpx
+            if [ "$DEBUG_MODE" = true ]; then
+                pip install web3 psycopg2-binary pyyaml fastapi uvicorn asyncpg sqlalchemy httpx pydantic-settings
+            else
+                pip install -q web3 psycopg2-binary pyyaml fastapi uvicorn asyncpg sqlalchemy httpx pydantic-settings
+            fi
         fi
         
         success "Dependencies installed"
@@ -267,22 +309,41 @@ check_prerequisites() {
 # Check database connectivity
 check_database() {
     log "Checking database connectivity..."
+    debug "Attempting connection to: $DATABASE_URL"
     
-    if ! psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+    local db_test_output
+    db_test_output=$(psql "$DATABASE_URL" -c "SELECT 1;" 2>&1)
+    local db_exit_code=$?
+    
+    if [ $db_exit_code -ne 0 ]; then
+        if [ "$DEBUG_MODE" = true ]; then
+            debug "Database connection failed with: $db_test_output"
+        fi
+        
         warn "Cannot connect to database, trying to start Docker container..."
         
         if command_exists docker-compose; then
+            debug "Starting PostgreSQL container..."
             docker-compose up -d postgres
             sleep 5
             
-            if ! psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+            db_test_output=$(psql "$DATABASE_URL" -c "SELECT 1;" 2>&1)
+            db_exit_code=$?
+            
+            if [ $db_exit_code -ne 0 ]; then
                 error "Still cannot connect to database"
+                if [ "$DEBUG_MODE" = true ]; then
+                    debug "Second connection attempt failed with: $db_test_output"
+                fi
                 echo "Please ensure PostgreSQL is running with correct credentials"
                 echo "Expected connection: $DATABASE_URL"
                 exit 1
             fi
         else
             error "PostgreSQL not accessible and Docker Compose not available"
+            if [ "$DEBUG_MODE" = true ]; then
+                debug "docker-compose command not found"
+            fi
             exit 1
         fi
     fi
@@ -361,19 +422,45 @@ start_api() {
     fi
     local log_file="$LOG_DIR/api_$(date +%Y%m%d_%H%M%S).log"
     
+    debug "Starting API with command: $cmd"
+    debug "API logs will be written to: $log_file"
+    
     if [ "$USE_TMUX" = true ]; then
         tmux send-keys -t "$SESSION_NAME:main" -t 1 "$cmd" Enter
     else
         bash -c "$cmd" > "$log_file" 2>&1 &
         echo $! > "$LOG_DIR/api.pid"
+        debug "API started with PID: $(cat "$LOG_DIR/api.pid")"
     fi
     
-    # Wait for API to be ready
+    # Wait for API to be ready with better error handling
     sleep 5
     if wait_for_service "http://localhost:8000/health" "API"; then
         success "API service ready on port 8000"
     else
         error "Failed to start API service"
+        
+        # Show detailed error information in debug mode
+        if [ "$DEBUG_MODE" = true ]; then
+            debug "Checking API log file for errors..."
+            if [ -f "$log_file" ]; then
+                debug "Last 20 lines of API log:"
+                tail -20 "$log_file" | while read line; do
+                    debug "API LOG: $line"
+                done
+            fi
+            
+            # Check if Python process is still running
+            if [ -f "$LOG_DIR/api.pid" ]; then
+                local api_pid=$(cat "$LOG_DIR/api.pid")
+                if ! kill -0 "$api_pid" 2>/dev/null; then
+                    debug "API process $api_pid has exited"
+                else
+                    debug "API process $api_pid is still running"
+                fi
+            fi
+        fi
+        
         exit 1
     fi
 }
@@ -517,6 +604,10 @@ main() {
     
     echo "🏛️ Auction System Development Orchestrator"
     echo "=============================================="
+    
+    if [ "$DEBUG_MODE" = true ]; then
+        log "🔍 DEBUG MODE ENABLED - Detailed logging active"
+    fi
     
     calculate_steps
     

@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Gavel, Activity, TrendingUp, Settings } from 'lucide-react'
+import { Gavel, Activity, TrendingUp, Settings, Book } from 'lucide-react'
 import SettingsModal from './SettingsModal'
+import { useUserSettings } from '../context/UserSettingsContext'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -10,11 +11,10 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
 
-  const navigation = [
-    // Add more nav items as needed
-  ]
+  const navigation = []
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { customRpcWarning, dismissCustomRpcWarning, disableCustomRpc } = useUserSettings()
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col">
@@ -73,6 +73,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
+      {/* Warning banner for custom RPC issues */}
+      {customRpcWarning.visible && (
+        <div className="px-6 lg:px-8 mt-2">
+          <div className="flex items-start justify-between rounded-lg border border-yellow-700 bg-yellow-900/30 text-yellow-200 p-3">
+            <div className="text-sm">
+              <span className="font-medium">Custom RPC issue:</span> {customRpcWarning.message || 'The configured RPC appears to be failing.'}
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={disableCustomRpc} className="text-xs px-2 py-1 rounded bg-yellow-700/30 hover:bg-yellow-700/40 border border-yellow-700">Disable custom RPC</button>
+              <button onClick={dismissCustomRpcWarning} className="text-xs px-2 py-1 rounded hover:bg-yellow-700/20">Dismiss</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
       <main className="flex-1">
         <div className="px-6 py-8 pb-12 lg:px-8">
@@ -88,6 +103,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="h-1.5 w-1.5 bg-success-500 rounded-full"></div>
               <span>Live</span>
             </span>
+            
+            <span className="mx-3">|</span>
+            
+            <Link 
+              to="/api-docs" 
+              className="flex items-center space-x-1 hover:text-gray-300 transition-colors"
+            >
+              <Book className="h-3 w-3" />
+              <span>API Docs</span>
+            </Link>
           </div>
         </div>
       </footer>

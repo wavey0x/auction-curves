@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import AuctionDetails from "./pages/AuctionDetails";
 import RoundDetails from "./pages/RoundDetails";
+import ApiDocs from "./pages/ApiDocs";
 import { NavigationProvider } from "./contexts/NavigationProvider";
 
 // Global refresh interval - change this to adjust all auto-refresh timing
@@ -33,6 +34,7 @@ function App() {
                   path="/round/:chainId/:auctionAddress/:roundId"
                   element={<RoundDetails />}
                 />
+                <Route path="/api-docs" element={<ApiDocs />} />
               </Routes>
             </Layout>
           </NavigationProvider>

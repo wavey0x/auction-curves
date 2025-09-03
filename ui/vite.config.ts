@@ -6,7 +6,49 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': {
+      '/api/auctions': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/tokens': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/system': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/chains': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/networks': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/activity': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/analytics': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/health': {
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,

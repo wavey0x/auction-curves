@@ -34,8 +34,8 @@ const InternalLink: React.FC<InternalLinkProps> = ({
   const baseClasses = "internal-link group relative";
   
   const variantClasses = {
-    default: "text-gray-300 hover:text-primary-300",
-    address: "text-primary-400 hover:text-primary-300 font-mono",
+    default: "text-white hover:text-gray-300",
+    address: "text-white hover:text-gray-300 font-mono",
     round: "text-gray-300 hover:text-primary-300 font-mono font-semibold",
   };
 

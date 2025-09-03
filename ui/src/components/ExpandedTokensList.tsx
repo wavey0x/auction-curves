@@ -4,16 +4,24 @@ import { Token } from "../types/auction";
 import TokenWithAddress from "./TokenWithAddress";
 import { cn } from "../lib/utils";
 
+interface KickableToken {
+  address: string;
+  symbol: string;
+  kickableAmount: bigint;
+}
+
 interface ExpandedTokensListProps {
   tokens: Token[];
   chainId: number;
   className?: string;
+  kickableTokens?: KickableToken[];
 }
 
 const ExpandedTokensList: React.FC<ExpandedTokensListProps> = ({
   tokens,
   chainId,
   className = "",
+  kickableTokens = [],
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -29,6 +37,12 @@ const ExpandedTokensList: React.FC<ExpandedTokensListProps> = ({
         token.address.toLowerCase().includes(searchLower)
     );
   }, [tokens, searchTerm]);
+
+  // Check if a token is kickable
+  const isTokenKickable = (tokenAddress: string) => {
+    const result = kickableTokens.some(kt => kt.address.toLowerCase() === tokenAddress.toLowerCase());
+    return result;
+  };
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -55,14 +69,17 @@ const ExpandedTokensList: React.FC<ExpandedTokensListProps> = ({
       <div className="max-h-64 overflow-y-auto">
         <div className="grid grid-cols-3 gap-2">
           {filteredTokens.length > 0 ? (
-            filteredTokens.map((token) => (
-              <TokenWithAddress
-                key={token.address}
-                token={token}
-                chainId={chainId}
-                className="text-white font-medium"
-              />
-            ))
+            filteredTokens.map((token) => {
+              const kickable = isTokenKickable(token.address);
+              return (
+                <TokenWithAddress
+                  key={token.address}
+                  token={token}
+                  chainId={chainId}
+                  textColor={kickable ? "text-purple-400" : "text-white"}
+                />
+              );
+            })
           ) : (
             <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
               {searchTerm ? "No tokens match your search" : "No tokens available"}

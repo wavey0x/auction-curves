@@ -1,0 +1,14 @@
+{
+  "name": "rpc-proxy",
+  "version": "1.0.0",
+  "description": "Simple CORS proxy for RPC endpoints",
+  "main": "proxy-server.js",
+  "scripts": {
+    "start": "node proxy-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
+    "cors": "^2.8.5"
+  }
+}
