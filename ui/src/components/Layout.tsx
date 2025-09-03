@@ -25,14 +25,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Logo */}
             <div className="flex items-center space-x-4">
               <Link to="/" className="flex items-center space-x-3 group">
-                <div className="p-2 bg-primary-500/10 rounded-lg group-hover:bg-primary-500/20 transition-colors">
-                  <Gavel className="h-6 w-6 text-primary-400" />
+                <div className="relative">
+                  <div className="relative h-11 w-11 rounded-2xl p-[1px] bg-gradient-to-br from-primary-400/60 via-primary-400/0 to-primary-400/60">
+                    <div className="h-full w-full rounded-2xl bg-gray-900/90 border border-primary-500/30 shadow-[0_0_24px_rgba(59,130,246,0.18)] flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
+                      <Gavel className="h-5 w-5 text-primary-400" />
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gradient">
-                    Auction House
+                  <h1 className="text-[22px] sm:text-2xl font-black tracking-tight leading-none">
+                    <span className="text-gray-100">Auction </span>
+                    <span className="relative inline-block">
+                      <span className="bg-gradient-to-r from-primary-300 via-primary-400 to-primary-300 bg-clip-text text-transparent">Analytics</span>
+                      <span className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-primary-500/0 via-primary-500/60 to-primary-500/0" />
+                    </span>
                   </h1>
-                  <p className="text-xs text-gray-500">Monitoring</p>
                 </div>
               </Link>
             </div>
@@ -59,12 +66,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </nav>
 
             {/* Right side */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm">
-                <div className="h-2 w-2 bg-success-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-400">Live</span>
-              </div>
-              
+            <div className="flex items-center">
               <button onClick={() => setSettingsOpen(true)} className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 rounded-lg transition-colors" aria-label="Open settings">
                 <Settings className="h-5 w-5" />
               </button>

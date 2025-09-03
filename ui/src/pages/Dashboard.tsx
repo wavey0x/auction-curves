@@ -496,7 +496,6 @@ const Dashboard: React.FC = () => {
                                     </div>
                                   );
                                 } else {
-                                  console.log(`❌ No price data for ${round.auction}`);
                                   return <span className="text-gray-500 text-sm">—</span>;
                                 }
                               })()}
@@ -507,19 +506,9 @@ const Dashboard: React.FC = () => {
                                 const auctionLiveData = liveData?.[round.auction];
                                 const availableAmount = auctionLiveData?.available;
                                 
-                                // Debug logging
-                                console.log(`📦 Available data for auction ${round.auction}:`, {
-                                  hasLiveData: !!auctionLiveData,
-                                  availableAmount,
-                                  availableAmountType: typeof availableAmount,
-                                  availableAmountString: availableAmount?.toString(),
-                                  fallbackAmount: round.available_amount
-                                });
-                                
                                 if (availableAmount !== undefined && availableAmount !== null) {
                                   // Format the live available data (including 0 values)
                                   const availableValue = Number(availableAmount) / Math.pow(10, 18);
-                                  console.log(`✅ Using live available for ${round.auction}: ${availableValue}`);
                                   
                                   // Get the correct token symbol for this round
                                   const specificToken = round.from_tokens?.find(t => 
@@ -539,7 +528,6 @@ const Dashboard: React.FC = () => {
                                   );
                                 } else if (round.available_amount) {
                                   // Fallback to database amount if available
-                                  console.log(`📊 Using database available for ${round.auction}: ${round.available_amount}`);
                                   
                                   // Get the correct token symbol for this round
                                   const specificToken = round.from_tokens?.find(t => 
@@ -558,7 +546,6 @@ const Dashboard: React.FC = () => {
                                     </div>
                                   );
                                 } else {
-                                  console.log(`❌ No available data for ${round.auction}`);
                                   return <span className="text-gray-500 text-sm">—</span>;
                                 }
                               })()}
@@ -697,7 +684,7 @@ const Dashboard: React.FC = () => {
                               <div className="flex flex-col items-start">
                                 <div className="font-medium text-sm text-gray-300 flex items-center space-x-1">
                                   <span>{take.from_token_symbol || 'Token'}</span>
-                                  <span className="text-xs text-gray-500">→</span>
+                                  <span className="text-lg text-gray-400">→</span>
                                 </div>
                                 <div className="font-bold text-sm text-white">
                                   {take.to_token_symbol || 'USDC'}

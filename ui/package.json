@@ -1,7 +1,7 @@
 {
   "name": "auction-house-ui",
   "version": "1.0.0",
-  "description": "Modern auction house dashboard with dark theme",
+  "description": "Modern auction analytics dashboard with dark theme",
   "private": true,
   "dependencies": {
     "@headlessui/react": "^1.7.17",

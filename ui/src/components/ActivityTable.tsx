@@ -151,7 +151,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
                                 const toSymbol = toToken?.symbol || formatAddress(event.to_token, 6)
                                 return (
                                   <>
-                                    <span className="text-gray-500">→</span>
+                                    <span className="text-gray-400 text-lg">→</span>
                                     <span className="font-medium text-gray-300">{toSymbol}</span>
                                   </>
                                 )

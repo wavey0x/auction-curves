@@ -14,11 +14,11 @@ const TokenPairDisplay: React.FC<TokenPairDisplayProps> = ({
   toToken,
   fromClassName = "text-gray-300",
   toClassName = "text-gray-300", 
-  arrowClassName = "text-gray-500",
+  arrowClassName = "text-gray-400",
   size = "sm"
 }) => {
   const textSize = size === "sm" ? "text-sm" : "text-base";
-  const arrowSize = size === "sm" ? "text-xs" : "text-sm";
+  const arrowSize = size === "sm" ? "text-lg" : "text-xl";
   
   return (
     <div className="flex flex-col items-start">

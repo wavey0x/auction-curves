@@ -280,7 +280,7 @@ const RoundDetails: React.FC = () => {
                     <span className="text-gray-300 font-medium">
                       {fromTokenSymbol}
                     </span>
-                    <span className="text-gray-500 mx-2">→</span>
+                    <span className="text-gray-400 mx-2 text-xl">→</span>
                     <span className="text-white font-medium">
                       {wantToken.symbol}
                     </span>

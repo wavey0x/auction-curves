@@ -45,7 +45,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
                 {formatAddress(auction.address, 8)}
               </h3>
               <p className="text-xs text-gray-500">
-                Auction House
+                Auction Analytics
               </p>
             </div>
           </div>
@@ -62,7 +62,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase">Trading</span>
-            <span className="text-xs text-gray-600">→</span>
+            <span className="text-lg text-gray-400">→</span>
           </div>
           
           <div className="flex items-center justify-between">

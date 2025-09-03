@@ -251,8 +251,14 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
           bVal = b.address.toLowerCase()
           break
         case 'status':
-          aVal = a.current_round?.is_active ? 1 : 0
-          bVal = b.current_round?.is_active ? 1 : 0
+          // Priority: kickable + active (3) > kickable (2) > active (1) > inactive (0)
+          const aIsActive = a.current_round?.is_active || false
+          const aIsKickable = kickableData[a.address]?.isKickable || false
+          const bIsActive = b.current_round?.is_active || false
+          const bIsKickable = kickableData[b.address]?.isKickable || false
+          
+          aVal = (aIsKickable && aIsActive) ? 3 : aIsKickable ? 2 : aIsActive ? 1 : 0
+          bVal = (bIsKickable && bIsActive) ? 3 : bIsKickable ? 2 : bIsActive ? 1 : 0
           break
         case 'decay_rate':
           aVal = a.decay_rate
@@ -276,7 +282,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
     })
 
     return filtered
-  }, [auctions, search, tokenFilter, statusFilter, chainFilter, sortField, sortDirection])
+  }, [auctions, search, tokenFilter, statusFilter, chainFilter, sortField, sortDirection, kickableData])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -597,24 +603,28 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                         const isKickable = kickableData[auction.address]?.isKickable || false
                         const kickableCount = kickableData[auction.address]?.totalKickableCount || 0
                         
-                        let status: AuctionStatus = 'inactive'
-                        if (isKickable) {
-                          status = 'kickable'
-                        } else if (isActive) {
-                          status = 'active'
-                        }
+                        // Determine all applicable statuses
+                        const statuses: AuctionStatus[] = []
+                        if (isKickable) statuses.push('kickable')
+                        if (isActive) statuses.push('active')
+                        if (statuses.length === 0) statuses.push('inactive')
                         
-                        const config = statusConfig[status]
-                          
                         return (
-                          <div className="flex items-center space-x-2">
-                            <div className={`h-2 w-2 rounded-full ${config.dotColor} ${config.animated ? 'animate-pulse' : ''}`}></div>
-                            <span className={`text-sm font-medium ${config.textColor}`}>
-                              {config.label}
-                              {status === 'kickable' && kickableCount > 0 && (
-                                <span className="text-xs ml-1">({kickableCount})</span>
-                              )}
-                            </span>
+                          <div className="flex flex-col space-y-1">
+                            {statuses.map((status, index) => {
+                              const config = statusConfig[status]
+                              return (
+                                <div key={status} className="flex items-center space-x-2">
+                                  <div className={`h-2 w-2 rounded-full ${config.dotColor} ${config.animated ? 'animate-pulse' : ''}`}></div>
+                                  <span className={`text-sm font-medium ${config.textColor}`}>
+                                    {config.label}
+                                    {status === 'kickable' && kickableCount > 0 && (
+                                      <span className="text-xs ml-1">({kickableCount})</span>
+                                    )}
+                                  </span>
+                                </div>
+                              )
+                            })}
                           </div>
                         )
                       })()}
@@ -661,7 +671,7 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
 
         {filteredAndSorted.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <p>No Auction Houses match the current filters</p>
+            <p>No auctions match the current filters</p>
           </div>
         )}
       </div>

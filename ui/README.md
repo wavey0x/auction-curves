@@ -1,4 +1,4 @@
-# Auction House UI
+# Auction Analytics UI
 
 Modern React dashboard for monitoring Dutch auction activity with real-time updates and dark theme aesthetics.
 
