@@ -374,6 +374,7 @@ const Dashboard: React.FC = () => {
                         <th className="text-center">Tokens</th>
                         <th className="text-center">Current Price</th>
                         <th className="text-center">Available</th>
+                        <th className="text-center">Kick Txn</th>
                         <th className="text-center">Progress</th>
                         <th className="text-center">Time Left</th>
                       </tr>
@@ -549,6 +550,20 @@ const Dashboard: React.FC = () => {
                                   return <span className="text-gray-500 text-sm">—</span>;
                                 }
                               })()}
+                            </td>
+
+                            <td>
+                              <div className="flex justify-center">
+                                {round.transaction_hash ? (
+                                  <StandardTxHashLink 
+                                    txHash={round.transaction_hash}
+                                    chainId={round.chain_id}
+                                    length={4}
+                                  />
+                                ) : (
+                                  <span className="text-gray-500 text-sm">—</span>
+                                )}
+                              </div>
                             </td>
 
                             <td>

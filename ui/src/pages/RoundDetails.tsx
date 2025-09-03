@@ -24,7 +24,7 @@ import InternalLink from '../components/InternalLink'
 import RoundLink from '../components/RoundLink'
 import { LiveDataBadge } from '../components/LiveDataBadge'
 import { useAuctionLiveData } from '../hooks/useAuctionLiveData'
-import { formatAddress, formatTokenAmount, formatReadableTokenAmount, formatUSD, formatTimeAgo } from '../lib/utils'
+import { formatAddress, formatTokenAmount, formatReadableTokenAmount, formatUSD, formatTimeAgo, getTxLink } from '../lib/utils'
 
 const RoundDetails: React.FC = () => {
   const { chainId, auctionAddress, roundId } = useParams<{
@@ -267,6 +267,24 @@ const RoundDetails: React.FC = () => {
                   <span className="text-sm text-gray-500">Initial Available</span>
                   <div className="font-mono text-gray-200">
                     {formatReadableTokenAmount(roundInfo.initial_available, 4)} {fromTokenSymbol}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-sm text-gray-500">Kick Transaction</span>
+                  <div className="font-mono text-sm">
+                    {roundInfo.transaction_hash ? (
+                      <a 
+                        href={getTxLink(roundInfo.transaction_hash, parseInt(chainId!))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white hover:text-primary-300 transition-colors"
+                      >
+                        {formatAddress(roundInfo.transaction_hash)}
+                      </a>
+                    ) : (
+                      <span className="text-gray-500">—</span>
+                    )}
                   </div>
                 </div>
               </div>

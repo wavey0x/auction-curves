@@ -1,7 +1,0 @@
-2025-09-02 22:34:09,360 - __main__ - INFO - ✅ Database connection established
-2025-09-02 22:34:09,360 - __main__ - INFO - 🚀 Starting Odos Price Service
-2025-09-02 22:34:09,360 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_minutes=10
-2025-09-02 22:34:09,360 - __main__ - WARNING - ⚠️  No Odos API key configured - may hit rate limits
-2025-09-02 22:42:19,714 - __main__ - INFO - [ODOS] Found 1 fresh price requests (< 10 minutes old)
-2025-09-02 22:42:19,922 - __main__ - INFO - [ODOS] 💰 Stored price: 0xdAC1..1ec7 = $1.0000
-2025-09-02 22:42:19,924 - __main__ - INFO - [ODOS] ✅ Completed request 6583: 0xdAC1..1ec7 = $1.0000

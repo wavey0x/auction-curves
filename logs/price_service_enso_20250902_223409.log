@@ -1,8 +1,0 @@
-2025-09-02 22:34:09,349 - __main__ - INFO - ✅ Database connection established
-2025-09-02 22:34:09,349 - __main__ - INFO - 🚀 Starting ENSO Price Service
-2025-09-02 22:34:09,349 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_minutes=10
-2025-09-02 22:34:09,349 - __main__ - INFO - 🌐 ENSO API supports: Mainnet (chain 1), Polygon (chain 137), Arbitrum (chain 42161), Optimism (chain 10), Base (chain 8453)
-2025-09-02 22:42:19,728 - __main__ - INFO - [ENSO] Found 1 fresh price requests (< 10 minutes old)
-2025-09-02 22:42:23,724 - __main__ - INFO - [ENSO] 💰 Route price for 0xdAC1..1ec7 on Mainnet: $794189536.883816
-2025-09-02 22:42:23,734 - __main__ - INFO - [ENSO] 💰 Stored price: 0xdAC1..1ec7 on Mainnet = $794189536.8838
-2025-09-02 22:42:23,736 - __main__ - INFO - [ENSO] ✅ Completed request 6583: 0xdAC1..1ec7 = $794189536.8838

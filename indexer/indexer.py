@@ -145,7 +145,7 @@ class AuctionIndexer:
     def _normalize_transaction_hash(self, tx_hash) -> str:
         """Normalize transaction hash to hex string with 0x prefix"""
         if isinstance(tx_hash, bytes):
-            return tx_hash.hex()
+            return '0x' + tx_hash.hex()
         else:
             tx_str = str(tx_hash)
             return tx_str if tx_str.startswith('0x') else f'0x{tx_str}'

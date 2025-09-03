@@ -13,3 +13,7 @@ env/
 # Generated files
 deployment_info.json
 indexer/rindexer/rindexer-dev.yaml
+
+# Log files
+logs/
+*.log

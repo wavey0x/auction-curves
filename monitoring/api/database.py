@@ -82,7 +82,7 @@ class DatabaseQueries:
         
         if active_only:
             query = text(f"""
-                SELECT vw.*, a.decay_rate, r.from_token as current_round_from_token
+                SELECT vw.*, a.decay_rate, r.from_token as current_round_from_token, r.transaction_hash as current_round_transaction_hash
                 FROM vw_auctions vw
                 JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
                 LEFT JOIN rounds r ON vw.auction_address = r.auction_address 
@@ -94,7 +94,7 @@ class DatabaseQueries:
             """)
         else:
             query = text(f"""
-                SELECT vw.*, a.decay_rate, r.from_token as current_round_from_token
+                SELECT vw.*, a.decay_rate, r.from_token as current_round_from_token, r.transaction_hash as current_round_transaction_hash
                 FROM vw_auctions vw
                 JOIN auctions a ON vw.auction_address = a.auction_address AND vw.chain_id = a.chain_id
                 LEFT JOIN rounds r ON vw.auction_address = r.auction_address 
@@ -744,7 +744,8 @@ class DatabaseDataProvider(DataProvider):
                                 "round_end": getattr(auction_row, 'round_end', None),
                                 "is_active": getattr(auction_row, 'has_active_round', False),
                                 "total_takes": getattr(auction_row, 'current_round_takes', 0) if hasattr(auction_row, 'current_round_takes') else 0,
-                                "from_token": getattr(auction_row, 'current_round_from_token', None)
+                                "from_token": getattr(auction_row, 'current_round_from_token', None),
+                                "transaction_hash": getattr(auction_row, 'current_round_transaction_hash', None)
                             }
                             if getattr(auction_row, 'current_round_id', None) else None
                         ),
@@ -964,6 +965,7 @@ class DatabaseDataProvider(DataProvider):
                         ar.from_token,
                         ar.kicked_at,
                         ar.initial_available,
+                        ar.transaction_hash,
                         (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) as is_active,
                         COUNT(t.take_seq) as total_takes
                     FROM rounds ar
@@ -978,7 +980,7 @@ class DatabaseDataProvider(DataProvider):
                         {chain_filter}
                         {token_filter}
                         {round_filter}
-                    GROUP BY ar.round_id, ar.from_token, ar.kicked_at, ar.initial_available, ar.round_end, ar.available_amount
+                    GROUP BY ar.round_id, ar.from_token, ar.kicked_at, ar.initial_available, ar.transaction_hash, ar.round_end, ar.available_amount
                     ORDER BY ar.round_id DESC
                     LIMIT :limit
                 """)
@@ -1011,6 +1013,7 @@ class DatabaseDataProvider(DataProvider):
                         "round_start": round_row.round_start if hasattr(round_row, 'round_start') and round_row.round_start else round_row.kicked_at,
                         "round_end": round_row.round_end if hasattr(round_row, 'round_end') and round_row.round_end else None,
                         "initial_available": str(round_row.initial_available) if round_row.initial_available else "0",
+                        "transaction_hash": round_row.transaction_hash if hasattr(round_row, 'transaction_hash') else None,
                         "is_active": round_row.is_active or False,
                         "total_takes": round_row.total_takes or 0
                     }
