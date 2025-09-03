@@ -2,3 +2,6 @@
 2025-09-02 22:55:22,528 - __main__ - INFO - 🚀 Starting Odos Price Service
 2025-09-02 22:55:22,528 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_minutes=10
 2025-09-02 22:55:22,528 - __main__ - WARNING - ⚠️  No Odos API key configured - may hit rate limits
+2025-09-02 23:35:04,198 - __main__ - INFO - [ODOS] Found 1 fresh price requests (< 10 minutes old)
+2025-09-02 23:35:04,494 - __main__ - INFO - [ODOS] 💰 Stored price: 0x4606..D87f = $1.0175
+2025-09-02 23:35:04,496 - __main__ - INFO - [ODOS] ✅ Completed request 6585: 0x4606..D87f = $1.0175

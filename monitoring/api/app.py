@@ -206,13 +206,14 @@ async def get_auction_takes(
 async def get_auction_rounds(
     chain_id: int,
     auction_address: str,
-    from_token: str = Query(..., description="Token being sold"),
+    from_token: Optional[str] = Query(None, description="Token being sold (optional)"),
+    round_id: Optional[int] = Query(None, description="Specific round ID to fetch"),
     limit: int = Query(50, ge=1, le=100, description="Number of rounds to return"),
     data_service: DataProvider = Depends(get_data_service)
 ):
     """Get round history for an auction"""
     try:
-        result = await data_service.get_auction_rounds(auction_address, from_token, limit, chain_id)
+        result = await data_service.get_auction_rounds(auction_address, from_token, limit, chain_id, round_id)
         return result
     except Exception as e:
         logger.error(f"Error fetching auction rounds: {e}")

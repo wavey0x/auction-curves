@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { 
@@ -50,16 +50,26 @@ const RoundDetails: React.FC = () => {
   // Extract takes array from paginated response
   const takes = takesResponse?.takes || []
 
-  // Fetch rounds data to get specific round info (use the from_token from takes)
-  const { data: roundsData, isLoading: roundsLoading } = useQuery({
-    queryKey: ['auctionRounds', chainId, auctionAddress, takes?.[0]?.from_token],
+  // Fetch specific round data directly by round ID
+  const { data: specificRoundData, isLoading: roundsLoading } = useQuery({
+    queryKey: ['auctionRound', chainId, auctionAddress, roundId],
     queryFn: async () => {
-      if (takes && takes.length > 0) {
-        return apiClient.getAuctionRounds(auctionAddress!, parseInt(chainId!), takes[0].from_token)
+      if (!chainId || !auctionAddress || !roundId) return null;
+      
+      try {
+        // Get the specific round directly by ID
+        const roundData = await apiClient.getAuctionRound(
+          auctionAddress!, 
+          parseInt(chainId!), 
+          parseInt(roundId!)
+        );
+        return roundData;
+      } catch (error) {
+        console.log(`Failed to fetch round ${roundId}:`, error);
+        return null;
       }
-      return null
     },
-    enabled: !!chainId && !!auctionAddress && !!takes && takes.length > 0
+    enabled: !!chainId && !!auctionAddress && !!roundId
   })
 
   // Fetch tokens for symbol resolution
@@ -68,6 +78,36 @@ const RoundDetails: React.FC = () => {
     queryFn: apiClient.getTokens
   })
 
+  // Calculate values needed for other hooks (must be before any early returns)
+  const currentRound = auctionDetails?.current_round
+  const isCurrentRound = currentRound && currentRound.round_id.toString() === roundId
+  // specificRoundData now contains the direct round data
+  const specificRound = specificRoundData
+  
+  // Get live data for this specific round
+  // Now we should have the exact from_token for this specific round
+  const fromTokenAddress = useMemo(() => {
+    // Use the specific round data first - this should have the exact from_token for round 29
+    if (specificRound?.from_token) {
+      return specificRound.from_token;
+    }
+    // Fallback to first take from this round
+    if (takes?.[0]?.from_token) {
+      return takes[0].from_token;
+    }
+    // Final fallback to auction's first from_token
+    return auctionDetails?.from_tokens?.[0]?.address || ''
+  }, [specificRound?.from_token, takes, auctionDetails?.from_tokens])
+
+  const { data: liveData, isLoading: liveDataLoading } = useAuctionLiveData(
+    auctionAddress || '',
+    fromTokenAddress,
+    parseInt(chainId || '0'),
+    30000 // 30 second refresh
+  )
+
+
+  // Calculate loading state after all hooks
   const isLoading = detailsLoading || takesLoading || roundsLoading
 
   if (isLoading) {
@@ -96,22 +136,6 @@ const RoundDetails: React.FC = () => {
       </div>
     )
   }
-
-  const currentRound = auctionDetails.current_round
-  const isCurrentRound = currentRound && currentRound.round_id.toString() === roundId
-  
-  // Find the specific round data from the rounds API
-  const specificRound = roundsData?.rounds?.find(r => r.round_id.toString() === roundId)
-  
-  // Get live data for the current round if it's active
-  // Use the specific from_token from the round data, fallback to first take
-  const fromTokenAddress = specificRound?.from_token || takes?.[0]?.from_token || ''
-  const { data: liveData, isLoading: liveDataLoading } = useAuctionLiveData(
-    auctionAddress || '',
-    fromTokenAddress,
-    parseInt(chainId || '0'),
-    30000 // 30 second refresh
-  )
   
   const roundInfo = isCurrentRound ? currentRound : specificRound ? {
     round_id: specificRound.round_id,
@@ -183,37 +207,6 @@ const RoundDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Round Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total Takes"
-          value={takes.length}
-          icon={Activity}
-          iconColor="text-primary-500"
-        />
-        
-        <StatsCard
-          title="Amount Taken"
-          value={formatTokenAmount(totalAmountSold.toString(), 18, 2)}
-          icon={TrendingDown}
-          iconColor="text-success-500"
-        />
-        
-        <StatsCard
-          title="Volume"
-          value={formatTokenAmount(totalVolume.toString(), 6, 2)}
-          icon={DollarSign}
-          iconColor="text-yellow-500"
-        />
-        
-        <StatsCard
-          title="Unique Takers"
-          value={uniqueTakers}
-          icon={Users}
-          iconColor="text-purple-500"
-        />
-      </div>
-
       {/* Round Details Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card">
@@ -269,6 +262,13 @@ const RoundDetails: React.FC = () => {
                     {formatTimeAgo(new Date(roundInfo.kicked_at).getTime() / 1000)}
                   </div>
                 </div>
+
+                <div>
+                  <span className="text-sm text-gray-500">Initial Available</span>
+                  <div className="font-mono text-gray-200">
+                    {formatReadableTokenAmount(roundInfo.initial_available, 4)} {fromTokenSymbol}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -287,20 +287,10 @@ const RoundDetails: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <span className="text-sm text-gray-500">Initial Available</span>
-                  <div className="font-mono text-gray-200">
-                    {formatReadableTokenAmount(roundInfo.initial_available, 4)} {fromTokenSymbol}
-                  </div>
-                </div>
-
                 {/* Live Current Price */}
                 {roundInfo.is_active && (
                   <div>
-                    <span className="text-sm text-gray-500 flex items-center space-x-1">
-                      <Zap className="h-3 w-3 text-primary-400" />
-                      <span>Current Price</span>
-                    </span>
+                    <span className="text-sm text-gray-500">Current Price</span>
                     <div className="flex items-center space-x-2">
                       {liveDataLoading ? (
                         <div className="flex items-center space-x-1">
@@ -326,10 +316,7 @@ const RoundDetails: React.FC = () => {
                 {/* Live Available Amount */}
                 {roundInfo.is_active && (
                   <div>
-                    <span className="text-sm text-gray-500 flex items-center space-x-1">
-                      <Package className="h-3 w-3 text-primary-400" />
-                      <span>Available Now</span>
-                    </span>
+                    <span className="text-sm text-gray-500">Available</span>
                     <div className="flex items-center space-x-2">
                       {liveDataLoading ? (
                         <div className="flex items-center space-x-1">

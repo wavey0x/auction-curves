@@ -154,10 +154,11 @@ class DatabaseQueries:
         return result.fetchall()
     
     @staticmethod
-    async def get_auction_rounds(db: AsyncSession, auction_address: str, from_token: str = None, chain_id: int = None, limit: int = 50):
+    async def get_auction_rounds(db: AsyncSession, auction_address: str, from_token: str = None, chain_id: int = None, limit: int = 50, round_id: int = None):
         """Get round history for an Auction"""
         chain_filter = "AND ar.chain_id = :chain_id" if chain_id else ""
         token_filter = "AND ar.from_token = :from_token" if from_token else ""
+        round_filter = "AND ar.round_id = :round_id" if round_id else ""
         
         query = text(f"""
             SELECT 
@@ -171,6 +172,7 @@ class DatabaseQueries:
             WHERE LOWER(ar.auction_address) = LOWER(:auction_address)
             {chain_filter}
             {token_filter}
+            {round_filter}
             ORDER BY ar.round_id DESC
             LIMIT :limit
         """)
@@ -183,6 +185,8 @@ class DatabaseQueries:
             params["chain_id"] = chain_id
         if from_token:
             params["from_token"] = from_token
+        if round_id:
+            params["round_id"] = round_id
             
         result = await db.execute(query, params)
         return result.fetchall()
@@ -678,7 +682,7 @@ class MockDataProvider(DataProvider):
             "total_pages": 0
         }
 
-    async def get_auction_rounds(self, auction_address: str, from_token: str, limit: int = 50, chain_id: int = None) -> Dict[str, Any]:
+    async def get_auction_rounds(self, auction_address: str, from_token: str = None, limit: int = 50, chain_id: int = None, round_id: int = None) -> Dict[str, Any]:
         """Generate mock rounds data"""
         return {
             "auction": auction_address,
@@ -943,19 +947,21 @@ class DatabaseDataProvider(DataProvider):
             logger.error(f"Database error in get_auction_takes: {e}")
             raise Exception(f"Failed to fetch auction takes from database: {e}")
 
-    async def get_auction_rounds(self, auction_address: str, from_token: str, limit: int = 50, chain_id: int = None) -> Dict[str, Any]:
+    async def get_auction_rounds(self, auction_address: str, from_token: str = None, limit: int = 50, chain_id: int = None, round_id: int = None) -> Dict[str, Any]:
         """Get auction rounds from database using direct SQL query"""
         try:
             async with AsyncSessionLocal() as session:
                 logger.info(f"Querying rounds for auction {auction_address}, from_token {from_token}, chain_id {chain_id}")
                 
-                # Use a direct SQL query to get the data
-                # Add chain_id filter if provided
+                # Use a direct SQL query to get the data with optional filters
                 chain_filter = "AND ar.chain_id = :chain_id" if chain_id else ""
+                token_filter = "AND LOWER(ar.from_token) = LOWER(:from_token)" if from_token else ""
+                round_filter = "AND ar.round_id = :round_id" if round_id else ""
                 
                 query = text(f"""
                     SELECT 
                         ar.round_id,
+                        ar.from_token,
                         ar.kicked_at,
                         ar.initial_available,
                         (ar.round_end > EXTRACT(EPOCH FROM NOW())::BIGINT AND ar.available_amount > 0) as is_active,
@@ -969,20 +975,24 @@ class DatabaseDataProvider(DataProvider):
                         AND ar.chain_id = t.chain_id 
                         AND ar.round_id = t.round_id
                     WHERE LOWER(ar.auction_address) = LOWER(:auction_address)
-                        AND LOWER(ar.from_token) = LOWER(:from_token)
                         {chain_filter}
-                    GROUP BY ar.round_id, ar.kicked_at, ar.initial_available, ar.round_end, ar.available_amount
+                        {token_filter}
+                        {round_filter}
+                    GROUP BY ar.round_id, ar.from_token, ar.kicked_at, ar.initial_available, ar.round_end, ar.available_amount
                     ORDER BY ar.round_id DESC
                     LIMIT :limit
                 """)
                 
                 params = {
                     "auction_address": auction_address,
-                    "from_token": from_token,
                     "limit": limit
                 }
                 if chain_id:
                     params["chain_id"] = chain_id
+                if from_token:
+                    params["from_token"] = from_token
+                if round_id:
+                    params["round_id"] = round_id
                 
                 result = await session.execute(query, params)
                 rounds_data = result.fetchall()
@@ -996,6 +1006,7 @@ class DatabaseDataProvider(DataProvider):
                     
                     round_info = {
                         "round_id": round_row.round_id,
+                        "from_token": round_row.from_token,
                         "kicked_at": kicked_at_iso,
                         "round_start": round_row.round_start if hasattr(round_row, 'round_start') and round_row.round_start else round_row.kicked_at,
                         "round_end": round_row.round_end if hasattr(round_row, 'round_end') and round_row.round_end else None,

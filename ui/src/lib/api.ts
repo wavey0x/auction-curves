@@ -65,10 +65,13 @@ class APIClient {
   async getAuctionRounds(
     auctionAddress: string, 
     chainId: number,
-    fromToken: string, 
+    fromToken?: string, 
     limit: number = 50
   ): Promise<AuctionRoundHistory> {
-    const url = `/auctions/${chainId}/${auctionAddress}/rounds?from_token=${fromToken}&limit=${limit}`
+    let url = `/auctions/${chainId}/${auctionAddress}/rounds?limit=${limit}`
+    if (fromToken) {
+      url += `&from_token=${fromToken}`
+    }
     const response = await fetch(`${BASE_URL}${url}`, {
       cache: 'no-cache',
       headers: { 'Cache-Control': 'no-cache' }
@@ -79,6 +82,26 @@ class APIClient {
     }
     
     return response.json()
+  }
+
+  // Add a specific method to get a single round by ID
+  async getAuctionRound(
+    auctionAddress: string,
+    chainId: number, 
+    roundId: number
+  ): Promise<any> {
+    const url = `/auctions/${chainId}/${auctionAddress}/rounds?round_id=${roundId}&limit=1`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch auction round: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    return data.rounds?.[0] || null
   }
 
   async getAuctionTakes(

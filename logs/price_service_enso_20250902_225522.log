@@ -2,3 +2,7 @@
 2025-09-02 22:55:22,527 - __main__ - INFO - 🚀 Starting ENSO Price Service
 2025-09-02 22:55:22,527 - __main__ - INFO - 📊 Settings: poll_interval=10s, recency_minutes=10
 2025-09-02 22:55:22,527 - __main__ - INFO - 🌐 ENSO API supports: Mainnet (chain 1), Polygon (chain 137), Arbitrum (chain 42161), Optimism (chain 10), Base (chain 8453)
+2025-09-02 23:35:04,173 - __main__ - INFO - [ENSO] Found 1 fresh price requests (< 10 minutes old)
+2025-09-02 23:35:08,776 - __main__ - INFO - [ENSO] 💰 Route price for 0x4606..D87f on Mainnet: $1.175806
+2025-09-02 23:35:08,781 - __main__ - INFO - [ENSO] 💰 Stored price: 0x4606..D87f on Mainnet = $1.1758
+2025-09-02 23:35:08,783 - __main__ - INFO - [ENSO] ✅ Completed request 6585: 0x4606..D87f = $1.1758

@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format ethereum addresses for display
  */
-export function formatAddress(address: string, length = 4): string {
+export function formatAddress(address: string, length = 5): string {
   if (!address) return ''
   if (address.length <= length * 2) return address
   return `${address.slice(0, length)}..${address.slice(-length)}`
