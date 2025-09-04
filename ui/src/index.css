@@ -104,6 +104,88 @@
   .table tbody tr:hover {
     @apply bg-gray-800/50;
   }
+
+  /* 8-bit style logo and badge */
+  .logo-8bit {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    /* Subtle pixel-outline effect */
+    text-shadow: 0 1px 0 rgba(0,0,0,0.8), 1px 0 0 rgba(0,0,0,0.8), -1px 0 0 rgba(0,0,0,0.8), 0 -1px 0 rgba(0,0,0,0.8);
+  }
+
+  /* Subtle glow using current text color */
+  .glow-text {
+    /* Much subtler glow */
+    text-shadow: 0 0 2px rgba(59,130,246,0.16);
+  }
+
+  /* Matrix/tech aesthetic enhancements */
+  .matrix-text {
+    background: linear-gradient(90deg, #00ff95 0%, #00e884 40%, #00d072 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow:
+      0 0 6px rgba(0, 255, 149, 0.35),
+      0 0 18px rgba(0, 255, 149, 0.15);
+  }
+
+  .logo-wrap-matrix {
+    position: relative;
+  }
+  .logo-wrap-matrix::after {
+    content: "";
+    position: absolute;
+    inset: -4px -6px -6px -6px;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 149, 0.06) 0px,
+      rgba(0, 255, 149, 0.06) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+    mix-blend-mode: overlay;
+    opacity: .35;
+    border-radius: 0.25rem;
+  }
+
+  .pixel-badge {
+    @apply flex items-center justify-center border-2;
+    border-color: theme('colors.primary.500 / 0.6');
+    background: none;
+    image-rendering: pixelated;
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.25), 0 2px 0 rgba(0,0,0,0.6);
+  }
+
+  .pixel-badge--matrix {
+    border-color: rgba(0, 255, 149, 0.5);
+    background: repeating-linear-gradient(
+      135deg,
+      rgba(0,255,149,0.10) 0px,
+      rgba(0,255,149,0.10) 3px,
+      rgba(0,255,149,0.18) 3px,
+      rgba(0,255,149,0.18) 6px
+    );
+    box-shadow: 0 0 0 1px rgba(0,255,149,0.25), 0 2px 0 rgba(0,0,0,0.65), 0 0 22px rgba(0,255,149,0.12);
+    animation: scan 12s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { background-position: 0 0; }
+    100% { background-position: 160px 160px; }
+  }
+
+  .matrix-underscore {
+    color: #00ff95;
+    animation: blink 1.2s steps(2, start) infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
 }
 
 @layer utilities {

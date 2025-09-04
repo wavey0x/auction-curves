@@ -2,6 +2,7 @@ import React from "react";
 import { cn, formatAddress } from "../lib/utils";
 import InternalLink from "./InternalLink";
 import ExternalAddressLink from "./ExternalAddressLink";
+import { useAddressTag } from "../hooks/useAddressTag";
 
 interface AddressLinkProps {
   address: string;
@@ -20,6 +21,8 @@ const AddressLink: React.FC<AddressLinkProps> = ({
   className = "",
   showFullOnHover = true,
 }) => {
+  const { getDisplayName, getTagInfo } = useAddressTag();
+  const tagInfo = getTagInfo(address);
   // Determine internal link based on type
   const getInternalLink = () => {
     switch (type) {
@@ -31,11 +34,16 @@ const AddressLink: React.FC<AddressLinkProps> = ({
   };
 
   const internalLink = getInternalLink();
+  const displayText = getDisplayName(address, {
+    showFullAddress: false,
+    addressLength: length,
+    maxTagLength: 9
+  });
 
   return (
     <div
       className={cn(
-        "inline-flex items-center justify-center font-mono text-xs",
+        "inline-flex items-center justify-center font-mono text-xs space-x-1",
         className
       )}
     >
@@ -47,7 +55,7 @@ const AddressLink: React.FC<AddressLinkProps> = ({
           address={address}
           chainId={chainId}
         >
-          {formatAddress(address, length)}
+          {displayText}
         </InternalLink>
       ) : (
         <ExternalAddressLink
@@ -56,6 +64,7 @@ const AddressLink: React.FC<AddressLinkProps> = ({
           type={type}
           length={length}
           showFullOnHover={showFullOnHover}
+          displayText={displayText}
         />
       )}
     </div>

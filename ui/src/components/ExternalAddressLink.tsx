@@ -11,6 +11,7 @@ interface ExternalAddressLinkProps {
   length?: number;
   className?: string;
   showFullOnHover?: boolean;
+  displayText?: string; // Override display text (for tagged addresses)
 }
 
 /**
@@ -27,6 +28,7 @@ const ExternalAddressLink: React.FC<ExternalAddressLinkProps> = ({
   length = 5,
   className = "",
   showFullOnHover = true,
+  displayText,
 }) => {
   const [copied, setCopied] = useState(false);
   const chainInfo = getChainInfo(chainId);
@@ -77,7 +79,7 @@ const ExternalAddressLink: React.FC<ExternalAddressLinkProps> = ({
       >
         {/* Address with white color */}
         <span className="text-white select-all">
-          {formattedAddress}
+          {displayText || formattedAddress}
         </span>
       </div>
 

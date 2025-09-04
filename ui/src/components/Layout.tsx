@@ -1,8 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Gavel, Activity, TrendingUp, Settings, Book } from 'lucide-react'
 import SettingsModal from './SettingsModal'
+import NotificationContainer from './NotificationContainer'
 import { useUserSettings } from '../context/UserSettingsContext'
+import { useNotifications } from '../context/NotificationContext'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../lib/api'
+import { eventStreamService } from '../services/eventStreamService'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -15,6 +20,65 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { customRpcWarning, dismissCustomRpcWarning, disableCustomRpc } = useUserSettings()
+  const { addNotification } = useNotifications()
+
+  // Persist settings modal open state to survive refresh/HMR
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem('settings_modal_open')
+      if (raw === 'true') setSettingsOpen(true)
+    } catch {}
+    // run once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  React.useEffect(() => {
+    try { localStorage.setItem('settings_modal_open', settingsOpen ? 'true' : 'false') } catch {}
+  }, [settingsOpen])
+
+  // Initialize event stream for real-time notifications
+  useEffect(() => {
+    const unsubscribe = eventStreamService.addListener((notification) => {
+      addNotification(notification)
+    })
+
+    eventStreamService.connect()
+
+    return () => {
+      unsubscribe()
+      eventStreamService.disconnect()
+    }
+  }, [addNotification])
+
+  const { data: statusData, error: statusError, isLoading } = useQuery({
+    queryKey: ['status-summary'],
+    queryFn: () => apiClient.getStatus(),
+    refetchInterval: 5000, // More aggressive refresh - every 5 seconds
+    staleTime: 0, // Always consider data stale for immediate updates
+    retry: 3,
+  })
+
+
+  let healthLabel = 'Healthy'
+  let healthColor = 'text-green-400'
+  let healthBg = 'bg-green-400'
+  
+  if (isLoading && !statusData) {
+    healthLabel = 'Loading'
+    healthColor = 'text-gray-400'
+    healthBg = 'bg-gray-400'
+  } else if (statusError || !statusData) {
+    healthLabel = 'Unhealthy'
+    healthColor = 'text-red-400'
+    healthBg = 'bg-red-400'
+  } else {
+    const services = statusData.services || []
+    const anyDown = services.some((s: any) => s.status === 'down')
+    const anyWarn = services.some((s: any) => s.status === 'degraded' || s.status === 'unknown')
+    if (anyDown) { healthLabel = 'Unhealthy'; healthColor = 'text-red-400'; healthBg = 'bg-red-400' }
+    else if (anyWarn) { healthLabel = 'Degraded'; healthColor = 'text-yellow-400'; healthBg = 'bg-yellow-400' }
+    else { healthLabel = 'Healthy'; healthColor = 'text-green-400'; healthBg = 'bg-green-400' }
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col">
@@ -25,20 +89,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Logo */}
             <div className="flex items-center space-x-4">
               <Link to="/" className="flex items-center space-x-3 group">
-                <div className="relative">
-                  <div className="relative h-11 w-11 rounded-2xl p-[1px] bg-gradient-to-br from-primary-400/60 via-primary-400/0 to-primary-400/60">
-                    <div className="h-full w-full rounded-2xl bg-gray-900/90 border border-primary-500/30 shadow-[0_0_24px_rgba(59,130,246,0.18)] flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
-                      <Gavel className="h-5 w-5 text-primary-400" />
-                    </div>
-                  </div>
+                <div className="h-11 w-11 pixel-badge rounded-none">
+                  <Gavel className="h-5 w-5 text-primary-300" />
                 </div>
                 <div>
-                  <h1 className="text-[22px] sm:text-2xl font-black tracking-tight leading-none">
-                    <span className="text-gray-100">Auction </span>
-                    <span className="relative inline-block">
-                      <span className="bg-gradient-to-r from-primary-300 via-primary-400 to-primary-300 bg-clip-text text-transparent">Analytics</span>
-                      <span className="absolute left-0 -bottom-1 h-[2px] w-full bg-gradient-to-r from-primary-500/0 via-primary-500/60 to-primary-500/0" />
-                    </span>
+                  <h1 className="logo-8bit glow-text text-[20px] sm:text-[22px] font-black leading-none text-primary-300">
+                    [ AUCTION <span className="text-gray-200">ANALYTICS</span> ]
                   </h1>
                 </div>
               </Link>
@@ -101,13 +157,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <footer className="fixed bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-900/80 backdrop-blur-xl py-2 z-40">
         <div className="px-6 lg:px-8">
           <div className="flex items-center justify-center text-xs text-gray-500">
-            <span className="flex items-center space-x-2">
-              <div className="h-1.5 w-1.5 bg-success-500 rounded-full"></div>
-              <span>Live</span>
-            </span>
-            
+            <Link to="/status" className={`flex items-center gap-2 font-semibold ${healthColor} hover:opacity-90`}>
+              <span className="relative inline-flex">
+                <span className={`absolute inline-flex h-2 w-2 rounded-full ${healthBg} opacity-50 animate-ping`}></span>
+                <span className={`relative inline-flex h-2 w-2 rounded-full ${healthBg}`}></span>
+              </span>
+              <span>{healthLabel}</span>
+            </Link>
+
             <span className="mx-3">|</span>
-            
+
             <Link 
               to="/api-docs" 
               className="flex items-center space-x-1 hover:text-gray-300 transition-colors"
@@ -121,6 +180,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Settings Modal */}
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      
+      {/* Notification Container */}
+      <NotificationContainer />
     </div>
   )
 }

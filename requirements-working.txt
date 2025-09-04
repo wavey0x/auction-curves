@@ -22,6 +22,16 @@ sqlalchemy[asyncio]>=2.0.0  # SQL toolkit with async support
 pydantic-settings>=2.1.0    # Settings management for Pydantic V2
 
 # ============================================================================
+# REDIS DEPENDENCIES (Required for pub/sub messaging)
+# ============================================================================
+redis>=5.0.0                # Redis client for streams and messaging
+
+# ============================================================================
+# TELEGRAM BOT DEPENDENCIES (Required for auction alerts)
+# ============================================================================
+python-telegram-bot>=20.0  # Telegram bot framework with async support
+
+# ============================================================================
 # BLOCKCHAIN DEVELOPMENT (Optional - for smart contract work)
 # ============================================================================
 # eth-brownie>=1.20.0       # Uncomment only if needed for contract development

@@ -603,10 +603,10 @@ const AuctionsTable: React.FC<AuctionsTableProps> = ({ auctions = [] }) => {
                         const isKickable = kickableData[auction.address]?.isKickable || false
                         const kickableCount = kickableData[auction.address]?.totalKickableCount || 0
                         
-                        // Determine all applicable statuses
+                        // Determine all applicable statuses with ACTIVE prioritized at top
                         const statuses: AuctionStatus[] = []
-                        if (isKickable) statuses.push('kickable')
                         if (isActive) statuses.push('active')
+                        if (isKickable) statuses.push('kickable')
                         if (statuses.length === 0) statuses.push('inactive')
                         
                         return (

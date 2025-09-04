@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import InternalLink from "../components/InternalLink";
 import RoundLink from "../components/RoundLink";
 import { useQuery } from "@tanstack/react-query";
@@ -16,11 +16,14 @@ import {
   Gavel,
   ChevronLeft,
   ChevronRight,
+  Wallet,
 } from "lucide-react";
 import { apiClient } from "../lib/api";
 import Pagination from "../components/Pagination";
 import StatsCard from "../components/StatsCard";
 import TakesTable from "../components/TakesTable";
+import TakersView from "../components/TakersView";
+import TakerLink from "../components/TakerLink";
 import StandardTxHashLink from "../components/StandardTxHashLink";
 import AddressLink from "../components/AddressLink";
 import AuctionsTable from "../components/AuctionsTable";
@@ -43,7 +46,7 @@ import type { AuctionTake } from "../types/auction";
 import { useUserSettings } from "../context/UserSettingsContext";
 import { getAuctionLiveData, type AuctionCall } from "../lib/multicall";
 
-type ViewType = 'active-rounds' | 'takes' | 'all-auctions';
+type ViewType = 'active-rounds' | 'takes' | 'takers' | 'all-auctions';
 
 // Pulsing green dot component for active rounds
 const PulsingDot: React.FC = () => (
@@ -54,6 +57,8 @@ const PulsingDot: React.FC = () => (
 );
 
 const Dashboard: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { defaultValueDisplay, setDefaultValueDisplay } = useUserSettings();
   const [activeView, setActiveView] = useState<ViewType>('active-rounds');
   const [takesPage, setTakesPage] = useState(1);
@@ -66,6 +71,57 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     setShowUSD(defaultValueDisplay === 'usd');
   }, [defaultValueDisplay]);
+
+  // Persist selected tab and reflect in URL hash
+  const STORAGE_KEY = 'dashboard_active_tab';
+
+  const parseHashToView = (hash: string): ViewType | null => {
+    const h = (hash || '').replace(/^#/, '').trim();
+    if (h === 'active-rounds' || h === 'takes' || h === 'takers' || h === 'all-auctions') {
+      return h as ViewType;
+    }
+    return null;
+  };
+
+  // Initialize from hash or localStorage
+  useEffect(() => {
+    const fromHash = parseHashToView(location.hash);
+    if (fromHash) {
+      setActiveView(fromHash);
+      return;
+    }
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY) as ViewType | null;
+      if (stored && parseHashToView('#' + stored)) {
+        setActiveView(stored as ViewType);
+      }
+    } catch (e) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update on hash change (browser nav)
+  useEffect(() => {
+    const fromHash = parseHashToView(location.hash);
+    if (fromHash && fromHash !== activeView) {
+      setActiveView(fromHash);
+    }
+  }, [location.hash]);
+
+  // Reflect activeView to URL and localStorage (use history.replaceState to avoid route-level reloads)
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, activeView);
+    } catch (e) {
+      // ignore
+    }
+    const desiredHash = `#${activeView}`;
+    if (location.hash !== desiredHash) {
+      const newUrl = `${location.pathname}${location.search}${desiredHash}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [activeView]);
 
   // Function to toggle both local and global setting
   const toggleValueDisplay = () => {
@@ -188,6 +244,16 @@ const Dashboard: React.FC = () => {
     },
     staleTime: 10000,
   });
+  
+  // Get takers count for badge
+  const { data: takersTotal } = useQuery({
+    queryKey: ["takersCount"],
+    queryFn: async () => {
+      const response = await apiClient.getTakers({ limit: 1 });
+      return response.total;
+    },
+    staleTime: 30000,
+  });
 
   // Get recent takes (global, most recent first)
   const { data: allTakes, isLoading: takesLoading } = useQuery({
@@ -287,7 +353,7 @@ const Dashboard: React.FC = () => {
       <div className="relative">
         <div className="flex justify-center mb-6">
           <div className="inline-flex rounded-lg bg-gray-800/50 p-1 backdrop-blur-sm border border-gray-700/50">
-            <button
+            <button type="button"
               onClick={() => setActiveView('active-rounds')}
               className={`${
                 activeView === 'active-rounds'
@@ -311,7 +377,7 @@ const Dashboard: React.FC = () => {
             {/* Separator */}
             <div className="w-px bg-gray-600/50 mx-1"></div>
             
-            <button
+            <button type="button"
               onClick={() => setActiveView('takes')}
               className={`${
                 activeView === 'takes'
@@ -335,7 +401,7 @@ const Dashboard: React.FC = () => {
             {/* Separator */}
             <div className="w-px bg-gray-600/50 mx-1"></div>
             
-            <button
+            <button type="button"
               onClick={() => setActiveView('all-auctions')}
               className={`${
                 activeView === 'all-auctions'
@@ -352,6 +418,30 @@ const Dashboard: React.FC = () => {
                     : 'bg-primary-500/20 text-primary-400'
                 } text-xs px-1.5 py-0.5 rounded-full`}>
                   {auctionsTotal}
+                </span>
+              )}
+            </button>
+            
+            {/* Separator */}
+            <div className="w-px bg-gray-600/50 mx-1"></div>
+            
+            <button type="button"
+              onClick={() => setActiveView('takers')}
+              className={`${
+                activeView === 'takers'
+                  ? 'bg-primary-700 text-white shadow-lg'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+              } inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 space-x-2`}
+            >
+              <Users className="h-4 w-4" />
+              <span>Takers</span>
+              {takersTotal && takersTotal > 0 && (
+                <span className={`${
+                  activeView === 'takers'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-primary-500/20 text-primary-400'
+                } text-xs px-1.5 py-0.5 rounded-full`}>
+                  {takersTotal}
                 </span>
               )}
             </button>
@@ -591,18 +681,18 @@ const Dashboard: React.FC = () => {
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {round.seconds_elapsed !== undefined && round.seconds_elapsed !== null ? (
-                                      round.seconds_elapsed > 3600 ? (
+                                      round.seconds_elapsed >= 3600 ? (
                                         `${Math.floor(round.seconds_elapsed / 3600)}h ${Math.floor((round.seconds_elapsed % 3600) / 60)}m elapsed`
                                       ) : (
-                                        `${Math.floor(round.seconds_elapsed / 60)}m ${round.seconds_elapsed % 60}s elapsed`
+                                        '< 1h elapsed'
                                       )
                                     ) : round.round_start ? (
                                       (() => {
                                         const elapsed = Math.floor(Date.now() / 1000) - round.round_start;
-                                        return elapsed > 3600 ? (
+                                        return elapsed >= 3600 ? (
                                           `${Math.floor(elapsed / 3600)}h ${Math.floor((elapsed % 3600) / 60)}m elapsed`
                                         ) : (
-                                          `${Math.floor(elapsed / 60)}m ${elapsed % 60}s elapsed`
+                                          '< 1h elapsed'
                                         );
                                       })()
                                     ) : (
@@ -635,7 +725,7 @@ const Dashboard: React.FC = () => {
             <>
               {recentTakes && recentTakes.length > 0 ? (
                 <>
-                  <div className="card overflow-visible">
+                  <div className="overflow-hidden">
                     <table className="w-full border-collapse">
                       <thead className="bg-gray-800">
                         <tr>
@@ -747,11 +837,9 @@ const Dashboard: React.FC = () => {
                             </td>
 
                             <td className="border-b border-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                              <AddressLink
-                                address={take.taker}
+                              <TakerLink
+                                takerAddress={take.taker}
                                 chainId={take.chain_id}
-                                type="address"
-                                length={5}
                                 className="text-gray-400"
                               />
                             </td>
@@ -800,6 +888,11 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
             </>
+          )}
+
+          {/* Takers View */}
+          {activeView === 'takers' && (
+            <TakersView limit={50} />
           )}
 
           {/* All Auctions View */}

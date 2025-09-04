@@ -8,10 +8,27 @@ import type {
   SystemStats,
   PaginatedTakesResponse,
 } from '../types/auction'
+import type { 
+  TakerListResponse, 
+  TakerDetail, 
+  TakerTakesResponse,
+  TokenPairsResponse 
+} from '../types/taker'
+import type { TakeDetail } from '../types/take'
 
 const BASE_URL = '/api'
 
 class APIClient {
+  async getStatus(): Promise<any> {
+    const response = await fetch(`/api/status`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch status: ${response.statusText}`)
+    }
+    return response.json()
+  }
   // New Auction endpoints
   async getAuctions(params?: {
     status?: 'all' | 'active' | 'completed'
@@ -197,6 +214,112 @@ class APIClient {
     
     if (!response.ok) {
       throw new Error(`Failed to fetch system stats: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  // Taker endpoints
+  async getTakers(params?: {
+    sort_by?: string
+    page?: number
+    limit?: number
+    chain_id?: number
+  }): Promise<TakerListResponse> {
+    const searchParams = new URLSearchParams()
+    
+    if (params?.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params?.page) searchParams.append('page', params.page.toString())
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.chain_id) searchParams.append('chain_id', params.chain_id.toString())
+    
+    // Add timestamp to prevent caching
+    searchParams.append('_t', Date.now().toString())
+    const url = `/takers?${searchParams.toString()}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch takers: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  async getTakerDetails(address: string): Promise<TakerDetail> {
+    const response = await fetch(`${BASE_URL}/takers/${address}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch taker details: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  async getTakerTakes(address: string, params?: {
+    page?: number
+    limit?: number
+    chain_id?: number
+  }): Promise<TakerTakesResponse> {
+    const searchParams = new URLSearchParams()
+    
+    if (params?.page) searchParams.append('page', params.page.toString())
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.chain_id) searchParams.append('chain_id', params.chain_id.toString())
+    
+    // Add timestamp to prevent caching
+    searchParams.append('_t', Date.now().toString())
+    const url = `/takers/${address}/takes?${searchParams.toString()}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch taker takes: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  async getTakerTokenPairs(address: string, params?: {
+    page?: number
+    limit?: number
+  }): Promise<TokenPairsResponse> {
+    // Add timestamp to prevent caching
+    const searchParams = new URLSearchParams()
+    
+    if (params?.page) searchParams.append('page', params.page.toString())
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    
+    searchParams.append('_t', Date.now().toString())
+    const url = `/takers/${address}/token-pairs?${searchParams.toString()}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch taker token pairs: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+
+  async getTakeDetails(chainId: number, auctionAddress: string, roundId: number, takeSeq: number): Promise<TakeDetail> {
+    const url = `/takes/${chainId}/${auctionAddress}/${roundId}/${takeSeq}`
+    const response = await fetch(`${BASE_URL}${url}`, {
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch take details: ${response.statusText}`)
     }
     
     return response.json()

@@ -274,11 +274,12 @@ The Web3.py indexer populates business logic tables directly:
 
 #### User Account Rules
 
-- **Development Environment**: ALWAYS use consistent local user account for all database connections
+- **Development Environment**: ALWAYS use consistent database user account for all database connections
   - Database: `auction_dev`
-  - Connection: `postgresql://wavey@localhost:5432/auction_dev` (or your local username)
-  - User MUST have SUPERUSER privileges in PostgreSQL container
-  - **NEVER mix `postgres` and local user** - pick one and use consistently across all services
+  - Connection: `postgresql://postgres:password@localhost:5433/auction_dev`
+  - Port: `5433` (NOT 5432 - this is the Docker-mapped port)
+  - User: `postgres` (superuser with password authentication)
+  - **NEVER mix different users** - use `postgres` consistently across all services
 - **Production Environment**: Use service-specific users with minimal required privileges
   - Database: `auction_prod`
   - Connection: `postgresql://app_user:password@prod-host:5432/auction_prod`
@@ -411,6 +412,171 @@ colors: {
 - Color-coded progress states
 - Responsive sizing with percentages
 ```
+
+### Standard UI Components
+
+**CRITICAL FOR AI ASSISTANTS**: Always use these standard components instead of creating custom implementations. This ensures consistency across the application and reduces maintenance overhead.
+
+#### Navigation & Links
+
+```typescript
+// ui/src/components/InternalLink.tsx
+// Used for all internal navigation within the app
+<InternalLink to="/auction/1/0x123...abc" variant="address">
+  Address Display
+</InternalLink>
+<InternalLink to="/round/1/0x123...abc/5" variant="round">
+  R5
+</InternalLink>
+
+// ui/src/components/AddressLink.tsx
+// External blockchain explorer links
+<AddressLink 
+  address="0x123...abc" 
+  chainId={1} 
+  type="auction" 
+  className="text-primary-400" 
+/>
+
+// ui/src/components/TakerLink.tsx
+// Links to taker details pages
+<TakerLink takerAddress="0x123...abc" chainId={1} />
+
+// ui/src/components/RoundLink.tsx
+// Links to specific auction rounds
+<RoundLink chainId={1} auctionAddress="0x123...abc" roundId={5} />
+```
+
+#### Transaction & Address Display
+
+```typescript
+// ui/src/components/StandardTxHashLink.tsx
+// External blockchain explorer transaction links
+<StandardTxHashLink txHash="0xabc...123" chainId={1} />
+
+// ui/src/components/AddressDisplay.tsx
+// Formatted address display with copy functionality
+<AddressDisplay address="0x123...abc" />
+
+// ui/src/components/TxHashDisplay.tsx
+// Formatted transaction hash display
+<TxHashDisplay txHash="0xabc...123" />
+```
+
+#### Data Display
+
+```typescript
+// ui/src/components/TokenPairDisplay.tsx
+// Standard token pair visualization (from → to)
+<TokenPairDisplay 
+  fromToken="USDC" 
+  toToken="YFI" 
+  size="sm" 
+/>
+
+// ui/src/components/ChainIcon.tsx
+// Blockchain network icons with consistent sizing
+<ChainIcon chainId={1} size="sm" showName={false} />
+
+// ui/src/components/StatsCard.tsx
+// Consistent metric display cards
+<StatsCard
+  title="Total Volume"
+  value={formatUSD(123456)}
+  icon={DollarSign}
+  iconColor="text-green-400"
+/>
+```
+
+#### Tables & Data Lists
+
+```typescript
+// ui/src/components/Pagination.tsx
+// Standard pagination component - ALWAYS use this for paginated data
+<Pagination
+  currentPage={1}
+  canGoPrev={false}
+  canGoNext={true}
+  onPrev={() => setPage(p => p - 1)}
+  onNext={() => setPage(p => p + 1)}
+  totalPages={10}
+  summaryText="100 total items"
+/>
+
+// ui/src/components/TakesTable.tsx
+// Pre-built table for displaying auction takes
+<TakesTable
+  takes={takesData}
+  title="Recent Takes"
+  maxHeight="max-h-96"
+  hideAuctionColumn={false}
+  currentPage={1}
+  canGoNext={true}
+  canGoPrev={false}
+  onNextPage={() => {}}
+  onPrevPage={() => {}}
+  totalPages={5}
+/>
+```
+
+#### User Interface Elements
+
+```typescript
+// ui/src/components/BackButton.tsx
+// Consistent back navigation
+<BackButton />
+
+// ui/src/components/LoadingSpinner.tsx
+// Standard loading states
+<LoadingSpinner size="lg" />
+
+// ui/src/components/LiveDataBadge.tsx
+// Real-time data indicators
+<LiveDataBadge />
+```
+
+#### Layout & Organization
+
+```typescript
+// ui/src/components/CollapsibleSection.tsx
+// Expandable content sections
+<CollapsibleSection title="Advanced Options" defaultOpen={false}>
+  Content here
+</CollapsibleSection>
+
+// ui/src/components/KeyValueGrid.tsx
+// Structured data display
+<KeyValueGrid items={[
+  { label: "Status", value: "Active" },
+  { label: "Volume", value: "$123,456" }
+]} />
+```
+
+### Component Usage Standards
+
+**Required Patterns:**
+- ✅ **ALWAYS** use `InternalLink` for navigation within the app
+- ✅ **ALWAYS** use `AddressLink` for external blockchain explorer links
+- ✅ **ALWAYS** use `Pagination` component for paginated data (never custom pagination)
+- ✅ **ALWAYS** use `TokenPairDisplay` for showing token pairs (from → to format)
+- ✅ **ALWAYS** use `StandardTxHashLink` for transaction hash links
+- ✅ **ALWAYS** use `ChainIcon` for blockchain network indicators
+- ✅ **ALWAYS** use `StatsCard` for metric displays
+- ✅ **ALWAYS** use `LoadingSpinner` for loading states
+
+**Interface Requirements:**
+- All components have TypeScript interfaces defining props
+- Required props are explicitly marked as required
+- Optional props have sensible defaults
+- Components accept className prop for custom styling
+- Size variants follow pattern: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
+**Styling Consistency:**
+- Use TailwindCSS utility classes
+- Follow dark theme color palette (gray-800/900/950 backgrounds)
+- Use primary-400/500/600/700 for brand colors
+- Maintain consistent spacing with Tailwind's spacing scale
+- Ensure all interactive elements have hover states
 
 ### State Management Patterns
 

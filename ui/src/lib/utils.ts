@@ -15,6 +15,17 @@ export function formatAddress(address: string, length = 5): string {
 }
 
 /**
+ * Format address tags for display with consistent truncation
+ * Truncates from the end with ".." if longer than maxLength
+ * Examples: "HELLO_WORLD" -> "HELLO_WOR..", "Cowswap" -> "Cowswap"
+ */
+export function formatTag(tag: string, maxLength: number = 11): string {
+  if (!tag) return ''
+  if (tag.length <= maxLength) return tag
+  return tag.slice(0, maxLength - 2) + '..'
+}
+
+/**
  * Format token amounts with proper decimals
  */
 export function formatTokenAmount(
@@ -264,6 +275,22 @@ export function getAuctionStatus(progress: number): 'active' | 'ending' | 'ended
   if (progress >= 100) return 'ended'
   if (progress >= 90) return 'ending'
   return 'active'
+}
+
+/**
+ * Format numbers with appropriate commas and precision
+ */
+export function formatNumber(value: number, maxDecimals: number = 0): string {
+  if (!value || value === 0) return '0'
+  
+  if (maxDecimals === 0) {
+    return value.toLocaleString()
+  }
+  
+  return value.toLocaleString(undefined, { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxDecimals 
+  })
 }
 
 /**

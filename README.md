@@ -147,21 +147,211 @@ In development mode, the indexer configuration is generated dynamically to match
 
 ## 📊 API Endpoints
 
-### Core Endpoints
+### Core Auction Endpoints
 ```
-GET  /auctions                          # List all auctions with filtering
-GET  /auctions/{address}                # Individual auction details
-GET  /auctions/{address}/rounds         # Historical rounds  
-GET  /auctions/{address}/sales          # Sales/take events
-GET  /health                           # System health check
-GET  /docs                             # Interactive API documentation
+GET  /auctions                                           # List auctions with filtering (status, page, limit, chain_id)
+GET  /auctions/{chain_id}/{auction_address}             # Individual auction details  
+GET  /auctions/{chain_id}/{auction_address}/takes       # Get takes for specific auction (with round filtering)
+GET  /auctions/{chain_id}/{auction_address}/rounds      # Get auction round history (with token filtering)
+GET  /auctions/{chain_id}/{auction_address}/price-history # Price history for charting (placeholder)
 ```
 
-### Multi-Chain Support
+### Taker Analytics Endpoints
 ```
-GET  /chains                           # Supported blockchain networks
-GET  /chains/{chainId}                 # Specific chain information
+GET  /takers                                            # List takers ranked by activity (volume/takes/recent)
+GET  /takers/{taker_address}                           # Detailed taker profile with rankings
+GET  /takers/{taker_address}/takes                     # Paginated takes history for specific taker
+GET  /takers/{taker_address}/token-pairs               # Most frequented token pairs by taker
 ```
+
+### System & Network Endpoints
+```
+GET  /                                                 # API root with status and endpoint listing
+GET  /health                                          # System health check with database status
+GET  /system/stats                                    # System statistics (with optional chain filtering)
+GET  /tokens                                          # Token registry across all chains
+GET  /chains                                          # Supported blockchain networks with metadata
+GET  /chains/{chain_id}                               # Specific chain information
+GET  /networks                                        # Active network configurations and status
+GET  /networks/{network_name}                         # Detailed network information
+```
+
+### Activity & Analytics Endpoints  
+```
+GET  /activity/takes                                   # Recent takes across all auctions (most recent first)
+GET  /activity/kicks                                   # Legacy kicks endpoint (placeholder)
+GET  /analytics/overview                               # System overview with legacy format compatibility
+```
+
+### API Documentation
+```
+GET  /docs                                            # Interactive Swagger documentation
+GET  /redoc                                           # ReDoc API documentation
+```
+
+## 📋 API Documentation Details
+
+### Auction Endpoints
+
+**GET `/auctions`** - List auctions with filtering
+- **Parameters**: 
+  - `status` (string): Filter by "all", "active", or "completed" (default: "all")
+  - `page` (int): Page number (default: 1, min: 1)
+  - `limit` (int): Items per page (default: 20, max: 100)
+  - `chain_id` (int): Filter by specific chain ID (optional)
+- **Response**: Paginated list of auctions with metadata
+
+**GET `/auctions/{chain_id}/{auction_address}`** - Get auction details
+- **Parameters**: 
+  - `chain_id` (int): Blockchain network ID (e.g., 1 for Ethereum)
+  - `auction_address` (string): Contract address of the auction
+- **Response**: Complete auction information including parameters and status
+
+**GET `/auctions/{chain_id}/{auction_address}/takes`** - Get auction takes
+- **Parameters**:
+  - `round_id` (int): Filter by specific round ID (optional)
+  - `limit` (int): Number of takes to return (default: 50, max: 100)
+  - `offset` (int): Skip this many takes for pagination (default: 0)
+- **Response**: List of takes/sales for the auction
+
+**GET `/auctions/{chain_id}/{auction_address}/rounds`** - Get auction rounds  
+- **Parameters**:
+  - `from_token` (string): Filter by token being sold (optional)
+  - `round_id` (int): Get specific round ID (optional)
+  - `limit` (int): Number of rounds to return (default: 50, max: 100)
+- **Response**: Historical round data with pricing and timing
+
+### Taker Analytics Endpoints
+
+**GET `/takers`** - List and rank takers by activity
+- **Parameters**:
+  - `sort_by` (string): Sort by "volume", "takes", or "recent" (default: "volume")
+  - `limit` (int): Number of takers per page (default: 25, max: 100)  
+  - `page` (int): Page number (default: 1)
+  - `chain_id` (int): Filter by specific chain (optional)
+- **Response**: `TakerListResponse` with ranked taker summaries
+
+**GET `/takers/{taker_address}`** - Get detailed taker profile
+- **Parameters**: 
+  - `taker_address` (string): Ethereum address of the taker wallet
+- **Response**: `TakerDetail` with comprehensive statistics and auction breakdown
+
+**GET `/takers/{taker_address}/takes`** - Get taker's take history
+- **Parameters**:
+  - `limit` (int): Takes per page (default: 20, max: 100)
+  - `page` (int): Page number (default: 1)
+- **Response**: `TakerTakesResponse` with paginated takes list
+
+**GET `/takers/{taker_address}/token-pairs`** - Get frequented token pairs
+- **Parameters**:
+  - `page` (int): Page number (default: 1)
+  - `limit` (int): Token pairs per page (default: 50, max: 100)
+- **Response**: Token pairs ranked by frequency of takes
+
+### System Information
+
+**GET `/system/stats`** - System-wide statistics
+- **Parameters**:
+  - `chain_id` (int): Filter statistics by chain (optional)
+- **Response**: `SystemStats` with auction counts, volumes, and activity metrics
+
+**GET `/chains`** - Supported blockchain networks
+- **Response**: Map of chain IDs to network metadata (name, explorer, icon)
+
+**GET `/networks`** - Active network configurations
+- **Response**: Current network status including RPC health and factory addresses
+
+## 🏗️ Data Models & Response Structures
+
+### Core Data Models
+
+**TakerSummary** - Used in taker list views
+```typescript
+{
+  taker: string;              // Taker wallet address
+  total_takes: number;        // Total number of takes
+  unique_auctions: number;    // Number of unique auctions participated in
+  unique_chains: number;      // Number of chains active on
+  total_volume_usd: string;   // Total USD volume (formatted string)
+  avg_take_size_usd: string;  // Average USD per take (formatted string)
+  first_take: datetime;       // Timestamp of first take
+  last_take: datetime;        // Timestamp of most recent take
+  active_chains: number[];    // Array of chain IDs where taker is active
+  rank_by_takes: number;      // Rank position by total takes count
+  rank_by_volume: number;     // Rank position by total USD volume
+}
+```
+
+**TakerDetail** - Comprehensive taker profile
+```typescript
+{
+  // All TakerSummary fields plus:
+  auction_breakdown: AuctionBreakdown[];  // Per-auction activity breakdown
+}
+```
+
+**AuctionBreakdown** - Taker's activity per auction
+```typescript
+{
+  auction_address: string;    // Auction contract address
+  chain_id: number;          // Chain ID
+  takes_count: number;       // Number of takes in this auction
+  volume_usd: string;        // Total USD volume in this auction
+  last_take: datetime;       // Most recent take in this auction
+}
+```
+
+**SystemStats** - System-wide statistics
+```typescript
+{
+  total_auctions: number;     // Number of unique auctions
+  total_takes: number;        // Total takes across all auctions
+  total_volume_usd: string;   // Total USD volume (formatted)
+  active_auctions: number;    // Currently active auctions
+  unique_takers: number;      // Number of unique taker addresses
+  supported_chains: number;   // Number of supported blockchain networks
+}
+```
+
+### Response Wrappers
+
+**TakerListResponse** - Paginated taker list
+```typescript
+{
+  takers: TakerSummary[];     // Array of taker summaries
+  total: number;              // Total number of takers
+  page: number;               // Current page number
+  per_page: number;           // Items per page
+  has_next: boolean;          // Whether more pages exist
+}
+```
+
+**TakerTakesResponse** - Paginated takes for specific taker
+```typescript
+{
+  takes: Take[];              // Array of take objects
+  total: number;              // Total takes by this taker
+  page: number;               // Current page number
+  per_page: number;           // Items per page
+  has_next: boolean;          // Whether more pages exist
+}
+```
+
+### Database Integration
+
+The API uses **PostgreSQL with TimescaleDB** for optimal time-series performance:
+
+- **Real-time USD calculations** via database views and LATERAL joins with token price data
+- **Multi-chain support** with `chain_id` fields across all tables
+- **Optimized indexes** for frequent queries (taker rankings, auction filtering)
+- **Materialized views** for complex aggregations (taker statistics, system stats)
+
+### Authentication & Rate Limiting
+
+- **Public API**: No authentication required for read operations
+- **CORS enabled** for frontend integration
+- **Rate limiting**: Implemented at FastAPI level for production deployments
+- **Health checks**: Built-in endpoints for monitoring and load balancer health checks
 
 ## 🛠️ Development Workflow
 

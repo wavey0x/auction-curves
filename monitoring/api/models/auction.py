@@ -262,6 +262,69 @@ class ActivityEvent(BaseModel):
     round_id: Optional[int] = None
     take_seq: Optional[int] = None
 
+# Enhanced Take Details Models
+
+class PriceQuote(BaseModel):
+    """Price quote from a specific pricing source around the time of a take"""
+    source: str = Field(..., description="Pricing source (ypm, enso, odos, cowswap)")
+    token_address: str = Field(..., description="Token contract address")
+    token_symbol: Optional[str] = Field(None, description="Token symbol")
+    price_usd: float = Field(..., description="Price in USD")
+    block_number: int = Field(..., description="Block number when price was recorded")
+    timestamp: int = Field(..., description="Unix timestamp when price was recorded")
+    block_distance: int = Field(..., description="Blocks away from take (0 = same block)")
+    time_distance: int = Field(..., description="Seconds away from take")
+
+class PnLAnalysis(BaseModel):
+    """Profit/Loss analysis based on different price sources"""
+    base_pnl: float = Field(..., description="PnL using primary price source")
+    best_case_pnl: float = Field(..., description="Best possible PnL from available prices")
+    worst_case_pnl: float = Field(..., description="Worst possible PnL from available prices")
+    average_pnl: float = Field(..., description="Average PnL across all sources")
+    price_variance_percent: float = Field(..., description="Price variance as percentage")
+    take_value_usd: float = Field(..., description="Total value of the take in USD")
+
+class TakeDetail(BaseModel):
+    """Comprehensive take details including price analysis"""
+    # Core take data
+    take_id: str = Field(..., description="Unique take identifier: {auction}-{roundId}-{takeSeq}")
+    auction_address: str = Field(..., description="Auction contract address")
+    chain_id: int = Field(..., description="Chain ID where this take occurred")
+    round_id: int = Field(..., description="Round ID this take belongs to")
+    take_seq: int = Field(..., description="Take sequence number within round (1, 2, 3...)")
+    taker: str = Field(..., description="Address that made the purchase")
+    
+    # Token exchange details
+    from_token: str = Field(..., description="Token being sold (from auction)")
+    to_token: str = Field(..., description="Token being bought (want token)")
+    from_token_symbol: Optional[str] = Field(None, description="From token symbol")
+    to_token_symbol: Optional[str] = Field(None, description="To token symbol")
+    amount_taken: str = Field(..., description="Amount of from_token purchased")
+    amount_paid: str = Field(..., description="Amount of to_token paid")
+    price: str = Field(..., description="Price per from_token in to_token units")
+    
+    # Gas and transaction details
+    tx_hash: str = Field(..., description="Transaction hash")
+    block_number: int = Field(..., description="Block number")
+    timestamp: datetime = Field(..., description="Transaction timestamp")
+    gas_price: Optional[float] = Field(None, description="Gas price in Gwei")
+    base_fee: Optional[float] = Field(None, description="Base fee in Gwei (EIP-1559)")
+    priority_fee: Optional[float] = Field(None, description="Priority fee in Gwei")
+    gas_used: Optional[int] = Field(None, description="Total gas used")
+    transaction_fee_eth: Optional[float] = Field(None, description="Total fee in ETH")
+    transaction_fee_usd: Optional[float] = Field(None, description="Total fee in USD")
+    
+    # Price analysis
+    price_quotes: List[PriceQuote] = Field(default_factory=list, description="Price quotes from various sources")
+    pnl_analysis: PnLAnalysis = Field(..., description="PnL analysis based on price variations")
+    
+    # Auction context
+    auction_decay_rate: Optional[float] = Field(None, description="Auction decay rate")
+    auction_update_interval: Optional[int] = Field(None, description="Price update interval in seconds")
+    round_total_takes: Optional[int] = Field(None, description="Total takes in this round")
+    round_available_before: Optional[str] = Field(None, description="Available amount before this take")
+    round_available_after: Optional[str] = Field(None, description="Available amount after this take")
+
 # Backward compatibility aliases
 AuctionSale = Take  # For backward compatibility
 AuctionSaleMessage = TakeMessage  # For backward compatibility

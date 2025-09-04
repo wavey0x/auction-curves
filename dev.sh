@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SESSION_NAME="auction_dev"
 LOG_DIR="$SCRIPT_DIR/logs"
-SERVICES=("postgres" "api" "indexer" "ui" "prices")
+SERVICES=("postgres" "redis" "api" "indexer" "relay" "telegram" "ui" "prices")
 
 # Default options
 ATTACH_SESSION=false
@@ -45,10 +45,13 @@ OPTIONS:
 
 SERVICES MANAGED:
   📦 PostgreSQL   Database (via Docker if needed)
+  🔗 Redis        Message streaming and caching (via Docker if needed)
   🖥️  API Server   FastAPI backend on port 8000
   📊 Indexer      Custom Web3.py blockchain indexer
+  📤 Relay        Outbox to Redis Streams relay service
+  📱 Telegram     Bot for real-time auction alerts
   ⚛️  React UI     Vite dev server on port 3000
-  💰 Price Services All pricing services (ypm, odos, enso)
+  💰 Price Services All pricing services (ymp, odos, enso)
 
 EXAMPLES:
   ./dev.sh                    # Start all services with tmux
@@ -106,12 +109,13 @@ CURRENT_STEP=0
 
 # Calculate total steps based on configuration
 calculate_steps() {
-    TOTAL_STEPS=7  # Base steps: env, prereq, db, cleanup, tmux, api, indexer, pricing
+    # Base steps: env, prereq, venv, db, redis, cleanup, tmux, api, indexer, relay, telegram, pricing
+    TOTAL_STEPS=12
     if [ "$SKIP_UI" = false ]; then
         TOTAL_STEPS=$((TOTAL_STEPS + 1))  # UI service
     fi
     if [ "$USE_MOCK_DATA" = true ]; then
-        TOTAL_STEPS=$((TOTAL_STEPS - 2))  # No indexer/pricing in mock mode
+        TOTAL_STEPS=$((TOTAL_STEPS - 5))  # No indexer, relay, telegram, pricing, redis in mock mode
     fi
 }
 
@@ -121,12 +125,11 @@ log() {
 
 step() {
     CURRENT_STEP=$((CURRENT_STEP + 1))
-    local progress="[$CURRENT_STEP/$TOTAL_STEPS]"
     local bar_length=20
     local filled=$((CURRENT_STEP * bar_length / TOTAL_STEPS))
     local empty=$((bar_length - filled))
     local bar="$(printf '%*s' $filled '' | tr ' ' '█')$(printf '%*s' $empty '' | tr ' ' '░')"
-    echo -e "${BLUE}[$(date +'%H:%M:%S')] $progress [$bar] $1${NC}"
+    echo -e "${BLUE}[$(date +'%H:%M:%S')] [$bar] $1${NC}"
 }
 
 error() {
@@ -275,6 +278,16 @@ setup_venv() {
         error "Virtual environment setup failed - dependencies not working"
         exit 1
     fi
+
+    # Ensure redis client is available for health checks
+    if ! python3 -c "import redis" 2>/dev/null; then
+        log "Installing Redis Python client for health checks..."
+        if [ "$DEBUG_MODE" = true ]; then
+            pip install redis[hiredis]
+        else
+            pip install -q redis[hiredis]
+        fi
+    fi
 }
 
 # Check prerequisites
@@ -323,8 +336,8 @@ check_database() {
         warn "Cannot connect to database, trying to start Docker container..."
         
         if command_exists docker-compose; then
-            debug "Starting PostgreSQL container..."
-            docker-compose up -d postgres
+            debug "Starting PostgreSQL and Redis containers..."
+            docker-compose up -d postgres redis
             sleep 5
             
             db_test_output=$(psql "$DATABASE_URL" -c "SELECT 1;" 2>&1)
@@ -351,6 +364,263 @@ check_database() {
     success "Database connection verified"
 }
 
+# Setup Redis connection
+setup_redis() {
+    if [ "$USE_MOCK_DATA" = true ]; then
+        debug "Skipping Redis setup (mock mode)"
+        return
+    fi
+    
+    step "Setting up Redis connection..."
+    
+    local redis_url="${REDIS_URL:-redis://localhost:6379}"
+
+    # Simple timeout wrapper (since macOS lacks coreutils timeout)
+    run_with_timeout() {
+        local timeout_sec=$1; shift
+        local tmp_out
+        tmp_out=$(mktemp 2>/dev/null || echo "/tmp/redis_ping_$$.out")
+        "$@" > "$tmp_out" 2>&1 &
+        local pid=$!
+        local elapsed=0
+        while kill -0 "$pid" 2>/dev/null; do
+            if [ $elapsed -ge $timeout_sec ]; then
+                kill -9 "$pid" 2>/dev/null || true
+                echo "__TIMEOUT__" && cat "$tmp_out"
+                rm -f "$tmp_out" 2>/dev/null || true
+                return 124
+            fi
+            sleep 1
+            elapsed=$((elapsed+1))
+        done
+        wait "$pid"
+        local rc=$?
+        cat "$tmp_out"
+        rm -f "$tmp_out" 2>/dev/null || true
+        return $rc
+    }
+
+    # Prefer a fast Python ping (more portable than redis-cli -u across versions)
+    local python_ping_ok=false
+    if command_exists python3; then
+        local py_output
+        py_output=$(run_with_timeout 6 python3 - <<PY
+import os, sys
+try:
+    import redis
+except Exception:
+    sys.exit(2)
+url=os.getenv('REDIS_URL','${redis_url}')
+try:
+    r = redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+    ok = r.ping()
+    print('PONG' if ok else 'NO')
+    sys.exit(0 if ok else 1)
+except Exception as e:
+    print('ERR', e)
+    sys.exit(1)
+PY
+)
+        local py_rc=$?
+        if [ $py_rc -eq 124 ]; then
+            debug "Python Redis ping timed out"
+        elif [ $py_rc -eq 0 ] && echo "$py_output" | grep -q "PONG"; then
+            python_ping_ok=true
+            debug "Redis connection successful (python ping)"
+        else
+            debug "Python Redis ping output: $py_output"
+            # If auth-enabled URL failed, try no-auth ping to bootstrap ACLs
+            if { [ -n "${REDIS_URL:-}" ] && echo "${REDIS_URL}" | grep -q "@"; } || \
+               { [ -n "${REDIS_PUBLISHER_PASS:-}" ] || [ -n "${REDIS_CONSUMER_PASS:-}" ]; }; then
+                local noauth_url
+                if [ -n "${REDIS_URL:-}" ]; then
+                    noauth_url="${REDIS_URL}"
+                else
+                    noauth_url="${redis_url}"
+                fi
+                # strip credentials: redis://user:pass@host -> redis://host
+                noauth_url=$(printf "%s" "$noauth_url" | sed -E 's#(redis[s]?://)[^@]+@#\1#')
+                debug "Auth ping failed; trying unauth ping to $noauth_url"
+                py_output=$(REDIS_URL="$noauth_url" run_with_timeout 6 python3 - <<PY
+import os, sys
+import redis
+url=os.getenv('REDIS_URL')
+try:
+    r = redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+    ok = r.ping()
+    print('PONG' if ok else 'NO')
+    sys.exit(0 if ok else 1)
+except Exception as e:
+    print('ERR', e)
+    sys.exit(1)
+PY
+)
+                py_rc=$?
+                if [ $py_rc -eq 124 ]; then
+                    debug "Unauth Python ping timed out"
+                elif [ $py_rc -eq 0 ] && echo "$py_output" | grep -q "PONG"; then
+                    python_ping_ok=true
+                    debug "Redis unauth ping successful (will run ACL setup next)"
+                    # Override redis_url to unauth for subsequent checks
+                    redis_url="$noauth_url"
+                else
+                    debug "Unauth ping failed: $py_output"
+                fi
+            fi
+        fi
+    fi
+
+    # Fallback to redis-cli if python ping not available
+    if [ "$python_ping_ok" != true ]; then
+        if command_exists redis-cli; then
+            redis_test_output=$(run_with_timeout 6 redis-cli -u "$redis_url" ping)
+            redis_exit_code=$?
+        else
+            redis_test_output="redis-cli not installed"
+            redis_exit_code=127
+        fi
+    else
+        redis_exit_code=0
+        redis_test_output="PONG"
+    fi
+    
+    if [ $redis_exit_code -eq 0 ] && [ "$redis_test_output" = "PONG" ]; then
+        debug "Redis connection successful"
+    else
+        if [ "$DEBUG_MODE" = true ]; then
+            debug "Redis connection failed with: $redis_test_output"
+        fi
+        
+        warn "Cannot connect to Redis, trying to start Docker container..."
+
+        # Verify Docker engine is available before attempting to start containers
+        if ! command_exists docker; then
+            error "Docker not available (no 'docker' command). Cannot auto-start Redis."
+            echo "Set REDIS_URL to an accessible instance or start Docker Desktop."
+            exit 1
+        fi
+        if ! docker info >/dev/null 2>&1; then
+            error "Docker engine is not running. Please start Docker Desktop and retry."
+            exit 1
+        fi
+
+        # Prefer starting existing container if present to avoid name conflicts
+        local redis_container="auction_redis"
+        local existing_cid
+        existing_cid=$(docker ps -a --filter "name=^/${redis_container}$" -q 2>/dev/null || true)
+        if [ -n "$existing_cid" ]; then
+            debug "Found existing Redis container: $redis_container ($existing_cid)"
+            local is_running
+            is_running=$(docker inspect -f '{{.State.Running}}' "$redis_container" 2>/dev/null || echo "false")
+            if [ "$is_running" != "true" ]; then
+                debug "Starting existing Redis container..."
+                docker start "$redis_container" >/dev/null 2>&1 || true
+                sleep 2
+            else
+                debug "Redis container already running"
+            fi
+        elif command_exists docker-compose; then
+            debug "Starting Redis container via docker-compose..."
+            docker-compose up -d redis
+            sleep 3
+        
+            if [ "$python_ping_ok" = true ]; then
+                # Re-run python ping
+                py_output=$(REDIS_URL="$redis_url" run_with_timeout 6 python3 - <<PY
+import os, sys
+import redis
+url=os.getenv('REDIS_URL')
+try:
+    r = redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+    ok = r.ping()
+    print('PONG' if ok else 'NO')
+    sys.exit(0 if ok else 1)
+except Exception as e:
+    print('ERR', e)
+    sys.exit(1)
+PY
+)
+                redis_exit_code=$?
+                redis_test_output="$py_output"
+            else
+                redis_test_output=$(run_with_timeout 6 redis-cli -u "$redis_url" ping)
+                redis_exit_code=$?
+            fi
+            
+            if [ $redis_exit_code -ne 0 ] || [ "$redis_test_output" != "PONG" ]; then
+                error "Still cannot connect to Redis"
+                if [ "$DEBUG_MODE" = true ]; then
+                    debug "Second Redis connection attempt failed with: $redis_test_output"
+                fi
+                echo "Please ensure Redis is running with correct configuration"
+                echo "Expected connection: $redis_url"
+                exit 1
+            fi
+        else
+            # Try direct docker if docker-compose fails
+            warn "docker-compose not available, trying direct Docker..."
+            if command_exists docker; then
+                debug "Starting Redis with direct Docker..."
+                if [ -n "$existing_cid" ]; then
+                    debug "Existing container detected; attempting to start"
+                    docker start "$redis_container" >/dev/null 2>&1 || true
+                else
+                    docker run -d --name "$redis_container" -p 6379:6379 redis:7-alpine 2>/dev/null || true
+                fi
+                sleep 3
+                
+                if [ "$python_ping_ok" = true ]; then
+                    py_output=$(REDIS_URL="$redis_url" run_with_timeout 6 python3 - <<PY
+import os, sys
+import redis
+url=os.getenv('REDIS_URL')
+try:
+    r = redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+    ok = r.ping()
+    print('PONG' if ok else 'NO')
+    sys.exit(0 if ok else 1)
+except Exception as e:
+    print('ERR', e)
+    sys.exit(1)
+PY
+)
+                    redis_exit_code=$?
+                    redis_test_output="$py_output"
+                else
+                    redis_test_output=$(run_with_timeout 6 redis-cli -u "$redis_url" ping)
+                    redis_exit_code=$?
+                fi
+                
+                if [ $redis_exit_code -ne 0 ] || [ "$redis_test_output" != "PONG" ]; then
+                    error "Redis not accessible via Docker"
+                    echo "Please ensure Redis is running with correct configuration"
+                    echo "Expected connection: $redis_url"
+                    exit 1
+                fi
+            else
+                error "Neither docker-compose nor docker commands available"
+                exit 1
+            fi
+        fi
+    fi
+    
+    success "Redis connection verified"
+
+    # Optionally configure ACL users if passwords are provided
+    if [ -n "${REDIS_PUBLISHER_PASS:-}" ] && [ -n "${REDIS_CONSUMER_PASS:-}" ]; then
+        step "Configuring Redis ACL users..."
+        if command_exists python3; then
+            # Use venv python if present
+            if [ -d "$SCRIPT_DIR/venv" ]; then
+                source "$SCRIPT_DIR/venv/bin/activate"
+            fi
+            python3 "$SCRIPT_DIR/scripts/setup_redis_acl.py" || warn "Redis ACL setup encountered an issue; continuing"
+        else
+            warn "Python not available to run ACL setup; skipping"
+        fi
+    fi
+}
+
 # Kill existing processes for clean start
 cleanup_existing() {
     log "Cleaning up existing processes..."
@@ -372,6 +642,9 @@ cleanup_existing() {
     
     # Kill specific processes
     pkill -f "python.*indexer.py" 2>/dev/null || true
+    pkill -f "python.*relay_outbox_to_redis.py" 2>/dev/null || true
+    pkill -f "python.*telegram_bot.py" 2>/dev/null || true
+    pkill -f "python.*telegram_consumer.py" 2>/dev/null || true
     pkill -f "python.*app.py" 2>/dev/null || true
     pkill -f "npm run dev" 2>/dev/null || true
     pkill -f "vite" 2>/dev/null || true
@@ -394,16 +667,21 @@ setup_tmux() {
     tmux send-keys -t "$SESSION_NAME:main" "echo 'Auction Development Environment'" Enter
     tmux send-keys -t "$SESSION_NAME:main" "echo 'Services starting...'" Enter
     
-    # Split window into panes
-    tmux split-window -t "$SESSION_NAME:main" -v
-    tmux split-window -t "$SESSION_NAME:main" -h
+    # Split window into panes for services (0: API, 1: Indexer, 2: Relay, 3: Telegram, 4: Pricing)
+    tmux split-window -t "$SESSION_NAME:main" -v    # Pane 1
+    tmux split-window -t "$SESSION_NAME:main" -h    # Pane 2
     tmux select-pane -t "$SESSION_NAME:main" -U
-    tmux split-window -t "$SESSION_NAME:main" -h
+    tmux split-window -t "$SESSION_NAME:main" -h    # Pane 3
+    tmux select-pane -t "$SESSION_NAME:main" -D
+    tmux select-pane -t "$SESSION_NAME:main" -L
+    tmux split-window -t "$SESSION_NAME:main" -v    # Pane 4
     
     if [ "$SKIP_UI" = false ]; then
+        # Add UI pane if needed
         tmux select-pane -t "$SESSION_NAME:main" -D
-        tmux select-pane -t "$SESSION_NAME:main" -L
-        tmux split-window -t "$SESSION_NAME:main" -v
+        tmux select-pane -t "$SESSION_NAME:main" -R
+        tmux split-window -t "$SESSION_NAME:main" -v    # Pane 5 (Pricing)
+        tmux split-window -t "$SESSION_NAME:main" -v    # Pane 6 (UI)
     fi
     
     # Select first pane
@@ -487,6 +765,55 @@ start_indexer() {
     success "Indexer service ready"
 }
 
+# Start relay service
+start_relay() {
+    if [ "$USE_MOCK_DATA" = true ]; then
+        return 0
+    fi
+    
+    step "Starting outbox relay service..."
+    
+    local cmd="source '$SCRIPT_DIR/venv/bin/activate' && cd '$SCRIPT_DIR' && python3 scripts/relay_outbox_to_redis.py"
+    local log_file="$LOG_DIR/relay_$(date +%Y%m%d_%H%M%S).log"
+    
+    if [ "$USE_TMUX" = true ]; then
+        tmux send-keys -t "$SESSION_NAME:main" -t 3 "$cmd" Enter
+    else
+        bash -c "$cmd" > "$log_file" 2>&1 &
+        echo $! > "$LOG_DIR/relay.pid"
+    fi
+    
+    sleep 2
+    success "Relay service ready"
+}
+
+start_telegram() {
+    if [ "$USE_MOCK_DATA" = true ]; then
+        return 0
+    fi
+    
+    step "Starting Telegram bot..."
+    
+    # Check if Telegram bot token is configured (group IDs resolved via YAML fallbacks)
+    if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+        warn "Telegram bot token not configured, skipping Telegram consumer startup"
+        return 0
+    fi
+
+    local cmd="source '$SCRIPT_DIR/venv/bin/activate' && cd '$SCRIPT_DIR' && python3 scripts/consumers/telegram_consumer.py"
+    local log_file="$LOG_DIR/telegram_$(date +%Y%m%d_%H%M%S).log"
+    
+    if [ "$USE_TMUX" = true ]; then
+        tmux send-keys -t "$SESSION_NAME:main" -t 4 "$cmd" Enter
+    else
+        bash -c "$cmd" > "$log_file" 2>&1 &
+        echo $! > "$LOG_DIR/telegram.pid"
+    fi
+    
+    sleep 2
+    success "Telegram bot ready"
+}
+
 # Start pricing services
 start_pricing() {
     if [ "$USE_MOCK_DATA" = true ]; then
@@ -499,7 +826,7 @@ start_pricing() {
     local log_file="$LOG_DIR/pricing_$(date +%Y%m%d_%H%M%S).log"
     
     if [ "$USE_TMUX" = true ]; then
-        tmux send-keys -t "$SESSION_NAME:main" -t 3 "$cmd" Enter
+        tmux send-keys -t "$SESSION_NAME:main" -t 5 "$cmd" Enter
     else
         bash -c "$cmd" > "$log_file" 2>&1 &
         echo $! > "$LOG_DIR/pricing.pid"
@@ -521,7 +848,7 @@ start_ui() {
     local log_file="$LOG_DIR/ui_$(date +%Y%m%d_%H%M%S).log"
     
     if [ "$USE_TMUX" = true ]; then
-        tmux send-keys -t "$SESSION_NAME:main" -t 4 "$cmd" Enter
+        tmux send-keys -t "$SESSION_NAME:main" -t 6 "$cmd" Enter
     else
         bash -c "$cmd" > "$log_file" 2>&1 &
         echo $! > "$LOG_DIR/ui.pid"
@@ -553,9 +880,11 @@ show_summary() {
         echo "      • Pane 0: Main dashboard"
         echo "      • Pane 1: API service"
         echo "      • Pane 2: Indexer service"
-        echo "      • Pane 3: Pricing services"
+        echo "      • Pane 3: Relay service"
+        echo "      • Pane 4: Telegram bot"
+        echo "      • Pane 5: Pricing services"
         if [ "$SKIP_UI" = false ]; then
-            echo "      • Pane 4: React UI"
+            echo "      • Pane 6: React UI"
         fi
     else
         echo "   📁 Service PIDs:  Check $LOG_DIR/*.pid files"
@@ -623,6 +952,9 @@ main() {
     if [ "$USE_MOCK_DATA" = false ]; then
         step "Verifying database connection..."
         check_database
+        
+        step "Verifying Redis connection..."
+        setup_redis
     fi
     
     step "Cleaning up existing processes..."
@@ -636,6 +968,8 @@ main() {
     # Start all services
     start_api
     start_indexer
+    start_relay
+    start_telegram
     start_pricing
     start_ui
     

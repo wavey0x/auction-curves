@@ -8,6 +8,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
@@ -70,6 +71,12 @@ async def check_database_connection():
         logger.error(f"Database connection failed: {e}")
         return False
 
+
+import time as _time
+
+# Lightweight, in-process caches for repeated calls
+_TABLES_CACHE: dict[str, float] = {}
+_TABLES_CACHE_TTL = 60.0  # seconds
 
 class DatabaseQueries:
     """Centralized database query methods for Auction structure"""
@@ -334,65 +341,109 @@ class DatabaseQueries:
     
     @staticmethod
     async def get_system_stats(db: AsyncSession, chain_id: int = None):
-        """Get overall system statistics using safe queries that handle missing tables"""
+        """Get overall system statistics with optimized SQL and light caching.
+
+        Optimizations:
+        - Cache table-existence checks for a short TTL.
+        - Use JOINs instead of IN-subqueries for better planner choices.
+        - Optionally clamp USD volume to a recent time window via env STATS_VOLUME_DAYS.
+        """
         try:
-            # First check which tables exist
-            table_check_query = text("""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public' 
-                AND table_name IN ('auctions', 'rounds', 'takes', 'tokens', 'vw_takes')
-            """)
-            result = await db.execute(table_check_query)
-            existing_tables = {row[0] for row in result.fetchall()}
-            
-            chain_filter = "WHERE chain_id = :chain_id" if chain_id else ""
-            
-            # Build safe subqueries based on existing tables
-            auctions_count = f"(SELECT COUNT(*) FROM auctions {chain_filter})" if 'auctions' in existing_tables else "0"
-            tokens_count = f"(SELECT COUNT(DISTINCT address) FROM tokens {chain_filter})" if 'tokens' in existing_tables else "0"
-            
-            # Active auctions query - more complex logic needed
+            now = _time.time()
+            # Cache table existence (to avoid information_schema hits per request)
+            existing_tables: set[str]
+            if _TABLES_CACHE and now - next(iter(_TABLES_CACHE.values())) < _TABLES_CACHE_TTL:
+                existing_tables = set(_TABLES_CACHE.keys())
+            else:
+                table_check_query = text("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                      AND table_name IN ('auctions', 'rounds', 'takes', 'tokens', 'vw_takes', 'vw_takes_enriched')
+                """)
+                result = await db.execute(table_check_query)
+                existing_tables = {row[0] for row in result.fetchall()}
+                # Refresh cache timestamp values
+                _TABLES_CACHE.clear()
+                for t in existing_tables:
+                    _TABLES_CACHE[t] = now
+
+            params: dict = {}
+            chain_filter_sql = ""
+            if chain_id is not None:
+                params["chain_id"] = chain_id
+                chain_filter_sql = " AND a.chain_id = :chain_id"
+
+            # total_auctions, unique_tokens
+            auctions_count_sql = "0"
+            tokens_count_sql = "0"
+            if 'auctions' in existing_tables:
+                auctions_count_sql = f"(SELECT COUNT(*) FROM auctions a{' WHERE a.chain_id = :chain_id' if chain_id is not None else ''})"
+            if 'tokens' in existing_tables:
+                tokens_count_sql = f"(SELECT COUNT(DISTINCT t.address) FROM tokens t{' WHERE t.chain_id = :chain_id' if chain_id is not None else ''})"
+
+            # active_auctions and rounds_count
+            active_auctions_sql = "0"
+            rounds_count_sql = "0"
             if 'rounds' in existing_tables and 'auctions' in existing_tables:
-                auction_filter = "auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else ")")
-                active_auctions_count = f"(SELECT COUNT(DISTINCT auction_address) FROM rounds WHERE {auction_filter} AND available_amount > 0)"
-                rounds_count = f"(SELECT COUNT(*) FROM rounds WHERE {auction_filter})"
-            else:
-                active_auctions_count = "0"
-                rounds_count = "0"
-            
+                # Active when any round for the auction currently has available_amount > 0
+                active_auctions_sql = (
+                    "(SELECT COUNT(DISTINCT r.auction_address)"
+                    "   FROM rounds r JOIN auctions a"
+                    "     ON LOWER(r.auction_address) = LOWER(a.auction_address) AND r.chain_id = a.chain_id"
+                    f"  WHERE r.available_amount > 0{chain_filter_sql})"
+                )
+                rounds_count_sql = (
+                    "(SELECT COUNT(*) FROM rounds r JOIN auctions a"
+                    "  ON LOWER(r.auction_address) = LOWER(a.auction_address) AND r.chain_id = a.chain_id"
+                    f" WHERE 1=1{chain_filter_sql})"
+                )
+
+            # takes_count and participants_count
+            takes_count_sql = "0"
+            participants_count_sql = "0"
             if 'takes' in existing_tables and 'auctions' in existing_tables:
-                auction_filter = "auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else ")")
-                takes_count = f"(SELECT COUNT(*) FROM takes WHERE {auction_filter})"
-                participants_count = f"(SELECT COUNT(DISTINCT taker) FROM takes WHERE {auction_filter})"
-            else:
-                takes_count = "0"
-                participants_count = "0"
-            
-            if 'vw_takes' in existing_tables and 'auctions' in existing_tables:
-                auction_filter = "auction_address IN (SELECT auction_address FROM auctions" + (f" WHERE chain_id = :chain_id)" if chain_id else "") + ")"
-                volume_usd = f"(SELECT COALESCE(SUM(amount_paid_usd), 0) FROM vw_takes WHERE {auction_filter})"
-            else:
-                volume_usd = "0"
-            
+                takes_count_sql = (
+                    "(SELECT COUNT(*) FROM takes t JOIN auctions a"
+                    "  ON LOWER(t.auction_address) = LOWER(a.auction_address) AND t.chain_id = a.chain_id"
+                    f" WHERE 1=1{chain_filter_sql})"
+                )
+                participants_count_sql = (
+                    "(SELECT COUNT(DISTINCT t.taker) FROM takes t JOIN auctions a"
+                    "  ON LOWER(t.auction_address) = LOWER(a.auction_address) AND t.chain_id = a.chain_id"
+                    f" WHERE 1=1{chain_filter_sql})"
+                )
+
+            # total_volume_usd, with optional time window
+            volume_usd_sql = "0"
+            if ('vw_takes_enriched' in existing_tables or 'vw_takes' in existing_tables) and 'auctions' in existing_tables:
+                view_name = 'vw_takes_enriched' if 'vw_takes_enriched' in existing_tables else 'vw_takes'
+                days = int(os.getenv('STATS_VOLUME_DAYS', os.getenv('DEV_STATS_VOLUME_DAYS', '7')))
+                time_filter = ""
+                if days and days > 0:
+                    time_filter = f" AND t.timestamp >= NOW() - INTERVAL '{days} days'"
+                volume_usd_sql = (
+                    f"(SELECT COALESCE(SUM(t.amount_paid_usd), 0) FROM {view_name} t JOIN auctions a"
+                    "  ON LOWER(t.auction_address) = LOWER(a.auction_address) AND t.chain_id = a.chain_id"
+                    f" WHERE 1=1{chain_filter_sql}{time_filter})"
+                )
+
             query = text(f"""
                 SELECT 
-                    {auctions_count} as total_auctions,
-                    {active_auctions_count} as active_auctions,
-                    {tokens_count} as unique_tokens,
-                    {rounds_count} as total_rounds,
-                    {takes_count} as total_takes,
-                    {participants_count} as total_participants,
-                    {volume_usd} as total_volume_usd
+                    {auctions_count_sql} as total_auctions,
+                    {active_auctions_sql} as active_auctions,
+                    {tokens_count_sql} as unique_tokens,
+                    {rounds_count_sql} as total_rounds,
+                    {takes_count_sql} as total_takes,
+                    {participants_count_sql} as total_participants,
+                    {volume_usd_sql} as total_volume_usd
             """)
-            
-            params = {"chain_id": chain_id} if chain_id else {}
+
             result = await db.execute(query, params)
             return result.fetchone()
-            
+
         except Exception as e:
             logger.warning(f"Error querying system stats, returning zeros: {e}")
-            # Return a mock result with all zeros if queries fail
             from collections import namedtuple
             StatsResult = namedtuple('StatsResult', ['total_auctions', 'active_auctions', 'unique_tokens', 'total_rounds', 'total_takes', 'total_participants', 'total_volume_usd'])
             return StatsResult(0, 0, 0, 0, 0, 0, 0.0)
@@ -433,7 +484,7 @@ class DatabaseQueries:
 
     @staticmethod
     async def get_recent_takes(db: AsyncSession, limit: int = 100, chain_id: int = None):
-        """Get recent takes across all auctions from vw_takes for consistent shape"""
+        """Get recent takes across all auctions from enriched view"""
         chain_filter = "WHERE chain_id = :chain_id" if chain_id else ""
         query = text(f"""
             SELECT 
@@ -454,19 +505,19 @@ class DatabaseQueries:
                 transaction_hash,
                 log_index,
                 round_kicked_at,
-                from_symbol,
-                from_name,
-                from_decimals,
-                to_symbol,
-                to_name,
-                to_decimals,
+                from_token_symbol,
+                from_token_name,
+                from_token_decimals,
+                to_token_symbol,
+                to_token_name,
+                to_token_decimals,
                 from_token_price_usd,
-                want_token_price_usd,
+                to_token_price_usd as want_token_price_usd,
                 amount_taken_usd,
                 amount_paid_usd,
                 price_differential_usd,
                 price_differential_percent
-            FROM vw_takes
+            FROM vw_takes_enriched
             {chain_filter}
             ORDER BY timestamp DESC
             LIMIT :limit
@@ -476,6 +527,315 @@ class DatabaseQueries:
             params["chain_id"] = chain_id
         result = await db.execute(query, params)
         return result.fetchall()
+
+    @staticmethod
+    async def get_takers_summary(db: AsyncSession, sort_by: str, limit: int, page: int, chain_id: Optional[int]):
+        """Get ranked takers with summary statistics using materialized view"""
+        order_clause = {
+            "volume": "total_volume_usd DESC NULLS LAST",
+            "takes": "total_takes DESC",
+            "recent": "last_take DESC NULLS LAST"
+        }.get(sort_by, "total_volume_usd DESC NULLS LAST")
+        
+        chain_filter = ""
+        if chain_id:
+            chain_filter = f"WHERE {chain_id} = ANY(active_chains)"
+        
+        offset = (page - 1) * limit
+        
+        # Use materialized view with pre-calculated rankings
+        query = text(f"""
+            SELECT 
+                taker,
+                total_takes,
+                unique_auctions,
+                unique_chains,
+                total_volume_usd,
+                avg_take_size_usd,
+                first_take,
+                last_take,
+                active_chains,
+                rank_by_takes,
+                rank_by_volume,
+                total_profit_usd,
+                success_rate_percent,
+                takes_last_7d,
+                takes_last_30d,
+                volume_last_7d,
+                volume_last_30d
+            FROM mv_takers_summary
+            {chain_filter}
+            ORDER BY {order_clause}
+            LIMIT :limit OFFSET :offset
+        """)
+        
+        result = await db.execute(query, {"limit": limit, "offset": offset})
+        takers = [dict(row._mapping) for row in result.fetchall()]
+        
+        # Get total count
+        count_query = text(f"SELECT COUNT(*) FROM mv_takers_summary {chain_filter}")
+        total = (await db.execute(count_query)).scalar()
+        
+        return {
+            "takers": takers,
+            "total": total or 0,
+            "page": page,
+            "per_page": limit,
+            "has_next": (page * limit) < (total or 0)
+        }
+
+    @staticmethod
+    async def get_taker_details(db: AsyncSession, taker_address: str):
+        """Get comprehensive taker details using materialized view"""
+        # Get taker data from materialized view
+        query = text("""
+            SELECT 
+                taker,
+                total_takes,
+                unique_auctions,
+                unique_chains,
+                total_volume_usd,
+                avg_take_size_usd,
+                first_take,
+                last_take,
+                active_chains,
+                rank_by_takes,
+                rank_by_volume,
+                total_profit_usd,
+                avg_profit_per_take_usd,
+                success_rate_percent,
+                takes_last_7d,
+                takes_last_30d,
+                volume_last_7d,
+                volume_last_30d,
+                profitable_takes,
+                unprofitable_takes
+            FROM mv_takers_summary
+            WHERE LOWER(taker) = LOWER(:taker)
+        """)
+        
+        result = await db.execute(query, {"taker": taker_address})
+        taker_data = result.fetchone()
+        
+        if not taker_data:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Taker not found")
+        
+        # Get auction breakdown using enriched view
+        auction_breakdown_query = text("""
+            SELECT 
+                auction_address,
+                chain_id,
+                COUNT(*) as takes_count,
+                SUM(amount_taken_usd) as volume_usd,
+                MIN(timestamp) as first_take,
+                MAX(timestamp) as last_take
+            FROM vw_takes_enriched
+            WHERE LOWER(taker) = LOWER(:taker)
+            GROUP BY auction_address, chain_id
+            ORDER BY volume_usd DESC NULLS LAST
+        """)
+        
+        breakdown_result = await db.execute(auction_breakdown_query, {"taker": taker_address})
+        auction_breakdown = [dict(row._mapping) for row in breakdown_result.fetchall()]
+        
+        return {
+            **dict(taker_data._mapping),
+            "auction_breakdown": auction_breakdown
+        }
+
+    @staticmethod
+    async def get_taker_takes(db: AsyncSession, taker_address: str, limit: int, page: int):
+        """Get paginated takes for a taker using enriched view"""
+        offset = (page - 1) * limit
+        
+        query = text("""
+            SELECT 
+                take_id,
+                auction_address as auction,
+                chain_id,
+                round_id,
+                take_seq,
+                taker,
+                from_token,
+                to_token,
+                amount_taken,
+                amount_paid,
+                price,
+                timestamp,
+                seconds_from_round_start,
+                block_number,
+                transaction_hash as tx_hash,
+                log_index,
+                amount_taken_usd,
+                amount_paid_usd,
+                amount_taken_usd as price_usd,  -- For backwards compatibility
+                price_differential_usd,
+                price_differential_percent,
+                from_token_symbol,
+                from_token_name,
+                from_token_decimals,
+                to_token_symbol,
+                to_token_name,
+                to_token_decimals
+            FROM vw_takes_enriched
+            WHERE LOWER(taker) = LOWER(:taker)
+            ORDER BY timestamp DESC
+            LIMIT :limit OFFSET :offset
+        """)
+        
+        result = await db.execute(query, {"taker": taker_address, "limit": limit, "offset": offset})
+        takes = [dict(row._mapping) for row in result.fetchall()]
+        
+        # Get total count
+        count_result = await db.execute(
+            text("SELECT COUNT(*) FROM vw_takes_enriched WHERE LOWER(taker) = LOWER(:taker)"),
+            {"taker": taker_address}
+        )
+        total = count_result.scalar()
+        
+        return {
+            "takes": takes,
+            "total": total or 0,
+            "page": page,
+            "per_page": limit,
+            "has_next": (page * limit) < (total or 0)
+        }
+
+    @staticmethod
+    async def get_taker_token_pairs(db: AsyncSession, taker_address: str, page: int = 1, limit: int = 50):
+        """Get most frequented token pairs for a taker with pagination"""
+        offset = (page - 1) * limit
+        
+        # Main query with improved USD calculations
+        query = text("""
+            WITH token_pair_summary AS (
+                SELECT 
+                    t.from_token,
+                    t.to_token,
+                    COUNT(*) as takes_count,
+                    -- Calculate volume_usd using token prices if amount_taken_usd is NULL
+                    COALESCE(
+                        SUM(t.amount_taken_usd),
+                        SUM(
+                            CASE 
+                                WHEN tp_from.price_usd IS NOT NULL THEN 
+                                    CAST(t.amount_taken AS DECIMAL) * tp_from.price_usd
+                                ELSE NULL 
+                            END
+                        )
+                    ) as volume_usd,
+                    MAX(t.timestamp) as last_take_at,
+                    MIN(t.timestamp) as first_take_at,
+                    COUNT(DISTINCT t.auction_address) as unique_auctions,
+                    COUNT(DISTINCT t.chain_id) as unique_chains,
+                    ARRAY_AGG(DISTINCT t.chain_id ORDER BY t.chain_id) as active_chains
+                FROM takes t
+                -- Join with token_prices for from_token (closest block <= take block)
+                LEFT JOIN LATERAL (
+                    SELECT price_usd 
+                    FROM token_prices 
+                    WHERE chain_id = t.chain_id 
+                    AND LOWER(token_address) = LOWER(t.from_token)
+                    AND block_number <= t.block_number
+                    ORDER BY block_number DESC
+                    LIMIT 1
+                ) tp_from ON true
+                WHERE LOWER(t.taker) = LOWER(:taker)
+                GROUP BY t.from_token, t.to_token
+            )
+            SELECT 
+                tps.*,
+                tok1.symbol as from_token_symbol,
+                tok1.name as from_token_name,
+                tok1.decimals as from_token_decimals,
+                tok2.symbol as to_token_symbol,
+                tok2.name as to_token_name,
+                tok2.decimals as to_token_decimals
+            FROM token_pair_summary tps
+            LEFT JOIN tokens tok1 ON tps.from_token = tok1.address
+            LEFT JOIN tokens tok2 ON tps.to_token = tok2.address
+            ORDER BY takes_count DESC, volume_usd DESC NULLS LAST
+            LIMIT :limit OFFSET :offset
+        """)
+        
+        # Count query for pagination
+        count_query = text("""
+            SELECT COUNT(DISTINCT t.from_token || '::' || t.to_token) as total_count
+            FROM takes t
+            WHERE LOWER(t.taker) = LOWER(:taker)
+        """)
+        
+        # Execute both queries
+        result = await db.execute(query, {"taker": taker_address, "limit": limit, "offset": offset})
+        token_pairs = [dict(row._mapping) for row in result.fetchall()]
+        
+        count_result = await db.execute(count_query, {"taker": taker_address})
+        total_count = count_result.scalar() or 0
+        
+        total_pages = (total_count + limit - 1) // limit
+        
+        return {
+            "token_pairs": token_pairs,
+            "page": page,
+            "per_page": limit,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1
+        }
+
+    @staticmethod
+    async def get_take_details(db: AsyncSession, auction_address: str, round_id: int, take_seq: int, chain_id: int):
+        """Get simplified take details without complex price analysis"""
+        try:
+            
+            # Get the take details from enriched view
+            take_query = text("""
+                SELECT 
+                    t.*,
+                    tf.symbol as from_token_symbol,
+                    tt.symbol as to_token_symbol,
+                    a.decay_rate as auction_decay_rate,
+                    a.update_interval as auction_update_interval
+                FROM vw_takes_enriched t
+                LEFT JOIN tokens tf ON LOWER(tf.address) = LOWER(t.from_token) 
+                                   AND tf.chain_id = t.chain_id
+                LEFT JOIN tokens tt ON LOWER(tt.address) = LOWER(t.to_token) 
+                                   AND tt.chain_id = t.chain_id
+                LEFT JOIN auctions a ON LOWER(a.auction_address) = LOWER(t.auction_address) 
+                                    AND a.chain_id = t.chain_id
+                WHERE t.chain_id = :chain_id 
+                  AND LOWER(t.auction_address) = LOWER(:auction_address)
+                  AND t.round_id = :round_id 
+                  AND t.take_seq = :take_seq
+                LIMIT 1
+            """)
+            
+            result = await db.execute(take_query, {
+                "chain_id": chain_id,
+                "auction_address": auction_address,
+                "round_id": round_id,
+                "take_seq": take_seq
+            })
+            take_row = result.fetchone()
+            
+            if not take_row:
+                return None
+            
+            # Skip round context for now to isolate the error
+            context_row = None
+            
+            return {
+                "take_data": take_row,
+                "price_quotes": [],  # Empty for now since token_prices table doesn't exist
+                "round_context": context_row
+            }
+            
+        except Exception as e:
+            logger.error(f"Database error getting take details: {e}")
+            raise
+
 
 # Initialize database connection check
 async def init_database():
@@ -736,7 +1096,7 @@ class DatabaseDataProvider(DataProvider):
                         "address": auction_row.auction_address,
                         "chain_id": auction_row.chain_id,
                         "from_tokens": auction_row.from_tokens_json if hasattr(auction_row, 'from_tokens_json') and auction_row.from_tokens_json else [],
-                        "want_token": {"address": auction_row.want_token, "symbol": getattr(auction_row, 'want_token_symbol', None) or "Unknown", "name": getattr(auction_row, 'want_token_name', None) or "Unknown", "decimals": getattr(auction_row, 'want_token_decimals', None) or 18, "chain_id": auction_row.chain_id},
+                        "want_token": {"address": auction_row.want_token, "symbol": auction_row.want_token_symbol if hasattr(auction_row, 'want_token_symbol') else "Unknown", "name": getattr(auction_row, 'want_token_name', None) or "Unknown", "decimals": getattr(auction_row, 'want_token_decimals', None) or 18, "chain_id": auction_row.chain_id},
                         "current_round": (
                             {
                                 "round_id": getattr(auction_row, 'current_round_id', None),
@@ -812,7 +1172,7 @@ class DatabaseDataProvider(DataProvider):
                 # Use actual database data from vw_auctions
                 want_token = TokenInfo(
                     address=auction_data.want_token,
-                    symbol=getattr(auction_data, 'want_token_symbol', None) or "Unknown",
+                    symbol=auction_data.want_token_symbol if hasattr(auction_data, 'want_token_symbol') else "Unknown",
                     name=getattr(auction_data, 'want_token_name', None) or "Unknown", 
                     decimals=getattr(auction_data, 'want_token_decimals', None) or 18,
                     chain_id=chain_id
@@ -915,12 +1275,12 @@ class DatabaseDataProvider(DataProvider):
                         # Add token information
                         from_token=take_row.from_token,
                         to_token=take_row.to_token,
-                        from_token_symbol=getattr(take_row, 'from_symbol', None),
-                        from_token_name=getattr(take_row, 'from_name', None),
-                        from_token_decimals=getattr(take_row, 'from_decimals', None),
-                        to_token_symbol=getattr(take_row, 'to_symbol', None),
-                        to_token_name=getattr(take_row, 'to_name', None),
-                        to_token_decimals=getattr(take_row, 'to_decimals', None),
+                        from_token_symbol=take_row.from_symbol if hasattr(take_row, 'from_symbol') else None,
+                        from_token_name=take_row.from_name if hasattr(take_row, 'from_name') else None,
+                        from_token_decimals=take_row.from_decimals if hasattr(take_row, 'from_decimals') else None,
+                        to_token_symbol=take_row.to_symbol if hasattr(take_row, 'to_symbol') else None,
+                        to_token_name=take_row.to_name if hasattr(take_row, 'to_name') else None,
+                        to_token_decimals=take_row.to_decimals if hasattr(take_row, 'to_decimals') else None,
                         # Add USD price information
                         from_token_price_usd=str(take_row.from_token_price_usd) if getattr(take_row, 'from_token_price_usd', None) is not None else None,
                         want_token_price_usd=str(take_row.want_token_price_usd) if getattr(take_row, 'want_token_price_usd', None) is not None else None,
@@ -1031,12 +1391,22 @@ class DatabaseDataProvider(DataProvider):
             raise Exception(f"Failed to fetch auction rounds from database: {e}")
 
     async def get_system_stats(self, chain_id: Optional[int] = None) -> SystemStats:
-        """Get system stats from database"""
+        """Get system stats from database with short in-process caching."""
         try:
+            # Simple per-process cache to avoid hammering DB on frequent polls
+            ttl = int(os.getenv('STATS_CACHE_SEC', os.getenv('DEV_STATS_CACHE_SEC', '5')))
+            cache_key = f"stats:{chain_id if chain_id is not None else 'all'}"
+            now = _time.time()
+            if not hasattr(self, '_stats_cache'):
+                self._stats_cache = {}
+            entry = self._stats_cache.get(cache_key)
+            if entry and now - entry['ts'] < ttl:
+                return entry['val']
+
             async with AsyncSessionLocal() as session:
                 stats_data = await DatabaseQueries.get_system_stats(session, chain_id)
                 if not stats_data:
-                    return SystemStats(
+                    val = SystemStats(
                         total_auctions=0,
                         active_auctions=0,
                         unique_tokens=0,
@@ -1045,16 +1415,19 @@ class DatabaseDataProvider(DataProvider):
                         total_participants=0,
                         total_volume_usd=0.0
                     )
-                
-                return SystemStats(
-                    total_auctions=stats_data.total_auctions or 0,
-                    active_auctions=stats_data.active_auctions or 0,
-                    unique_tokens=stats_data.unique_tokens or 0,
-                    total_rounds=stats_data.total_rounds or 0,
-                    total_takes=stats_data.total_takes or 0,
-                    total_participants=stats_data.total_participants or 0,
-                    total_volume_usd=float(stats_data.total_volume_usd) if stats_data.total_volume_usd else 0.0
-                )
+                else:
+                    val = SystemStats(
+                        total_auctions=stats_data.total_auctions or 0,
+                        active_auctions=stats_data.active_auctions or 0,
+                        unique_tokens=stats_data.unique_tokens or 0,
+                        total_rounds=stats_data.total_rounds or 0,
+                        total_takes=stats_data.total_takes or 0,
+                        total_participants=stats_data.total_participants or 0,
+                        total_volume_usd=float(stats_data.total_volume_usd) if stats_data.total_volume_usd else 0.0
+                    )
+
+                self._stats_cache[cache_key] = {'ts': now, 'val': val}
+                return val
         except Exception as e:
             logger.error(f"Database error in get_system_stats: {e}")
             raise Exception(f"Failed to fetch system stats from database: {e}")
@@ -1082,12 +1455,12 @@ class DatabaseDataProvider(DataProvider):
                             block_number=r.block_number,
                             from_token=r.from_token,
                             to_token=r.to_token,
-                            from_token_symbol=getattr(r, 'from_symbol', None),
-                            from_token_name=getattr(r, 'from_name', None),
-                            from_token_decimals=getattr(r, 'from_decimals', None),
-                            to_token_symbol=getattr(r, 'to_symbol', None),
-                            to_token_name=getattr(r, 'to_name', None),
-                            to_token_decimals=getattr(r, 'to_decimals', None),
+                            from_token_symbol=r.from_token_symbol if hasattr(r, 'from_token_symbol') else None,
+                            from_token_name=r.from_token_name if hasattr(r, 'from_token_name') else None,
+                            from_token_decimals=r.from_token_decimals if hasattr(r, 'from_token_decimals') else None,
+                            to_token_symbol=r.to_token_symbol if hasattr(r, 'to_token_symbol') else None,
+                            to_token_name=r.to_token_name if hasattr(r, 'to_token_name') else None,
+                            to_token_decimals=r.to_token_decimals if hasattr(r, 'to_token_decimals') else None,
                             from_token_price_usd=str(r.from_token_price_usd) if getattr(r, 'from_token_price_usd', None) is not None else None,
                             want_token_price_usd=str(r.want_token_price_usd) if getattr(r, 'want_token_price_usd', None) is not None else None,
                             amount_taken_usd=str(r.amount_taken_usd) if getattr(r, 'amount_taken_usd', None) is not None else None,

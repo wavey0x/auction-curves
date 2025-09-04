@@ -6,8 +6,11 @@ import AddressDisplay from "./AddressDisplay";
 import TxHashDisplay from "./TxHashDisplay";
 import StandardTxHashLink from "./StandardTxHashLink";
 import AddressLink from "./AddressLink";
+import TakerLink from "./TakerLink";
 import InternalLink from "./InternalLink";
 import RoundLink from "./RoundLink";
+import TakeLink from "./TakeLink";
+import TokenPairDisplay from "./TokenPairDisplay";
 import {
   formatTokenAmount,
   formatReadableTokenAmount,
@@ -101,23 +104,18 @@ const TakesTable: React.FC<TakesTableProps> = ({
                 <th className="text-center w-[22px] min-w-[22px] max-w-[22px] px-0 py-2"><span className="sr-only">Chain</span></th>
                 {!hideAuctionColumn && <th className="text-center w-24 px-0.5 py-2">Auction</th>}
                 <th className="text-center w-16 px-0.5 py-2">Round</th>
+                <th className="text-left w-32 px-0.5 py-2">Tokens</th>
                 <th 
                   className="text-center w-32 px-0.5 py-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
                   onClick={toggleValueDisplay}
                   title="Click to toggle between token and USD values"
                 >
-                  Amount {showUSD ? '($)' : '(T)'}
-                </th>
-                <th 
-                  className="text-center w-28 px-0.5 py-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                  onClick={toggleValueDisplay}
-                  title="Click to toggle between token and USD values"
-                >
-                  Price {showUSD ? '($)' : '(T)'}
+                  Value {showUSD ? '($)' : '(T)'}
                 </th>
                 <th className="text-center w-24 px-0.5 py-2">Profit/Loss</th>
                 <th className="text-center w-24 px-0.5 py-2">Taker</th>
                 <th className="text-center w-20 px-0.5 py-2">Time</th>
+                <th className="text-center w-20 px-0.5 py-2">Take</th>
                 <th className="text-center w-24 px-0.5 py-2">Transaction</th>
               </tr>
             </thead>
@@ -162,8 +160,16 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   </td>
 
                   <td className="px-0.5 py-1">
+                    <TokenPairDisplay
+                      fromToken={take.from_token_symbol || 'FROM'}
+                      toToken={take.to_token_symbol || 'TO'}
+                      size="sm"
+                    />
+                  </td>
+
+                  <td className="px-0.5 py-1">
                     <div className="text-sm">
-                      <div className="font-medium text-gray-200 leading-tight">
+                      <div className="font-bold text-gray-100 leading-tight">
                         {showUSD ? (
                           take.amount_taken_usd ? (
                             formatUSD(parseFloat(take.amount_taken_usd))
@@ -171,38 +177,22 @@ const TakesTable: React.FC<TakesTableProps> = ({
                             <span className="text-gray-500">—</span>
                           )
                         ) : (
-                          `${formatReadableTokenAmount(take.amount_taken, 4)} ${take.from_token_symbol || '?'}`
+                          // Show amount taken with token symbol
+                          `${formatReadableTokenAmount(take.amount_taken, 4)} ${take.from_token_symbol || 'TOKEN'}`
                         )}
                       </div>
-                      <div className="text-xs text-gray-500 leading-tight">
+                      <div className="text-xs text-gray-400 leading-tight mt-0.5">
                         {showUSD ? (
-                          take.amount_paid_usd ? (
-                            formatUSD(parseFloat(take.amount_paid_usd))
-                          ) : (
-                            <span className="text-gray-500">—</span>
-                          )
+                          // In USD mode, show the token amount as secondary info
+                          `${formatReadableTokenAmount(take.amount_taken, 3)} ${take.from_token_symbol || 'TOKEN'}`
                         ) : (
-                          `${formatReadableTokenAmount(take.amount_paid, 2)} ${take.to_token_symbol || '?'}`
-                        )}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="px-0.5 py-1">
-                    <div className="text-sm">
-                      <div className="font-medium text-gray-200 leading-tight">
-                        {showUSD ? (
-                          take.amount_taken_usd && take.amount_paid_usd ? (
-                            `${formatUSD(parseFloat(take.amount_paid_usd) / parseFloat(take.amount_taken))}`
+                          // In token mode, show price per token as secondary info
+                          take.price && take.from_token_symbol && take.to_token_symbol ? (
+                            `${formatReadableTokenAmount(take.price, 6)} ${take.to_token_symbol}/${take.from_token_symbol}`
                           ) : (
-                            <span className="text-gray-500">—</span>
+                            take.amount_taken_usd ? formatUSD(parseFloat(take.amount_taken_usd)) : 'USD N/A'
                           )
-                        ) : (
-                          `${formatReadableTokenAmount(take.price, 6)} ${take.to_token_symbol || '?'}`
                         )}
-                      </div>
-                      <div className="text-xs text-gray-500 leading-tight">
-                        / {take.from_token_symbol || '?'}
                       </div>
                     </div>
                   </td>
@@ -237,10 +227,9 @@ const TakesTable: React.FC<TakesTableProps> = ({
                   </td>
 
                   <td className="px-0.5 py-1">
-                    <AddressLink
-                      address={take.taker}
+                    <TakerLink
+                      takerAddress={take.taker}
                       chainId={take.chain_id}
-                      type="address"
                     />
                   </td>
 
@@ -251,6 +240,25 @@ const TakesTable: React.FC<TakesTableProps> = ({
                     >
                       {formatTimeAgo(new Date(take.timestamp).getTime() / 1000)}
                     </span>
+                  </td>
+
+                  <td className="px-0.5 py-1">
+                    <div className="flex justify-center">
+                      {take.take_id && take.auction && take.round_id !== undefined && take.take_seq !== undefined ? (
+                        <TakeLink
+                          chainId={take.chain_id}
+                          auctionAddress={take.auction}
+                          roundId={take.round_id}
+                          takeSeq={take.take_seq}
+                          variant="icon"
+                          size="sm"
+                        />
+                      ) : (
+                        <div className="w-4 h-4 flex items-center justify-center text-gray-500">
+                          —
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   <td className="px-0.5 py-1">

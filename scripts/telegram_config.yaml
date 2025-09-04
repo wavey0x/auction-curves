@@ -1,0 +1,152 @@
+# Multi-Group Telegram Bot Configuration
+# Supports multiple Telegram groups with individual settings and filters
+
+# Bot credentials (with environment variable expansion using standard ${VAR} syntax)
+bot_token: ${TELEGRAM_BOT_TOKEN}
+
+# Multiple groups with individual configurations
+groups:
+  main_alerts:
+    chat_id: ${TELEGRAM_GROUP_1_ID:-TELEGRAM_CHAT_ID}
+    description: "Main auction alerts channel"
+
+    # Event filters (true = send this event type)
+    events:
+      deploy: true # Send deployment events
+      kick: true # Send kick events
+      take: true # Send take events
+
+    filters:
+      # Minimum USD values for events (0 = no filter)
+      min_take_usd: 0 # Only send takes above this value
+      min_kick_value_usd: 0 # Only send kicks above this value
+      min_deploy_value_usd: 0 # Minimum deployment size
+
+      # Chain filters (empty = all chains)
+      enabled_chains: [] # e.g., [1, 137, 42161] for mainnet, polygon, arbitrum
+
+      # Token filters (empty = all tokens)
+      watchlist_tokens: [] # e.g., ["0x1234...", "0xabcd..."] to only watch specific tokens
+
+    thresholds:
+      # Alert thresholds for special formatting
+      large_take_usd: 10000 # Format as "🚨 LARGE TAKE" above this
+      whale_take_usd: 100000 # Format as "🐋 WHALE ALERT" above this
+
+    formatting:
+      # Message formatting options
+      show_usd_values: true
+      show_explorer_links: true
+      show_time_elapsed: true
+      show_percentage_complete: true
+      use_token_symbols: true # Try to resolve token symbols from DB
+      decimal_places: 2 # For USD values
+
+    rate_limiting:
+      min_seconds_between_messages: 1 # Prevent spam
+      max_messages_per_minute: 30 # Group-specific rate limit
+
+  # Example additional group - whale alerts only
+  whale_alerts:
+    chat_id: ${TELEGRAM_WHALE_GROUP_ID}
+    description: "High-value whale movements only"
+
+    events:
+      deploy: false # Don't send deployments to whale channel
+      kick: true # Send kicks (high value ones filtered below)
+      take: true # Send takes (high value ones filtered below)
+
+    filters:
+      min_take_usd: 50000 # Only large takes
+      min_kick_value_usd: 100000 # Only very large kicks
+      min_deploy_value_usd: 0 # Not needed since deploy is false
+      enabled_chains: [1] # Ethereum mainnet only
+      watchlist_tokens: [] # All tokens
+
+    thresholds:
+      large_take_usd: 100000 # Higher threshold for whale channel
+      whale_take_usd: 1000000 # Ultra-whale threshold
+
+    formatting:
+      show_usd_values: true
+      show_explorer_links: true
+      show_time_elapsed: true
+      show_percentage_complete: true
+      use_token_symbols: true
+      decimal_places: 0 # No decimals for big numbers
+
+    rate_limiting:
+      min_seconds_between_messages: 2 # Less frequent for whale channel
+      max_messages_per_minute: 10
+
+  # Example dev/test group
+  dev_alerts:
+    chat_id: ${TELEGRAM_DEV_GROUP_ID}
+    description: "Development and testing alerts"
+
+    events:
+      deploy: true # All events for dev testing
+      kick: true
+      take: true
+
+    filters:
+      min_take_usd: 0 # No minimum filters for testing
+      min_kick_value_usd: 0
+      min_deploy_value_usd: 0
+      enabled_chains: [31337] # Local/Anvil only
+      watchlist_tokens: []
+
+    thresholds:
+      large_take_usd: 1000 # Lower thresholds for testing
+      whale_take_usd: 10000
+
+    formatting:
+      show_usd_values: true
+      show_explorer_links: false # No explorer links for local chain
+      show_time_elapsed: true
+      show_percentage_complete: true
+      use_token_symbols: true
+      decimal_places: 4 # More precision for testing
+
+    rate_limiting:
+      min_seconds_between_messages: 0.5 # Faster for dev
+      max_messages_per_minute: 60
+
+# Global settings (shared across all groups)
+global:
+  # Chain ID to name mapping for readable messages
+  chains:
+    1: "Ethereum"
+    137: "Polygon"
+    42161: "Arbitrum"
+    10: "Optimism"
+    8453: "Base"
+    31337: "Local"
+
+  # Block explorer URLs by chain
+  explorers:
+    1: "https://etherscan.io/tx/"
+    137: "https://polygonscan.com/tx/"
+    42161: "https://arbiscan.io/tx/"
+    10: "https://optimistic.etherscan.io/tx/"
+    8453: "https://basescan.org/tx/"
+    # No explorer for local/anvil (31337)
+
+  # Application URLs for internal links
+  app_urls:
+    # Base URL for the application (auto-detected if not specified)
+    base_url: ${APP_BASE_URL:-} # e.g. "https://auctions.yearn.fi" or "http://localhost:3000"
+
+    # URL templates for internal app links
+    auction_details: "/auction/{address}"
+    round_details: "/round/{auction_address}/{round_id}"
+    take_details: "/auction/{auction_address}/rounds" # Takes are shown in auction rounds view
+    taker_details: "/taker/{address}" # Taker details page
+
+# Configuration notes:
+# - Groups that don't have environment variables set will be skipped (returns empty string)
+# - Use ${VAR1:-${VAR2}} syntax for fallback chains
+# - If no variables are set, the value will be an empty string
+# - Event filters use positive logic: true = send, false = don't send
+# - Empty arrays in filters mean "allow all" (no restriction)
+# - Rate limiting is per-group to prevent one group from affecting others

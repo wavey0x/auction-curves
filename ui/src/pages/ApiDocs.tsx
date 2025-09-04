@@ -528,10 +528,7 @@ console.log(health.status);`
 
       {/* Footer */}
       <div className="mt-8 pt-6 border-t border-gray-800 text-center">
-        <p className="text-gray-500 text-xs">
-          Built with ❤️ for the Auction System API
-        </p>
-        <div className="mt-1 flex items-center justify-center space-x-3 text-xs text-gray-600">
+        <div className="flex items-center justify-center space-x-3 text-xs text-gray-600">
           <span>Version 2.0.0</span>
           <span>•</span>
           <span>Interactive Documentation</span>

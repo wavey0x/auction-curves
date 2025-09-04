@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { X, Settings } from "lucide-react";
+import { X, Settings, Tags, Volume2 } from "lucide-react";
 import { useUserSettings } from "../context/UserSettingsContext";
+import AddressTagManager from "./AddressTagManager";
 
 interface SettingsModalProps {
   open: boolean;
@@ -16,6 +17,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [rpcInput, setRpcInput] = React.useState<string>(customRpcUrl || '');
   const [rpcError, setRpcError] = React.useState<string | null>(null);
+  const [notificationSoundEnabled, setNotificationSoundEnabled] = React.useState(() => {
+    try {
+      return localStorage.getItem('notificationSoundEnabled') !== 'false'
+    } catch { return true }
+  });
+  const [activeTab, setActiveTab] = React.useState<'general' | 'tags'>(() => {
+    try {
+      const v = localStorage.getItem('settings_active_tab')
+      return (v === 'tags' || v === 'general') ? (v as 'general'|'tags') : 'general'
+    } catch { return 'general' }
+  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -33,6 +45,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     }
   }, [open, customRpcUrl])
 
+  // persist active tab selection
+  useEffect(() => {
+    try { localStorage.setItem('settings_active_tab', activeTab) } catch {}
+  }, [activeTab])
+
   if (!open) return null;
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -45,7 +62,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
-      <div className="relative w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 shadow-2xl">
+      <div className="relative w-full max-w-[700px] rounded-xl border border-gray-800 bg-gray-900 shadow-2xl">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
           <div className="flex items-center space-x-2 text-gray-200">
             <Settings className="h-4 w-4 text-primary-400" />
@@ -56,9 +73,38 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
           </button>
         </div>
 
-        <div className="p-4 space-y-6">
-          {/* Default Value Display Toggle */}
-          <div className="flex items-start justify-between">
+        {/* Tabs */}
+        <div className="flex border-b border-gray-800">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'general'
+                ? 'text-primary-400 border-b-2 border-primary-400 bg-primary-500/5'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            <span>General</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('tags')}
+            className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'tags'
+                ? 'text-primary-400 border-b-2 border-primary-400 bg-primary-500/5'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            <Tags className="h-4 w-4" />
+            <span>Address Tags</span>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-6 max-h-[70vh] overflow-y-auto">
+          {activeTab === 'general' && (
+            <>
+              {/* Default Value Display Toggle */}
+              <div className="flex items-start justify-between">
             <div className="pr-4">
               <div className="text-sm text-gray-200">Display values as USD</div>
               <div className="text-xs text-gray-500 mt-1">Currently displaying as <span className="text-gray-300 font-medium">{defaultValueDisplay === 'usd' ? 'USD' : 'token'}</span></div>
@@ -79,6 +125,112 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                 }`}
               />
             </button>
+          </div>
+
+          {/* Notification Sound Toggle */}
+          <div className="space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="pr-4">
+                <div className="text-sm text-gray-200 flex items-center space-x-2">
+                  <Volume2 className="h-4 w-4 text-primary-400" />
+                  <span>Notification sounds</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Play kick drum sound on event notifications</div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={notificationSoundEnabled}
+                aria-label="Enable notification sounds"
+                onClick={() => {
+                  const newValue = !notificationSoundEnabled
+                  setNotificationSoundEnabled(newValue)
+                  localStorage.setItem('notificationSoundEnabled', String(newValue))
+                }}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 shrink-0 ${
+                  notificationSoundEnabled ? 'bg-primary-600' : 'bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                    notificationSoundEnabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            {/* Test Sound Button */}
+            {notificationSoundEnabled && (
+              <div>
+                <button
+                  onClick={() => {
+                    // Test kick drum sound (same as NotificationBubble)
+                    try {
+                      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+                      const now = audioContext.currentTime
+                      
+                      // Create oscillator for the bass thump
+                      const osc = audioContext.createOscillator()
+                      const oscGain = audioContext.createGain()
+                      
+                      // Create noise for the attack/click
+                      const noiseBufferSize = audioContext.sampleRate * 0.02
+                      const noiseBuffer = audioContext.createBuffer(1, noiseBufferSize, audioContext.sampleRate)
+                      const noiseData = noiseBuffer.getChannelData(0)
+                      
+                      // Generate brown noise
+                      let lastOut = 0
+                      for (let i = 0; i < noiseBufferSize; i++) {
+                        const white = Math.random() * 2 - 1
+                        noiseData[i] = (lastOut + (0.02 * white)) / 1.02
+                        lastOut = noiseData[i]
+                        noiseData[i] *= 3.5
+                      }
+                      
+                      const noiseSource = audioContext.createBufferSource()
+                      const noiseGain = audioContext.createGain()
+                      const noiseFilter = audioContext.createBiquadFilter()
+                      
+                      noiseSource.buffer = noiseBuffer
+                      noiseFilter.type = 'lowpass'
+                      noiseFilter.frequency.value = 1000
+                      noiseFilter.Q.value = 1
+                      
+                      // Kick drum frequency sweep
+                      osc.type = 'sine'
+                      osc.frequency.setValueAtTime(150, now)
+                      osc.frequency.exponentialRampToValueAtTime(40, now + 0.1)
+                      
+                      // Envelopes
+                      oscGain.gain.setValueAtTime(0, now)
+                      oscGain.gain.linearRampToValueAtTime(0.8, now + 0.005)
+                      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2)
+                      
+                      noiseGain.gain.setValueAtTime(0, now)
+                      noiseGain.gain.linearRampToValueAtTime(0.4, now + 0.002)
+                      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05)
+                      
+                      // Connect and play
+                      osc.connect(oscGain)
+                      oscGain.connect(audioContext.destination)
+                      noiseSource.connect(noiseFilter)
+                      noiseFilter.connect(noiseGain)
+                      noiseGain.connect(audioContext.destination)
+                      
+                      osc.start(now)
+                      osc.stop(now + 0.2)
+                      noiseSource.start(now)
+                      noiseSource.stop(now + 0.05)
+                    } catch (error) {
+                      alert('Audio test failed: ' + error.message)
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition-colors"
+                >
+                  Test Sound 🥁
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Custom RPC Toggle and Input */}
@@ -141,11 +293,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
               </div>
             )}
           </div>
+            </>
+          )}
+
+          {activeTab === 'tags' && (
+            <AddressTagManager />
+          )}
         </div>
 
-        <div className="px-4 py-3 border-t border-gray-800 flex justify-end">
-          <button onClick={onClose} className="px-3 py-1.5 bg-primary-500/20 text-primary-300 rounded hover:bg-primary-500/30 text-sm">Close</button>
-        </div>
+        {/* Bottom actions removed per request */}
       </div>
     </div>
   );

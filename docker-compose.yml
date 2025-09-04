@@ -18,17 +18,18 @@ services:
     networks:
       - auction
 
-  # Redis for caching and real-time data
+  # Redis for caching and pub/sub messaging
   redis:
     image: redis:7-alpine
     container_name: auction_redis
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --save "" --maxmemory 256mb --maxmemory-policy noeviction
     volumes:
       - redis_data:/data
     networks:
       - auction
+    restart: unless-stopped
 
   # Anvil for local blockchain testing
   anvil:

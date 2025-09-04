@@ -20,6 +20,7 @@ from psycopg2.extras import RealDictCursor
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 from dotenv import load_dotenv
+from event_publisher import EventPublisher
 
 # Load environment variables
 load_dotenv()
@@ -62,6 +63,9 @@ class AuctionIndexer:
         self.tokens_buffer = []  # Buffer for token records
         self.TAKES_BATCH_SIZE = 50  # Conservative batch size
         self.TOKENS_BATCH_SIZE = 20
+        
+        # Event publisher for Redis Streams integration
+        self.event_publisher = EventPublisher()
         
         # Load ABIs
         self._load_abis()
@@ -545,6 +549,33 @@ class AuctionIndexer:
                         starting_price, governance_address
                     ))
                 
+                # Publish deploy event to outbox
+                try:
+                    self.event_publisher.insert_outbox_event(
+                        cursor=cursor,
+                        event_type='deploy',
+                        chain_id=chain_id,
+                        block_number=event['blockNumber'],
+                        tx_hash=self._normalize_transaction_hash(event['transactionHash']),
+                        log_index=event['logIndex'],
+                        auction_address=auction_address,
+                        timestamp=timestamp,
+                        payload={
+                            'deployer': deployer,
+                            'version': '0.1.0' if factory_type == 'modern' else '0.0.1',
+                            'want_token': want_token,
+                            'factory_address': factory_address,
+                            'update_interval': price_update_interval,
+                            'decay_rate': float(decay_rate),
+                            'auction_length': auction_length,
+                            'starting_price': float(starting_price),
+                            'governance': governance_address
+                        },
+                        want_token=want_token
+                    )
+                except Exception as pub_error:
+                    logger.warning(f"Failed to publish deploy event: {pub_error}")
+                
                 # Add to tracked auctions
                 if chain_id not in self.tracked_auctions:
                     self.tracked_auctions[chain_id] = {}
@@ -644,6 +675,30 @@ class AuctionIndexer:
                     timestamp, block['timestamp'], round_start, round_end,
                     initial_available, initial_available, event['blockNumber'], txn_hash
                 ))
+                
+                # Publish kick event to outbox
+                try:
+                    self.event_publisher.insert_outbox_event(
+                        cursor=cursor,
+                        event_type='kick',
+                        chain_id=chain_id,
+                        block_number=event['blockNumber'],
+                        tx_hash=self._normalize_transaction_hash(event['transactionHash']),
+                        log_index=event['logIndex'],
+                        auction_address=auction_address,
+                        timestamp=timestamp,
+                        payload={
+                            'initial_available': str(initial_available),
+                            'initial_available_wei': str(initial_available_wei),
+                            'round_start': round_start,
+                            'round_end': round_end,
+                            'auction_length': auction_length
+                        },
+                        round_id=next_round_id,
+                        from_token=from_token
+                    )
+                except Exception as pub_error:
+                    logger.warning(f"Failed to publish kick event: {pub_error}")
             
             logger.info(f"[{event['blockNumber']}] ⚪ Created round {next_round_id} for auction {auction_address[:5]}..{auction_address[-4:]} on chain {chain_id}")
             
@@ -837,6 +892,32 @@ class AuctionIndexer:
                 
                 self.takes_buffer.append(take_data)
                 logger.debug(f"Added take {take_id} to buffer ({len(self.takes_buffer)}/{self.TAKES_BATCH_SIZE})")
+                
+                # Publish take event to outbox (immediate since takes are buffered)
+                try:
+                    self.event_publisher.insert_outbox_event(
+                        cursor=cursor,
+                        event_type='take',
+                        chain_id=chain_id,
+                        block_number=event['blockNumber'],
+                        tx_hash=self._normalize_transaction_hash(event['transactionHash']),
+                        log_index=event['logIndex'],
+                        auction_address=auction_address,
+                        timestamp=timestamp_unix,
+                        payload={
+                            'taker': taker,
+                            'amount_taken': str(amount_taken),
+                            'amount_paid': str(amount_paid),
+                            'price': str(price),
+                            'take_seq': take_seq,
+                            'seconds_from_round_start': seconds_from_start
+                        },
+                        round_id=round_id,
+                        from_token=from_token,
+                        want_token=want_token
+                    )
+                except Exception as pub_error:
+                    logger.warning(f"Failed to publish take event: {pub_error}")
                 
                 # Flush buffer if full
                 if len(self.takes_buffer) >= self.TAKES_BATCH_SIZE:
